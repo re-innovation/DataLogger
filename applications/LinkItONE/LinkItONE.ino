@@ -14,16 +14,34 @@
  * - Uses GPS for position testing and RTC updates
  */
 
+/*
+ * Standard Library Includes
+ */
 #include <stdint.h>
 
-#include "datalogger.h"
+/*
+ * LinkIt One Includes
+ */
+#include <LGPRS.h>
+#include <LSD.h>
+#include <LStorage.h>
+
+/*
+ * DataLogger Includes
+ */
+
+#include "DLSettings.h"
+#include "DLService.h"
+#include "DLNetwork.h"
+#include "DLDataField.h"
+#include "DLService.ThingSpeak.h"
+#include "DLLocalStorage.h"
 
 static ServiceInterface * s_thingSpeakService;
-static NetworkInterface * s_gprsService;
-static LGPRSClient client;
+static NetworkInterface * s_gprsConnection;
+static LocalStorageInterface * s_sdCard;
 
-static DataField dataFields[] = {
-    DataField(VOLTAGE),
+static DataField s_dataFields[] = {
     DataField(VOLTAGE),
     DataField(CURRENT),
     DataField(CURRENT),
@@ -42,7 +60,7 @@ void createFakeData(void)
         {
             // First two fields are random voltage between 40V and 60V
             randomData = (float)random(4000, 6000)/100.0;
-            dataFields[f].StoreData(&randomData);
+            s_dataFields[f].StoreData(randomData);
         }
         else
         {
@@ -50,8 +68,8 @@ void createFakeData(void)
             randomData = (float)random(0, 1000)/100.0;
         }
 
-        dataFields[f].StoreData(&randomData);
-        s_thingSpeakService->Set(f, &dataFields[f]);
+        s_dataFields[f].StoreData(randomData);
+        s_thingSpeakService->SetField(f, &s_dataFields[f]);
     }
 }
 
@@ -62,49 +80,22 @@ void uploadData(void)
     Serial.println(Thingspeak::THINGSPEAK_URL);
 
     char request_buffer[200];
+    char response_buffer[200];
     s_thingSpeakService->CreateGetAPICall(request_buffer);
 
     Serial.print("Request '");
     Serial.print(request_buffer);
     Serial.println("'");
 
-    if (client.connect(Thingspeak::THINGSPEAK_URL, HTTP_PORT))
+    if (s_gprsConnection->HTTPGet(Thingspeak::THINGSPEAK_URL, request_buffer, response_buffer))
     {
         Serial.println("connected");
-        // Make a HTTP request:
-        client.print("GET ");
-        client.print(request_buffer);
-        client.println(" HTTP/1.1");
-        client.print("Host: ");
-        client.println(Thingspeak::THINGSPEAK_URL);
-        client.println("Connection: close");
-        client.println();
     }
     else
     {
-        // if you didn't get a connection to the server:
         Serial.println("connection failed");
     }
 
-}
-
-void readResponse(void)
-{
-    // if there are incoming bytes available
-    // from the server, read them and print them:
-    if (client.available())
-    {
-        char c = client.read();
-        Serial.print(c);
-    }
-
-    // if the server's disconnected, stop the client:
-    if (!client.available() && !client.connected())
-    {
-        Serial.println();
-        Serial.println("disconnecting.");
-        client.stop();
-    }
 }
 
 void setup()
@@ -114,15 +105,17 @@ void setup()
 
     delay(10000);
 
-    SetString(GRPS_APN, "giffgaff.com");
-    SetString(GPRS_USERNAME, "giffgaff");
-    SetString(GPRS_PASSWORD, "");
-    SetString(THINGSPEAK_API_KEY, "0CKUYB7VJI2I9WG9");
+    Settings_SetString(GPRS_APN, "giffgaff.com");
+    Settings_SetString(GPRS_USERNAME, "giffgaff");
+    Settings_SetString(GPRS_PASSWORD, "");
+    Settings_SetString(THINGSPEAK_API_KEY, "0CKUYB7VJI2I9WG9");
 
-    s_thingSpeakService = GetService(SERVICE_THINGSPEAK);
-    s_gprsService = GetInterface(NETWORK_INTERFACE_LINKITONE_GPRS);
+    s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
+    s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
+    s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+
     Serial.println("Attach to GPRS network by auto-detect APN setting");
-    s_gprsService->tryConnection(5);
+    s_gprsConnection->tryConnection(5);
 }
 
 void loop()
@@ -130,7 +123,6 @@ void loop()
 
     createFakeData();
     uploadData();
-    readResponse();
 
     delay(30000);
 }
