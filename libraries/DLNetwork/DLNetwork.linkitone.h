@@ -25,6 +25,10 @@ class LinkItOneWiFi : public NetworkInterface
         ~LinkItOneWiFi();
         bool tryConnection(uint8_t timeoutSeconds);
         bool HTTPGet(char const * const url, char * request, char * response, bool useHTTPS=false);
+        bool isConnected(void);
+        
+    private:
+        bool m_connected;
 };
 
 class LinkItOneGPRS : public NetworkInterface
@@ -34,11 +38,13 @@ class LinkItOneGPRS : public NetworkInterface
         ~LinkItOneGPRS();
         bool tryConnection(uint8_t timeoutSeconds);
         bool HTTPGet(char const * const url, char * request, char * response, bool useHTTPS=false);
+        bool isConnected(void);
 
     private:
         char * m_pAPN;
         char * m_pUser;
         char * m_pPwd;
+        bool m_connected;
         LGPRSClient * m_client;
         void readResponse(char *);
 };

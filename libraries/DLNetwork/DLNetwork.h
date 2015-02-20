@@ -20,6 +20,7 @@ class NetworkInterface
     public: 
         virtual bool tryConnection(uint8_t timeoutSeconds) = 0;
         virtual bool HTTPGet(char const * const url, char * request, char * response, bool useHTTPS=false) = 0;
+        virtual bool isConnected(void) = 0;
 };
 
 NetworkInterface * Network_GetNetwork(NETWORK_INTERFACE interface);

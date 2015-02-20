@@ -20,6 +20,12 @@
 #include <stdint.h>
 
 /*
+ * Arduino Library Includes
+ */
+
+#include <Wire.h>
+
+/*
  * LinkIt One Includes
  */
 #include <LGPRS.h>
@@ -36,12 +42,17 @@
 #include "DLDataField.h"
 #include "DLService.ThingSpeak.h"
 #include "DLLocalStorage.h"
+#include "DLUtility.h"
+#include "DLSensor.ADS1x1x.h"
 
 static ServiceInterface * s_thingSpeakService;
 static NetworkInterface * s_gprsConnection;
 static LocalStorageInterface * s_sdCard;
 
+static ADS1115 s_ADC();
+
 static DataField s_dataFields[] = {
+    DataField(VOLTAGE),
     DataField(VOLTAGE),
     DataField(CURRENT),
     DataField(CURRENT),
@@ -49,7 +60,21 @@ static DataField s_dataFields[] = {
     DataField(CURRENT)
 };
 
-void createFakeData(void)
+static void tryConnection(void)
+{
+    // Try to connect to GPRS network
+    Serial.print("Attempting to attach to ");
+    Serial.print(Settings_GetString(GPRS_APN));
+    Serial.print(" with username/pwd ");
+    Serial.print(Settings_GetString(GPRS_USERNAME));
+    Serial.print("/");
+    Serial.println(Settings_GetString(GPRS_PASSWORD));
+    
+    s_gprsConnection->tryConnection(10);
+}
+
+
+static void createFakeData(void)
 {
     float randomData = 0.0;
     uint8_t f = 0;
@@ -73,8 +98,14 @@ void createFakeData(void)
     }
 }
 
-void uploadData(void)
+static void uploadData(void)
 {
+    if (!s_gprsConnection->isConnected())
+    {
+        Serial.println("GPRS not connected. Attempting new connection.");
+        tryConnection();
+    }
+
     // Try to upload to ThingSpeak
     Serial.print("Connect to ");
     Serial.println(Thingspeak::THINGSPEAK_URL);
@@ -89,11 +120,13 @@ void uploadData(void)
 
     if (s_gprsConnection->HTTPGet(Thingspeak::THINGSPEAK_URL, request_buffer, response_buffer))
     {
-        Serial.println("connected");
+        Serial.print("Got response:");   
+        Serial.println(response_buffer);
     }
     else
     {
-        Serial.println("connection failed");
+        Serial.print("Could not connect to ");
+        Serial.println(Thingspeak::THINGSPEAK_URL);
     }
 
 }
@@ -108,14 +141,13 @@ void setup()
     Settings_SetString(GPRS_APN, "giffgaff.com");
     Settings_SetString(GPRS_USERNAME, "giffgaff");
     Settings_SetString(GPRS_PASSWORD, "");
-    Settings_SetString(THINGSPEAK_API_KEY, "0CKUYB7VJI2I9WG9");
+    //Settings_SetString(THINGSPEAK_API_KEY, "NNMOIJ91NG0MRNNX"); // My Thingspeak API key
+    Settings_SetString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
 
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
 
-    Serial.println("Attach to GPRS network by auto-detect APN setting");
-    s_gprsConnection->tryConnection(5);
 }
 
 void loop()
@@ -124,5 +156,5 @@ void loop()
     createFakeData();
     uploadData();
 
-    delay(30000);
+    delay(17000);
 }

@@ -1,5 +1,5 @@
 /*
- * network_interface.cpp
+ * DLNetwork.cpp
  * 
  * Connect and communicate with network resources
  *

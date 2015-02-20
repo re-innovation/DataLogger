@@ -21,7 +21,7 @@
  * Public static class members
  */
 
-const char Thingspeak::THINGSPEAK_URL[] = "api.thingspeak.com";
+const char Thingspeak::THINGSPEAK_URL[] = "agile-headland-8076.herokuapp.com";
 const char Thingspeak::THINGSPEAK_GET_PATH[] = "/update";
 
 /*

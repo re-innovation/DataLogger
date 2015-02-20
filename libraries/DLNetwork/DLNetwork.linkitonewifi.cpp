@@ -52,3 +52,5 @@ bool LinkItOneWiFi::HTTPGet(char const * const url, char * request, char * respo
 	(void)useHTTPS;
 	return false;
 }
+
+bool LinkItOneWiFi::isConnected(void) { return false; }

@@ -63,8 +63,9 @@ void StringSetting::Set(char const * const pSetting)
     if (!m_pSetting)
     {
         uint8_t length = strlen(pSetting);
-        m_pSetting = new char[length];
+        m_pSetting = new char[length+1];
         strncpy(m_pSetting, pSetting, length);
+		m_pSetting[length] = '\0';
     }
 }
 
