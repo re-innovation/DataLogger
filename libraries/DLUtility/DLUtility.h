@@ -1,12 +1,16 @@
 #ifndef _UTILITY_H_
 #define _UTILITY_H_
 
-/*
- * READFN type
- * - Used to pass a function pointer to standard Read* functions
- */
-typedef char (*READFN)(void);
+#include "DLUtility.AVR.h"
+#include "DLUtility.HelperMacros.h"
+#include "DLUtility.Readline.h"
+#include "DLUtility.ArrayFunctions.h"
 
-uint32_t ReadLineWithReadFunction(READFN fn, char * buffer, uint32_t n, bool stripCRLF = false);
+/*
+ * DecToBcd
+ * Converts a decimal value to its BCD equivalent. For example if the number 13
+ * is passed in, the function will return (1 * 16) + (3 * 1) = 19.
+ */
+char DecToBcd(char value);
 
 #endif
