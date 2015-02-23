@@ -14,8 +14,15 @@ bool TaskAction::tick(unsigned long millisec /* = NULL */)
 {
     // Check state and ticks count (if m_ticks == 0 then infinite ticks)
     if (!GetCurrentState() || (m_tick > 0 && GetCurrentTick() >= m_tick))
+    {
         return false;
-
+    }
+    
+    if (m_interval == 0) // If interval is 0 then treat as disabled
+    {
+        return false;
+    }
+    
     unsigned long currentTime = millisec ? millisec : millis();
 
     if(currentTime - m_LastTime > m_interval)
