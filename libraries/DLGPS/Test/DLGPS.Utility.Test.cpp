@@ -87,7 +87,7 @@ static void test_DDMMYYStringIsParsedCorrectly(void)
 
 static void test_LatitudeStringIsParsedCorrectly(void)
 {
-    /*int8_t lat = 0;
+    int8_t lat = 0;
     uint32_t millidegrees = 0;
     
     char toParse[10];
@@ -119,12 +119,12 @@ static void test_LatitudeStringIsParsedCorrectly(void)
             
             TEST_ASSERT_EQUAL_FLOAT_MESSAGE(-expected, result, onFailMessage);
         }
-    }*/
+    }
 }
 
 static void test_LongitudeStringIsParsedCorrectly(void)
 {
-    /*int16_t lon = 0;
+    int16_t lon = 0;
     uint32_t millidegrees = 0;
     
     char toParse[11];
@@ -156,7 +156,7 @@ static void test_LongitudeStringIsParsedCorrectly(void)
             
             TEST_ASSERT_EQUAL_FLOAT_MESSAGE(-expected, result, onFailMessage);
         }
-    }*/
+    }
 }
 
 static void test_completeRMCParsedCorrectly(void)

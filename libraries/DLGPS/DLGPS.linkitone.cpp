@@ -25,7 +25,7 @@
  * Local Application Includes
  */
 
-#include "DLUtility.DateTime.h"
+#include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
 #include "DLGPS.h"
 
@@ -85,9 +85,16 @@ bool GPS_GetLocation_3D(LOCATION_3D * pLocation)
     pLocation->altitude_m = s_parsedInfo.altitude;
 }
 
-uint16_t GPS_GetGPSTime(void)
+void GPS_GetGPSTime(TM * time)
 {
+    if (!time) { return; }
     
+    time->tm_sec = s_parsedInfo.sec;
+    time->tm_min = s_parsedInfo.min;
+    time->tm_hour = s_parsedInfo.hour;
+    time->tm_mday = s_parsedInfo.dd;
+    time->tm_mon = s_parsedInfo.mm;
+    time->tm_year = s_parsedInfo.yy;
 }
 
 /*
