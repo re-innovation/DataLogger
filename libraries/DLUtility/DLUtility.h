@@ -5,6 +5,8 @@
 #include "DLUtility.HelperMacros.h"
 #include "DLUtility.Readline.h"
 #include "DLUtility.ArrayFunctions.h"
+#include "DLUtility.Time.h"
+#include "DLUtility.Location.h"
 
 /*
  * DecToBcd

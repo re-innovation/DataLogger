@@ -37,6 +37,7 @@
  */
 
 #include "DLSettings.h"
+#include "DLGPS.h"
 #include "DLService.h"
 #include "DLNetwork.h"
 #include "DLDataField.h"

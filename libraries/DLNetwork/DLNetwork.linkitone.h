@@ -38,6 +38,7 @@ class LinkItOneGPRS : public NetworkInterface
         ~LinkItOneGPRS();
         bool tryConnection(uint8_t timeoutSeconds);
         bool HTTPGet(char const * const url, char * request, char * response, bool useHTTPS=false);
+        bool HTTPPost(char const * const url, char * request, char * response, bool useHTTPS=false);
         bool isConnected(void);
 
     private:
@@ -47,6 +48,9 @@ class LinkItOneGPRS : public NetworkInterface
         bool m_connected;
         LGPRSClient * m_client;
         void readResponse(char *);
+        bool connect(void);
+        void get(char const * const url, char * request, char * response, bool useHTTPS);
+        void post(char const * const url, char * request, char * response, bool useHTTPS);
 };
 
 #endif

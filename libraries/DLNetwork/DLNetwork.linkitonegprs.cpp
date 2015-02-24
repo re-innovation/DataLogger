@@ -55,31 +55,61 @@ bool LinkItOneGPRS::tryConnection(uint8_t timeoutSeconds)
     return m_connected;
 }
 
-bool LinkItOneGPRS::HTTPGet(char const * const url, char * request, char * response, bool useHTTPS)
+bool LinkItOneGPRS::connect(void)
 {
     bool success = m_connected;
 
     if (success)
     {
         success &= m_client->connect(url, HTTP_PORT);
-        if (success)
-        {
-            m_client->print("GET ");
-            m_client->print(request);
-            m_client->println(" HTTP/1.1");
-            m_client->print("Host: ");
-            m_client->println(url);
-            m_client->println("Connection: close");
-            m_client->println();
-
-            readResponse(response);
-        }
     }
-
+    
     return success;
-
 }
 
+bool LinkItOneGPRS::HTTPPost(char const * const url, char * request, char * response, bool useHTTPS)
+{
+    (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
+    if (connect())
+    {
+        post(request, url);
+    }
+    return true;
+}
+
+bool LinkItOneGPRS::HTTPGet(char const * const url, char * request, char * response, bool useHTTPS)
+{
+    (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
+    if (connect())
+    {
+        get(request, url);
+    }
+    return true;
+}
+
+void LinkItOneGPRS::get(char const * const url, char * request, char * response, bool useHTTPS)
+{
+    m_client->print("GET ");
+    m_client->print(request);
+    m_client->println(" HTTP/1.1");
+    m_client->print("Host: ");
+    m_client->println(url);
+    m_client->println("Connection: close");
+    m_client->println();
+    readResponse(response);
+}
+
+void LinkItOneGPRS::post(char const * const url, char * request, char * response, bool useHTTPS)
+{
+    m_client->print("GET ");
+    m_client->print(request);
+    m_client->println(" HTTP/1.1");
+    m_client->print("Host: ");
+    m_client->println(url);
+    m_client->println("Connection: close");
+    m_client->println();
+    readResponse(response);
+}
 
 void LinkItOneGPRS::readResponse(char * response)
 {
