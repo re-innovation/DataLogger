@@ -1,5 +1,5 @@
 /*
- * DLGPS.linkitone.cpp
+ * DLLocation.linkitone.cpp
  * 
  * Abstraction for Linkit ONE GPS resources
  *
@@ -27,7 +27,7 @@
 
 #include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
-#include "DLGPS.h"
+#include "DLLocation.h"
 
 /*
  * Local object and variables
@@ -42,7 +42,7 @@ static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
  * Public Functions 
  */
 
-bool GPS_Setup(uint32_t updatePeriod)
+bool Location_Setup(uint32_t updatePeriod)
 {
     LGPS.powerOn();
     
@@ -52,40 +52,40 @@ bool GPS_Setup(uint32_t updatePeriod)
     return true; 
 }
 
-void GPS_Tick(void)
+void Location_Tick(void)
 {
     updateTask.tick();
 }
 
-void GPS_UpdateNow(void)
+void Location_UpdateNow(void)
 {
     updateTaskFn();
 }
 
-void GPS_EnableUpdates(bool enable)
+void Location_EnableUpdates(bool enable)
 {
     updateTask.Enable(enable);
 }
 
-void GPS_SetUpdatePeriod(uint32_t newPeriod)
+void Location_SetUpdatePeriod(uint32_t newPeriod)
 {
     updateTask.SetInterval(newPeriod * 1000UL);
 }
 
-bool GPS_GetLocation_2D(LOCATION_2D * pLocation)
+bool Location_GetLocation_2D(LOCATION_2D * pLocation)
 {
     pLocation->latitude = s_parsedInfo.latitude;
     pLocation->longitude = s_parsedInfo.longitude;
 }
 
-bool GPS_GetLocation_3D(LOCATION_3D * pLocation)
+bool Location_GetLocation_3D(LOCATION_3D * pLocation)
 {
     pLocation->latitude = s_parsedInfo.latitude;
     pLocation->longitude = s_parsedInfo.longitude;
     pLocation->altitude_m = s_parsedInfo.altitude;
 }
 
-void GPS_GetGPSTime(TM * time)
+void Location_GetGPSTime(TM * time)
 {
     if (!time) { return; }
     

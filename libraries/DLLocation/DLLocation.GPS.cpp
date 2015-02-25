@@ -20,7 +20,7 @@
  */
 
 #include "DLUtility.Location.h"
-#include "DLGPS.Utility.h"
+#include "DLLocation.GPS.h"
 
 /*
  * Defines and typedefs

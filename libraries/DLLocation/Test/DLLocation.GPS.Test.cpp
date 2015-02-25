@@ -1,7 +1,7 @@
 /*
- * DLGPS.Utility.Test.cpp
+ * DLLocation.GPS.Test.cpp
  * 
- * Tests the GPS utility functionality
+ * Tests the GPS functionality
  *
  * Author: James Fowkes
  *
@@ -19,7 +19,7 @@
  * Local Application Includes
  */
 
-#include "../DLGPS.Utility.h"
+#include "../DLLocation.GPS.h"
 
 /*
  * Unity Test Framework
