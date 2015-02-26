@@ -30,8 +30,9 @@ class StringSetting
         StringSetting();
         ~StringSetting();
     
-        char * Get();
-        void Set(char const * const);
+        char * get();
+        bool isSet(void);
+        void set(char const * const);
         
     private:
         char * m_pSetting;
@@ -44,8 +45,9 @@ class IntSetting
         
         ~IntSetting();
     
-        int Get();
-        void Set(int);
+        int get();
+        bool isSet(void);
+        void set(int);
     
     private:
         int m_setting;
@@ -55,10 +57,13 @@ class IntSetting
 StringSetting::StringSetting() {m_pSetting = NULL;}
 StringSetting::~StringSetting() {}
 
+
 IntSetting::IntSetting() { m_set = false; m_setting = 0;}
 IntSetting::~IntSetting() {}
 
-void StringSetting::Set(char const * const pSetting)
+
+bool StringSetting::isSet() {return m_pSetting == NULL;}
+void StringSetting::set(char const * const pSetting)
 {
     if (!m_pSetting)
     {
@@ -68,11 +73,11 @@ void StringSetting::Set(char const * const pSetting)
 		m_pSetting[length] = '\0';
     }
 }
+char * StringSetting::get(void) { return m_pSetting; }
 
-char * StringSetting::Get(void) { return m_pSetting; }
-
-void IntSetting::Set(int setting) { if (!m_set) { m_setting = setting; m_set = true;} }
-int IntSetting::Get(void) { return m_setting; }
+bool IntSetting::isSet() {return m_set;}
+void IntSetting::set(int setting) { if (!m_set) { m_setting = setting; m_set = true;} }
+int IntSetting::get(void) { return m_setting; }
 
 /////////////////////////////////////////////////////////
 
@@ -83,11 +88,23 @@ int IntSetting::Get(void) { return m_setting; }
 static StringSetting s_strings[STRING_SETTINGS_COUNT];
 static IntSetting s_ints[INT_SETTINGS_COUNT];
 
-char * Settings_GetString(STRINGSETTING setting)
+bool Settings_stringIsSet(STRINGSETTING setting)
 {
     if (setting < STRING_SETTINGS_COUNT)
     {
-        return s_strings[setting].Get();
+        return s_strings[setting].isSet();
+    }
+    else
+    {
+        return false;
+    }
+}
+
+char * Settings_getString(STRINGSETTING setting)
+{
+    if (setting < STRING_SETTINGS_COUNT)
+    {
+        return s_strings[setting].get();
     }
     else
     {
@@ -95,19 +112,31 @@ char * Settings_GetString(STRINGSETTING setting)
     }
 }
 
-void Settings_SetString(STRINGSETTING setting, char const * const pSet)
+void Settings_setString(STRINGSETTING setting, char const * const pSet)
 {
     if (setting < STRING_SETTINGS_COUNT)
     {
-        s_strings[setting].Set(pSet);
+        s_strings[setting].set(pSet);
     }
 }
 
-int Settings_GetInt(INTSETTING setting)
+bool Settings_intisSet(INTSETTING setting)
 {
     if (setting < INT_SETTINGS_COUNT)
     {
-        return s_ints[setting].Get();
+        return s_ints[setting].isSet();
+    }
+    else
+    {
+        return false;
+    } 
+}
+
+int Settings_getInt(INTSETTING setting)
+{
+    if (setting < INT_SETTINGS_COUNT)
+    {
+        return s_ints[setting].get();
     }
     else
     {
@@ -115,10 +144,10 @@ int Settings_GetInt(INTSETTING setting)
     }    
 }
 
-void Settings_SetInt(INTSETTING setting, int set)
+void Settings_setInt(INTSETTING setting, int set)
 {
     if (setting < INT_SETTINGS_COUNT)
     {
-        s_ints[setting].Set(set);
+        s_ints[setting].set(set);
     }  
 }

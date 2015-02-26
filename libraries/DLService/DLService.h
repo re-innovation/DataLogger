@@ -20,13 +20,14 @@ class DataField;
 class ServiceInterface
 {
     public:
-        virtual void SetField(uint8_t fieldIndex, DataField * pDataField) = 0;
-
-        virtual uint16_t CreateGetAPICall(char * buffer) = 0;
-        virtual uint16_t CreateGetAPICall(char * buffer, char const * const time) = 0;
+        virtual void setField(uint8_t fieldIndex, DataField * pDataField) = 0;
+        virtual char *  getURL(void) = 0;
         
-        virtual uint16_t CreateGetAPIParamsString(char * buffer) = 0;
-        virtual uint16_t CreateGetAPIParamsString(char * buffer, char const * const time) = 0;
+        virtual uint16_t createGetAPICall(char * buffer) = 0;
+        virtual uint16_t createGetAPICall(char * buffer, char const * const time) = 0;
+        
+        virtual uint16_t createGetAPIParamsString(char * buffer) = 0;
+        virtual uint16_t createGetAPIParamsString(char * buffer, char const * const time) = 0;
         
 };
 

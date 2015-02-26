@@ -21,20 +21,27 @@
  * Public static class members
  */
 
-const char Thingspeak::THINGSPEAK_URL[] = "agile-headland-8076.herokuapp.com";
+const char THINGSPEAK_DEFAULT_URL[] = "api.thingspeak.com"; 
+
 const char Thingspeak::THINGSPEAK_GET_PATH[] = "/update";
 
 /*
  * Public Class Functions
  */
 
-Thingspeak::Thingspeak(char const * const key)
+Thingspeak::Thingspeak(char const * const url, char const * const key)
 {
-    if (key)
+    if (url)
     {
-        memcpy(m_key, key, strlen(key));
+        memcpy(m_url, url, strlen(url));   
     }
-    
+    else
+    {
+        memcpy(m_url, THINGSPEAK_DEFAULT_URL, strlen(THINGSPEAK_DEFAULT_URL));   
+    }
+
+    memcpy(m_key, key, strlen(key)); 
+
     uint8_t i;
     for (i = 0; i < 6; i++)
     {
@@ -44,19 +51,24 @@ Thingspeak::Thingspeak(char const * const key)
 
 Thingspeak::~Thingspeak() {}
 
-void Thingspeak::SetField(uint8_t fieldIndex, DataField * pDataField)
+char * Thingspeak::getURL(void)
+{
+    return m_url;
+}
+
+void Thingspeak::setField(uint8_t fieldIndex, DataField * pDataField)
 {
     if (fieldIndex > 5) { return; }
     
     m_data[fieldIndex] = pDataField->GetDataAsFloat();
 }
 
-uint16_t Thingspeak::CreateGetAPICall(char * buffer)
+uint16_t Thingspeak::createGetAPICall(char * buffer)
 {
-    return CreateGetAPICall(buffer, NULL);
+    return createGetAPICall(buffer, NULL);
 }
 
-uint16_t Thingspeak::CreateGetAPICall(char * buffer, char const * const time)
+uint16_t Thingspeak::createGetAPICall(char * buffer, char const * const time)
 {
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
@@ -66,17 +78,17 @@ uint16_t Thingspeak::CreateGetAPICall(char * buffer, char const * const time)
     // Copy the thingspeak update path into buffer
     index += sprintf(&buffer[index], THINGSPEAK_GET_PATH);
     index += sprintf(&buffer[index], "?");
-    index += CreateGetAPIParamsString(&buffer[index], time);
+    index += createGetAPIParamsString(&buffer[index], time);
     
     return index;
 }
 
-uint16_t Thingspeak::CreateGetAPIParamsString(char * buffer)
+uint16_t Thingspeak::createGetAPIParamsString(char * buffer)
 {
-    return CreateGetAPIParamsString(buffer, NULL);
+    return createGetAPIParamsString(buffer, NULL);
 }
 
-uint16_t Thingspeak::CreateGetAPIParamsString(char * buffer, char const * const time)
+uint16_t Thingspeak::createGetAPIParamsString(char * buffer, char const * const time)
 {
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }

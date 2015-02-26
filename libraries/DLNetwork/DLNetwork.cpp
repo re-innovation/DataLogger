@@ -34,9 +34,9 @@ NetworkInterface * Network_GetNetwork(NETWORK_INTERFACE interface)
         pInterface = new LinkItOneWiFi();
         break;
     case NETWORK_INTERFACE_LINKITONE_GPRS:
-        char * pAPN = Settings_GetString(GPRS_APN);
-        char * pUser = Settings_GetString(GPRS_USERNAME);
-        char * pPwd = Settings_GetString(GPRS_PASSWORD);
+        char * pAPN = Settings_getString(GPRS_APN);
+        char * pUser = Settings_getString(GPRS_USERNAME);
+        char * pPwd = Settings_getString(GPRS_PASSWORD);
         pInterface = new LinkItOneGPRS(pAPN, pUser, pPwd);
         break;
     }

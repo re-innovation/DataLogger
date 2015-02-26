@@ -65,11 +65,11 @@ static void tryConnection(void)
 {
     // Try to connect to GPRS network
     Serial.print("Attempting to attach to ");
-    Serial.print(Settings_GetString(GPRS_APN));
+    Serial.print(Settings_getString(GPRS_APN));
     Serial.print(" with username/pwd ");
-    Serial.print(Settings_GetString(GPRS_USERNAME));
+    Serial.print(Settings_getString(GPRS_USERNAME));
     Serial.print("/");
-    Serial.println(Settings_GetString(GPRS_PASSWORD));
+    Serial.println(Settings_getString(GPRS_PASSWORD));
     
     s_gprsConnection->tryConnection(10);
 }
@@ -95,7 +95,7 @@ static void createFakeData(void)
         }
 
         s_dataFields[f].StoreData(randomData);
-        s_thingSpeakService->SetField(f, &s_dataFields[f]);
+        s_thingSpeakService->setField(f, &s_dataFields[f]);
     }
 }
 
@@ -108,18 +108,18 @@ static void uploadData(void)
     }
 
     // Try to upload to ThingSpeak
-    Serial.print("Connect to ");
-    Serial.println(Thingspeak::THINGSPEAK_URL);
+    Serial.print("Attempting upload to ");
+    Serial.println(s_thingSpeakService->getURL());
 
     char request_buffer[200];
     char response_buffer[200];
-    s_thingSpeakService->CreateGetAPICall(request_buffer);
+    s_thingSpeakService->createGetAPICall(request_buffer);
 
     Serial.print("Request '");
     Serial.print(request_buffer);
     Serial.println("'");
 
-    if (s_gprsConnection->HTTPGet(Thingspeak::THINGSPEAK_URL, request_buffer, response_buffer))
+    if (s_gprsConnection->HTTPGet(s_thingSpeakService->getURL(), request_buffer, response_buffer))
     {
         Serial.print("Got response:");   
         Serial.println(response_buffer);
@@ -127,7 +127,7 @@ static void uploadData(void)
     else
     {
         Serial.print("Could not connect to ");
-        Serial.println(Thingspeak::THINGSPEAK_URL);
+        Serial.println(s_thingSpeakService->getURL());
     }
 
 }
@@ -139,11 +139,15 @@ void setup()
 
     delay(10000);
 
-    Settings_SetString(GPRS_APN, "giffgaff.com");
-    Settings_SetString(GPRS_USERNAME, "giffgaff");
-    Settings_SetString(GPRS_PASSWORD, "");
-    //Settings_SetString(THINGSPEAK_API_KEY, "NNMOIJ91NG0MRNNX"); // My Thingspeak API key
-    Settings_SetString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
+    Settings_setString(GPRS_APN, "giffgaff.com");
+    Settings_setString(GPRS_USERNAME, "giffgaff");
+    Settings_setString(GPRS_PASSWORD, "");
+
+    //Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Mouse's heroku instance
+    //Settings_setString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
+
+    Settings_setString(THINGSPEAK_API_KEY, "NNMOIJ91NG0MRNNX"); // My Thingspeak API key
+    
 
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);

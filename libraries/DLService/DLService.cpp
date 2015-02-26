@@ -39,7 +39,8 @@
     switch (service)
     {
         case SERVICE_THINGSPEAK:
-            char * key = Settings_GetString(THINGSPEAK_API_KEY);
-            return new Thingspeak(key);
+        	char * url = Settings_getString(THINGSPEAK_URL);
+            char * key = Settings_getString(THINGSPEAK_API_KEY);
+            return new Thingspeak(url, key);
     }
  }

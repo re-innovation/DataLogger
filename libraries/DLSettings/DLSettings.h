@@ -14,6 +14,7 @@ enum stringsetting
     
     /*** Internet Services ***/
     /** Thingspeak **/
+    THINGSPEAK_URL,
     THINGSPEAK_API_KEY,
     
     /*** MUST be the last entry in the enumeration! ***/
@@ -35,11 +36,11 @@ typedef enum intsetting INTSETTING;
 // or if that setting has not been set, a null value is returned instead.
 // 0 is returned for integers, NULL for strings
 
-int Settings_GetInt(INTSETTING setting);
-void Settings_SetInt(INTSETTING setting, int set);
+int Settings_getInt(INTSETTING setting);
+void Settings_setInt(INTSETTING setting, int set);
 
-char * Settings_GetString(STRINGSETTING setting);
-void Settings_SetString(STRINGSETTING setting, char const * const pSet);
+char * Settings_getString(STRINGSETTING setting);
+void Settings_setString(STRINGSETTING setting, char const * const pSet);
 
 
 #endif
