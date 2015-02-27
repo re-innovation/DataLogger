@@ -16,9 +16,14 @@
 #define BETWEEN_EXC_LO(x, a, b) ((x > a) && (x <= b))
 
 // Simple min and max macros
+#ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+ 
 // Returns TRUE if - assuming i is loop counter var - this is the last time a loop will run.
 #define lastinloop(i, loopmax) ((i == (loopmax - 1)))
 
