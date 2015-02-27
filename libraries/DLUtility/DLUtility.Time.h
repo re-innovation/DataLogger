@@ -18,18 +18,18 @@ enum days_of_week_enum
 
 enum month_enum
 {
-	JAN,
-	FEB,
-	MAR,
-	APR,
+	JANUARY,
+	FEBRUARY,
+	MARCH,
+	APRIL,
 	MAY,
-	JUN,
-	JUL,
-	AUG,
-	SEP,
-	OCT,
-	NOV,
-	DEC
+	JUNE,
+	JULY,
+	AUGUST,
+	SEPTEMBER,
+	OCTOBER,
+	NOVEMBER,
+	DECEMBER
 };
 
 #ifndef UNIX_TIME_TYPE

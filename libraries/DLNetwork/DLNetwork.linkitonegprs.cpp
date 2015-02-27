@@ -55,7 +55,7 @@ bool LinkItOneGPRS::tryConnection(uint8_t timeoutSeconds)
     return m_connected;
 }
 
-bool LinkItOneGPRS::connect(void)
+bool LinkItOneGPRS::connect(char const * const url)
 {
     bool success = m_connected;
 
@@ -70,9 +70,10 @@ bool LinkItOneGPRS::connect(void)
 bool LinkItOneGPRS::HTTPPost(char const * const url, char * request, char * response, bool useHTTPS)
 {
     (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
-    if (connect())
+    if (connect(url))
     {
-        post(request, url);
+        post(url, request, useHTTPS);
+        readResponse(response);
     }
     return true;
 }
@@ -80,14 +81,15 @@ bool LinkItOneGPRS::HTTPPost(char const * const url, char * request, char * resp
 bool LinkItOneGPRS::HTTPGet(char const * const url, char * request, char * response, bool useHTTPS)
 {
     (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
-    if (connect())
+    if (connect(url))
     {
-        get(request, url);
+        get(url, request, useHTTPS);
+        readResponse(response);
     }
     return true;
 }
 
-void LinkItOneGPRS::get(char const * const url, char * request, char * response, bool useHTTPS)
+void LinkItOneGPRS::get(char const * const url, char * request, bool useHTTPS)
 {
     m_client->print("GET ");
     m_client->print(request);
@@ -96,10 +98,9 @@ void LinkItOneGPRS::get(char const * const url, char * request, char * response,
     m_client->println(url);
     m_client->println("Connection: close");
     m_client->println();
-    readResponse(response);
 }
 
-void LinkItOneGPRS::post(char const * const url, char * request, char * response, bool useHTTPS)
+void LinkItOneGPRS::post(char const * const url, char * request, bool useHTTPS)
 {
     m_client->print("GET ");
     m_client->print(request);
@@ -108,7 +109,6 @@ void LinkItOneGPRS::post(char const * const url, char * request, char * response
     m_client->println(url);
     m_client->println("Connection: close");
     m_client->println();
-    readResponse(response);
 }
 
 void LinkItOneGPRS::readResponse(char * response)
@@ -117,7 +117,7 @@ void LinkItOneGPRS::readResponse(char * response)
     // from the server, read them and print them:
     uint8_t i = 0;
     
-    if (m_connected)
+    if (m_connected && response)
     {
         if (m_client->available())
         {

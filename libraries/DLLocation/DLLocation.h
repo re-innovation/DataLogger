@@ -64,7 +64,7 @@ void Location_SetUpdatePeriod(uint32_t newPeriod);
 *  pLocation - Pointer to a Location struct to fill
  */
  
-bool Location_GetLocation_2D(Location_2D * pLocation);
+bool Location_GetLocation_2D(LOCATION_2D * pLocation);
 
 /* 
  * Location_GetLocation_3D
@@ -75,7 +75,7 @@ bool Location_GetLocation_2D(Location_2D * pLocation);
  *  pLocation - Pointer to a Location struct to fill
  */
  
-bool Location_GetLocation_3D(Location_3D * pLocation);
+bool Location_GetLocation_3D(LOCATION_3D * pLocation);
         
 #endif
 

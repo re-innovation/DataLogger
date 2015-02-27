@@ -17,11 +17,11 @@ bool is_leap_year(GREGORIAN_YEAR year)
 
 uint16_t days_in_month(uint8_t month, bool is_leap_year)
 {
-	if ((month == FEB) && is_leap_year)
+	if ((month == FEBRUARY) && is_leap_year)
 	{
 		return 29;
 	}
-	else if (month > DEC)
+	else if (month > DECEMBER)
 	{
 		return 0;
 	}

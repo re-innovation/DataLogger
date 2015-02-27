@@ -30,7 +30,7 @@ private:
 public:
     TaskAction(void (*function)(), unsigned long interval, unsigned int ticks);
 
-    bool tick(unsigned long millisec = NULL);
+    bool tick(unsigned long millisec = 0);
     void SetInterval(unsigned long interval) { m_interval = interval; }
     void SetTicks(unsigned int ticks) { m_tick = ticks; }
     void Enable(bool state) { m_state = state; }

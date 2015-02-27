@@ -31,7 +31,9 @@
  * Private Functions 
  */
 
+#ifndef radians
 static float radians(float degrees) { return ((degrees * PI) / 180.f); }
+#endif
 
 /*
  * Public Functions 

@@ -26,6 +26,7 @@
  * Defines and typedefs
  */
 
+// Converts a character char '0' through '9' to given numeric type
 #define C_TO_NUM(type, c) ((type)(c - '0'))
 
 /*
@@ -36,7 +37,7 @@
  *
  * Generic function for processing HHMMSS and DDMMYY stringstream
  */
-uint8_t parseSixCharsToThreeInts(char * pSentence, uint8_t * puint1, uint8_t * puint2, uint8_t * puint3)
+uint8_t parseSixCharsToThreeInts(const char * pSentence, uint8_t * puint1, uint8_t * puint2, uint8_t * puint3)
 {
     *puint1 = C_TO_NUM(uint8_t, pSentence[0]) * 10;    // Tens of first uint8_t
     *puint1 += C_TO_NUM(uint8_t, pSentence[1]);        // Units
@@ -48,17 +49,17 @@ uint8_t parseSixCharsToThreeInts(char * pSentence, uint8_t * puint1, uint8_t * p
     return 6; // 6 chars were parsed by this function
 }
 
-uint8_t parseHHMMSSTime(char * pSentence, uint8_t * h, uint8_t * m, uint8_t * s)
+uint8_t parseHHMMSSTime(const char * pSentence, uint8_t * h, uint8_t * m, uint8_t * s)
 {
     return parseSixCharsToThreeInts(pSentence, h, m, s);
 }
 
-uint8_t parseDDMMYYDate(char *pSentence,  uint8_t * d, uint8_t * m, uint8_t * y)
+uint8_t parseDDMMYYDate(const char * pSentence,  uint8_t * d, uint8_t * m, uint8_t * y)
 {
     return parseSixCharsToThreeInts(pSentence, d, m, y);
 }
 
-uint8_t parseLatitude(char * pSentence, float * pResult)
+uint8_t parseLatitude(const char * pSentence, float * pResult)
 {
     uint8_t charsParsed = 0;
     // First two chars are degrees
@@ -87,7 +88,7 @@ uint8_t parseLatitude(char * pSentence, float * pResult)
     return charsParsed;
 }
 
-uint8_t parseLongitude(char * pSentence, float * pResult)
+uint8_t parseLongitude(const char * pSentence, float * pResult)
 {
     uint8_t charsParsed = 0;
     // First three chars are degrees
@@ -117,13 +118,13 @@ uint8_t parseLongitude(char * pSentence, float * pResult)
     return charsParsed;
 }
 
-static bool rmcSentenceIsValid(char * pSentenceStart)
+static bool rmcSentenceIsValid(const char * pSentenceStart)
 {
     // RMC sentences have a A=active or V=Void char at position 14
     return pSentenceStart[14] == 'A';
 }
 
-static uint8_t skipToNextComma(char * pSentence)
+static uint8_t skipToNextComma(const char * pSentence)
 {
     uint8_t count = 0;
     while (*pSentence++ != ',') { count++; }
@@ -135,7 +136,7 @@ static uint8_t skipToNextComma(char * pSentence)
  * Public Function Definitions
  */
 
-bool GPS_parseGPRMCSentence(char * pSentence, GPS_DATA * pData)
+bool GPS_parseGPRMCSentence(const char * pSentence, GPS_DATA * pData)
 {
     /* Refer to http://www.gpsinformation.org/dale/nmea.htm#RMS
      * Sample Data: $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A

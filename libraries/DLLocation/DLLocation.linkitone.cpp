@@ -28,12 +28,19 @@
 #include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
 #include "DLLocation.h"
+#include "DLLocation.GPS.h"
+
+/*
+ * Private Functio Prototypes
+ */
+
+static void updateTaskFn(void);
 
 /*
  * Local object and variables
  */
  
-static gpsSentenceInfoStruct s_info;
+static gpsSentenceInfoStruct s_rawInfo;
 static GPS_DATA s_parsedInfo;
 
 static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
@@ -101,10 +108,10 @@ void Location_GetGPSTime(TM * time)
  * Private Function Definitions
  */
 
-void updateTaskFn(void)
+static void updateTaskFn(void)
 {
-    LGPS.getData(&info);
-    GPS_parseGPRMCSentence(&info.GPRMC, &s_parsedInfo);
+    LGPS.getData(&s_rawInfo);
+    GPS_parseGPRMCSentence((char *)&s_rawInfo.GPRMC, &s_parsedInfo);
 }
 
 

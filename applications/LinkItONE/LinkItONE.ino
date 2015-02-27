@@ -30,21 +30,23 @@
  */
 #include <LGPRS.h>
 #include <LSD.h>
+#include <LGPS.h>
 #include <LStorage.h>
 
 /*
  * DataLogger Includes
  */
 
+#include "DLUtility.h"
 #include "DLSettings.h"
-#include "DLGPS.h"
+#include "DLLocation.h"
 #include "DLService.h"
 #include "DLNetwork.h"
 #include "DLDataField.h"
 #include "DLService.ThingSpeak.h"
 #include "DLLocalStorage.h"
-#include "DLUtility.h"
 #include "DLSensor.ADS1x1x.h"
+#include "TaskAction.h"
 
 static ServiceInterface * s_thingSpeakService;
 static NetworkInterface * s_gprsConnection;

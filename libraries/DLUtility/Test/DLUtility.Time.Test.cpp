@@ -57,9 +57,9 @@ void test_UnixSecondsToTime(void)
 		{
 			dd = 1;
 			++mm;
-			if (mm == (DEC+1))
+			if (mm == (DECEMBER+1))
 			{
-				mm = JAN;
+				mm = JANUARY;
 				++yy;
 				yday = 0;
 				bLeapYear = is_leap_year(yy+1900);
@@ -100,9 +100,9 @@ void test_TimeToUnixSeconds(void)
 		{
 			dd = 1;
 			++mm;
-			if (mm == (DEC+1))
+			if (mm == (DECEMBER+1))
 			{
-				mm = JAN;
+				mm = JANUARY;
 				++yy;
 				bLeapYear = is_leap_year(yy+1900);
 			}
