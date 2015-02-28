@@ -69,14 +69,28 @@ void test_requestbuilder_BuildsWithBodyContent(void)
         "This is some data in the body.\r\n", requestBuffer);
 }
 
+void test_responseparser_ReadsHTTPStatusLine(void)
+{
+    char statusLine[] = "HTTP/1.0 200 OK\r\n";
+
+    ResponseParser response(statusLine);
+
+    TEST_ASSERT_EQUAL(10, response.getVersion() );
+    TEST_ASSERT_EQUAL(200, response.getStatus() );
+    TEST_ASSERT_EQUAL_STRING("OK", response.getReason() );
+}
+
 int main(void)
 {
     UnityBegin("DLHTTP.cpp");
 
     RUN_TEST(test_header_isSuccessfulyParsed);
+
     RUN_TEST(test_requestbuilder_BuildsWithMethodAndURLOnly);
     RUN_TEST(test_requestbuilder_BuildsWithHeaders);
     RUN_TEST(test_requestbuilder_BuildsWithBodyContent);
+
+    RUN_TEST(test_responseparser_ReadsHTTPStatusLine);
     
     return 0;
 }

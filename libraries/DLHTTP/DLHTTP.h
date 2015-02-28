@@ -159,11 +159,9 @@ class ResponseParser
 
         Header * findHeaderInList(char * name);
 
-        // get the HTTP status code
-        int getstatus() const;
-
-        // get the HTTP response reason string
-        const char* getreason() const;
+        int getStatus() const;          // get the HTTP status code
+        int getVersion() const;         // get the HTTP version code
+        const char* getReason() const;  // get the HTTP response reason string
 
     private:
         enum {
@@ -184,16 +182,15 @@ class ResponseParser
         int		m_BytesRead;		// body bytes read so far
         int		m_Length;			// -1 if unknown
 
-        char * m_LineBuf;		// line accumulation for states that want it
-        
         // header/value pairs
         Header m_headers[MAX_HTTP_HEADERS];
 
         // Accumulation buffer for headers.
         uint8_t m_headerCount;
         char m_headerBuffer[MAX_HTTP_HEADER_TOTAL_LENGTH+1];
-        FixedLengthAccumulator m_headerAccum;
         
+        FixedLengthAccumulator m_lineAccumulator; // line accumulation for states that want it
+
         void FlushHeader();
         void ProcessStatusLine( const char * line );
         void ProcessHeaderLine( const char * line );
