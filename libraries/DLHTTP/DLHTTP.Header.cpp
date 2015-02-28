@@ -94,7 +94,7 @@ void Header::setFromLine(const char * p)
     i = 0;
 	while( *p && *p != '\0' && i < MAX_HTTP_HEADER_VALUE_LENGTH)
     {
-		m_value[i++] = tolower( *p++ );
+		m_value[i++] = *p++;
         m_value[i] = '\0';
     }
 }

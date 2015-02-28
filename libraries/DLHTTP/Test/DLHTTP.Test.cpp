@@ -71,13 +71,33 @@ void test_requestbuilder_BuildsWithBodyContent(void)
 
 void test_responseparser_ReadsHTTPStatusLine(void)
 {
-    char statusLine[] = "HTTP/1.0 200 OK\r\n";
+    char response[] = "HTTP/1.0 200 OK\r\n";
 
-    ResponseParser response(statusLine);
+    ResponseParser responseParser(response);
 
-    TEST_ASSERT_EQUAL(10, response.getVersion() );
-    TEST_ASSERT_EQUAL(200, response.getStatus() );
-    TEST_ASSERT_EQUAL_STRING("OK", response.getReason() );
+    TEST_ASSERT_EQUAL(10, responseParser.getVersion() );
+    TEST_ASSERT_EQUAL(200, responseParser.getStatus() );
+    TEST_ASSERT_EQUAL_STRING("OK", responseParser.getReason() );
+}
+
+void test_responseparser_ReadsHTTPHeaders(void)
+{
+    char response[] = 
+        "HTTP/1.0 200 OK\r\n"
+        "Content-Length:100\r\n"
+        "Some-Other-Header: Some-Other-Value\r\n";
+
+    ResponseParser responseParser(response);
+
+    char headerNames[][20] = {"Content-Length", "Some-Other-Header"};
+    char headerValues[][20] = {"100", "Some-Other-Value"};
+
+    TEST_ASSERT_EQUAL(2, responseParser.headerCount());
+    TEST_ASSERT_NOT_NULL(responseParser.findHeaderInList(headerNames[0]));
+    TEST_ASSERT_NOT_NULL(responseParser.findHeaderInList(headerNames[1]));
+
+    TEST_ASSERT_EQUAL_STRING(headerValues[0], responseParser.getHeaderValue(headerNames[0]));
+    TEST_ASSERT_EQUAL_STRING(headerValues[1], responseParser.getHeaderValue(headerNames[1]));
 }
 
 int main(void)
@@ -91,6 +111,7 @@ int main(void)
     RUN_TEST(test_requestbuilder_BuildsWithBodyContent);
 
     RUN_TEST(test_responseparser_ReadsHTTPStatusLine);
+    RUN_TEST(test_responseparser_ReadsHTTPHeaders);
     
     return 0;
 }

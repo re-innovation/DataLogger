@@ -86,10 +86,10 @@ ResponseParser::ResponseParser(const char * response) : m_headerCount(0), m_line
 					switch( m_State )
 					{
 						case STATUSLINE:
-							ProcessStatusLine( m_lineAccumulator.c_str() );
+							processStatusLine( m_lineAccumulator.c_str() );
 							break;
 						case HEADERS:
-							ProcessHeaderLine( m_lineAccumulator.c_str() );
+							processHeaderLine( m_lineAccumulator.c_str() );
 							break;
 						default:
 							break;
@@ -107,7 +107,7 @@ ResponseParser::ResponseParser(const char * response) : m_headerCount(0), m_line
 		else if( m_State == BODY )
 		{
 			int bytesused = 0;
-            bytesused = ProcessData( response, count );
+            bytesused = processBody( response, count );
 			response += bytesused;
 			count -= bytesused;
 		}
@@ -123,6 +123,11 @@ ResponseParser::ResponseParser(const char * response) : m_headerCount(0), m_line
 
 Header * ResponseParser::findHeaderInList(char * name)
 {
+
+	if (!name) { return NULL; }
+    
+    toLowerStr(name);
+
     uint8_t i;
     Header * found = NULL;
     for (i = 0; i < m_headerCount; i++)
@@ -137,7 +142,7 @@ Header * ResponseParser::findHeaderInList(char * name)
     return found;
 }
 
-const char* ResponseParser::getHeaderValue( char  * name )
+const char* ResponseParser::getHeaderValue(char  * name )
 {
     if (!name) { return NULL; }
     
@@ -150,7 +155,7 @@ const char* ResponseParser::getHeaderValue( char  * name )
 
 // handle some body data
 // returns number of bytes used.
-int ResponseParser::ProcessData( const char * data, int count )
+int ResponseParser::processBody( const char * data, int count )
 {
     (void)data;
 	int n = count;
@@ -164,21 +169,23 @@ int ResponseParser::ProcessData( const char * data, int count )
 
 	m_BytesRead += n;
 
-	// Finish if we know we're done. Else we're waiting for connection close.
+	// Finish if we know we're done
 	if( m_Length != -1 && m_BytesRead == m_Length )
-		Finish();
+	{
+		finish();
+	}
 
 	return n;
 }
 
 
-void ResponseParser::Finish()
+void ResponseParser::finish()
 {
 	m_State = COMPLETE;
 }
 
 
-void ResponseParser::ProcessStatusLine( const char * line )
+void ResponseParser::processStatusLine( const char * line )
 {
 	// skip any leading space
     line = skipSpaces(line);
@@ -224,8 +231,37 @@ void ResponseParser::ProcessStatusLine( const char * line )
 	clearHeaderAccumulator();
 }
 
+void ResponseParser::processHeaderLine( const char * line )
+{
+	if( strlen(line) == 0 )
+	{
+
+		storeHeader();	// end of headers
+		beginBody();	// start on body now!
+        
+        return;
+	}
+
+	if( !isspace(*line) )
+	{
+		// begin a new header
+		storeHeader();
+		m_lineAccumulator.writeString(line);
+	}
+	else
+	{
+		// This is a continuation line - just add it to previous data
+		++line;
+		
+        line = skipSpaces(line);
+        
+        m_lineAccumulator.writeChar(' ');
+		m_lineAccumulator.writeString(line);
+	}
+}
+
 // process accumulated header data
-void ResponseParser::FlushHeader()
+void ResponseParser::storeHeader()
 {
 	if( strlen(m_lineAccumulator.c_str()) == 0) { return; }
 
@@ -241,48 +277,10 @@ void ResponseParser::clearHeaderAccumulator(void)
     m_lineAccumulator.reset();
 }
 
-void ResponseParser::ProcessHeaderLine( const char * line )
-{
-	if( strlen(line) == 0 )
-	{
-		FlushHeader();
-		// end of headers
-
-		// HTTP code 100 handling (we ignore 'em)
-		if( m_status == CONTINUE )
-        {
-			m_State = STATUSLINE;	// reset parsing, expect new status line
-		}
-        else
-        {
-			BeginBody();			// start on body now!
-		}
-        
-        return;
-	}
-
-	if( isspace(*line) )
-	{
-		// This is a continuation line - just add it to previous data
-		++line;
-		
-        line = skipSpaces(line);
-        
-        m_lineAccumulator.writeChar(' ');
-		m_lineAccumulator.writeString(line);
-	}
-	else
-	{
-		// begin a new header
-		FlushHeader();
-		m_lineAccumulator.writeString(line);
-	}
-}
-
 // OK, we've now got all the headers read in, so we're ready to start
 // on the body. But we need to see what info we can glean from the headers
 // first...
-void ResponseParser::BeginBody()
+void ResponseParser::beginBody()
 {
 
 	m_Length = -1;	// unknown
@@ -327,4 +325,9 @@ const char* ResponseParser::getReason() const
 {
 	// only valid once we've got the statusline
 	return m_reason;
+}
+
+int ResponseParser::headerCount() const
+{
+	return m_headerCount;
 }
