@@ -331,3 +331,14 @@ int ResponseParser::headerCount() const
 {
 	return m_headerCount;
 }
+
+Header * ResponseParser::getHeaderByIndex(uint8_t index)
+{
+    Header * pHeader = NULL;
+    if (index < m_headerCount)
+    {
+        pHeader = &m_headers[index];
+    }
+    
+    return pHeader;
+}

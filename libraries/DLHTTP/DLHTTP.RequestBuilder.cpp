@@ -78,7 +78,7 @@ void RequestBuilder::setMethodAndURL(const char* method, const char* url)
     accumulator.writeString(CRLF);   
 }
 
-void RequestBuilder::putHeaders( const char* header, const char* value )
+void RequestBuilder::putHeader( const char* header, const char* value )
 {
 	accumulator.writeString(header);
     accumulator.writeString(": ");

@@ -50,8 +50,8 @@ void test_requestbuilder_BuildsWithMethodAndURLOnly(void)
 
 void test_requestbuilder_BuildsWithHeaders(void)
 {
-    builder.putHeaders("Content-Length", "48");
-    builder.putHeaders("Some-Other-Header", "Some-Other-Value");
+    builder.putHeader("Content-Length", "48");
+    builder.putHeader("Some-Other-Header", "Some-Other-Value");
     TEST_ASSERT_EQUAL_STRING(
         "GET www.example.com HTTP/1.1\r\n"
         "Content-Length: 48\r\n"
@@ -96,6 +96,9 @@ void test_responseparser_ReadsHTTPHeaders(void)
     TEST_ASSERT_NOT_NULL(responseParser.findHeaderInList(headerNames[0]));
     TEST_ASSERT_NOT_NULL(responseParser.findHeaderInList(headerNames[1]));
 
+    TEST_ASSERT_EQUAL_PTR(responseParser.getHeaderByIndex(0), responseParser.findHeaderInList(headerNames[0]));
+    TEST_ASSERT_EQUAL_PTR(responseParser.getHeaderByIndex(1), responseParser.findHeaderInList(headerNames[1]));
+    
     TEST_ASSERT_EQUAL_STRING(headerValues[0], responseParser.getHeaderValue(headerNames[0]));
     TEST_ASSERT_EQUAL_STRING(headerValues[1], responseParser.getHeaderValue(headerNames[1]));
 }

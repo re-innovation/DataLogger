@@ -156,7 +156,8 @@ class ResponseParser
         
         // retrieve a header (returns 0 if not present)
         const char* getHeaderValue(char* name );
-
+        
+        Header * getHeaderByIndex(uint8_t index);
         Header * findHeaderInList(char * name);
 
         int getStatus() const;          // get the HTTP status code
@@ -212,10 +213,8 @@ class RequestBuilder
         
         void setMethodAndURL(const char* method, const char* url);
         
-        void putHeaders(const char* name, const char* value);
+        void putHeader(const char* name, const char* value);
         void putBody(const char * body);
-    
-        uint16_t writeToBuffer(void);
         
     private:
         FixedLengthAccumulator accumulator;
