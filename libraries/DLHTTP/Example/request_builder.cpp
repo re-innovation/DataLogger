@@ -7,6 +7,7 @@ You can pipe the output of this example to cURL to get responses from URLs
 
 Build with:
 g++ -I ../../DLUtility request_builder.cpp ../DLHTTP.Header.cpp ../DLHTTP.RequestBuilder.cpp -o request_builder.exe
+
 */
 
 #include <iostream>
@@ -47,6 +48,8 @@ int main(int argc, char * argv[])
     {
         builder.putBody(body);
     }
+    
+    builder.writeToBuffer(true);
     
     std::cout << request_buffer << std::endl;
     

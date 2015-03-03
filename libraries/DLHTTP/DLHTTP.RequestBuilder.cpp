@@ -62,33 +62,80 @@ RequestBuilder::RequestBuilder(char * buf, uint16_t maxLength):
 {
     if (!buf) { return; }
     
+    m_headerCount = 0;
+    
     accumulator.detach();
-    accumulator.attach(buf, maxLength);    
+    accumulator.attach(buf, maxLength); 
+
+    m_method = NULL;
+    m_url = NULL;
+    m_body = NULL;
 }
 
 RequestBuilder::~RequestBuilder() {}
 
 void RequestBuilder::setMethodAndURL(const char* method, const char* url)
 {
-    accumulator.writeString(method);
-    accumulator.writeChar(' ');
-    accumulator.writeString(url);
-    accumulator.writeChar(' ');
-    accumulator.writeString("HTTP/1.1");
-    accumulator.writeString(CRLF);   
+    m_method = method;
+    m_url = url;
 }
 
 void RequestBuilder::putHeader( const char* header, const char* value )
 {
-	accumulator.writeString(header);
-    accumulator.writeString(": ");
-    accumulator.writeString(value);
-    accumulator.writeString(CRLF);
+    if (m_headerCount == MAX_HTTP_HEADERS) { return; }
+    m_headers[m_headerCount].setName(header);
+    m_headers[m_headerCount++].setValue(value);
 }
 
 void RequestBuilder::putBody(const char * body)
 {
+    m_body = body;
+}
+
+void RequestBuilder::writeToBuffer(bool addContentLengthHeader)
+{
+
+    if (!m_method || !m_url) { return; }
+    
+    /* Write status line */
+    accumulator.reset();
+    accumulator.writeString(m_method);
+    accumulator.writeChar(' ');
+    accumulator.writeString(m_url);
+    accumulator.writeChar(' ');
+    accumulator.writeString("HTTP/1.1");
     accumulator.writeString(CRLF);
-    accumulator.writeString(body);
+    
+    /* Write header lines */
+    uint8_t i = 0;
+
+    for (i = 0; i < m_headerCount; i++)
+    {
+        accumulator.writeString(m_headers[i].getName());
+        accumulator.writeString(": ");
+        accumulator.writeString(m_headers[i].getValue());
+        accumulator.writeString(CRLF);
+    }
+    
+    if (addContentLengthHeader && m_body)
+    {
+        char lengthStr[5];
+        sprintf(lengthStr, "%d", (int)strlen(m_body));
+        
+        accumulator.writeString("Content-Length: ");
+        accumulator.writeString(lengthStr);
+        accumulator.writeString(CRLF);
+    }
+    
+    /* Write body */ 
+    if (m_body)
+    {
+        accumulator.writeString(CRLF);
+        accumulator.writeString(m_body);
+        accumulator.writeString(CRLF);
+    }
+    
+    /* Request finishes with blank line */
+
     accumulator.writeString(CRLF);
 }

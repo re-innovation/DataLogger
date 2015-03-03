@@ -72,6 +72,16 @@ bool Header::matchName(const char * name)
     return strcmp(m_name, name) == 0;
 }
 
+void Header::setName(const char * name)
+{
+    strncpy(m_name, name, MAX_HTTP_HEADER_NAME_LENGTH);
+}
+
+void Header::setValue(const char * value)
+{
+    strncpy(m_value, value, MAX_HTTP_HEADER_VALUE_LENGTH);
+}
+        
 void Header::setFromLine(const char * p)
 {
     uint8_t i = 0;

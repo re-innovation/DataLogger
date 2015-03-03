@@ -132,6 +132,8 @@ class Header
         ~Header();
     
         void setFromLine(const char * lineToParse);
+        void setName(const char * name);
+        void setValue(const char * value);
         char * getValue(void);
         char * getName(void);
         
@@ -216,7 +218,17 @@ class RequestBuilder
         void putHeader(const char* name, const char* value);
         void putBody(const char * body);
         
+        void writeToBuffer(bool addContentLengthHeader = false);
+        
     private:
+        // header/value pairs
+        Header m_headers[MAX_HTTP_HEADERS];
+        uint8_t m_headerCount;
+        
+        const char * m_method;
+        const char * m_url;
+        const char * m_body;
+        
         FixedLengthAccumulator accumulator;
 
 };
