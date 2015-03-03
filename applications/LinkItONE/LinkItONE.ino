@@ -41,6 +41,7 @@
 #include "DLSettings.h"
 #include "DLLocation.h"
 #include "DLService.h"
+#include "DLHTTP.h"
 #include "DLNetwork.h"
 #include "DLDataField.h"
 #include "DLService.ThingSpeak.h"

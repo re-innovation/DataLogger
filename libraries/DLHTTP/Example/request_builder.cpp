@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
     char * name;
     char * value;
     
-    RequestBuilder builder(request_buffer, 2048);
+    RequestBuilder builder;
     
     char * url = argv[1];
     char * method = argv[2];
@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
         builder.putBody(body);
     }
     
-    builder.writeToBuffer(true);
+    builder.writeToBuffer(request_buffer, 2048, true);
     
     std::cout << request_buffer << std::endl;
     

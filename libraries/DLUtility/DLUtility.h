@@ -7,6 +7,7 @@
 #include "DLUtility.ArrayFunctions.h"
 #include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
+#include "DLUtility.Strings.h"
 
 /*
  * DecToBcd

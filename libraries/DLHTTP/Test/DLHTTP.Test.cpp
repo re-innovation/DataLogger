@@ -29,7 +29,7 @@
 #include "unity.h"
 
 char requestBuffer[512];
-RequestBuilder builder(requestBuffer, 512);
+RequestBuilder builder;
         
 void test_header_isSuccessfulyParsed(void)
 {
@@ -45,7 +45,7 @@ void test_header_isSuccessfulyParsed(void)
 void test_requestbuilder_BuildsWithMethodAndURLOnly(void)
 {
     builder.setMethodAndURL("GET", "www.example.com");   
-    builder.writeToBuffer();
+    builder.writeToBuffer(requestBuffer, 512);
     TEST_ASSERT_EQUAL_STRING("GET www.example.com HTTP/1.1\r\n\r\n", requestBuffer);
 }
 
@@ -53,7 +53,7 @@ void test_requestbuilder_BuildsWithHeaders(void)
 {
     builder.putHeader("Content-Type", "text/html");
     builder.putHeader("Some-Other-Header", "Some-Other-Value");
-    builder.writeToBuffer();
+    builder.writeToBuffer(requestBuffer, 512);
     TEST_ASSERT_EQUAL_STRING(
         "GET www.example.com HTTP/1.1\r\n"
         "Content-Type: text/html\r\n"
@@ -63,7 +63,7 @@ void test_requestbuilder_BuildsWithHeaders(void)
 void test_requestbuilder_BuildsWithBodyContent(void)
 {
     builder.putBody("This is some data in the body.");
-    builder.writeToBuffer();
+    builder.writeToBuffer(requestBuffer, 512);
     TEST_ASSERT_EQUAL_STRING(
         "GET www.example.com HTTP/1.1\r\n"
         "Content-Type: text/html\r\n"
@@ -74,7 +74,7 @@ void test_requestbuilder_BuildsWithBodyContent(void)
 
 void test_requestbuilder_BuildsWithContentLengthHeader(void)
 {
-    builder.writeToBuffer(true);
+    builder.writeToBuffer(requestBuffer, 512, true);
     TEST_ASSERT_EQUAL_STRING(
         "GET www.example.com HTTP/1.1\r\n"
         "Content-Type: text/html\r\n"

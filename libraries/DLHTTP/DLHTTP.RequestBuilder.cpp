@@ -57,16 +57,11 @@
 //
 //---------------------------------------------------------------------
 
-RequestBuilder::RequestBuilder(char * buf, uint16_t maxLength):
+RequestBuilder::RequestBuilder():
     accumulator(NULL, 0)
 {
-    if (!buf) { return; }
-    
     m_headerCount = 0;
     
-    accumulator.detach();
-    accumulator.attach(buf, maxLength); 
-
     m_method = NULL;
     m_url = NULL;
     m_body = NULL;
@@ -92,10 +87,13 @@ void RequestBuilder::putBody(const char * body)
     m_body = body;
 }
 
-void RequestBuilder::writeToBuffer(bool addContentLengthHeader)
+void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addContentLengthHeader)
 {
 
-    if (!m_method || !m_url) { return; }
+    if (!m_method || !m_url || !buf) { return; }
+    
+    accumulator.detach();
+    accumulator.attach(buf, maxLength); 
     
     /* Write status line */
     accumulator.reset();

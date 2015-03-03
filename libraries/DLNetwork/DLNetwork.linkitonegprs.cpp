@@ -67,48 +67,15 @@ bool LinkItOneGPRS::connect(char const * const url)
     return success;
 }
 
-bool LinkItOneGPRS::HTTPPost(char const * const url, char * request, char * response, bool useHTTPS)
+bool LinkItOneGPRS::SendHTTPRequest(char const * const url, char * const request, bool useHTTPS)
 {
     (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
     if (connect(url))
     {
-        post(url, request, useHTTPS);
+        m_client->print("GET ");
         readResponse(response);
     }
     return true;
-}
-
-bool LinkItOneGPRS::HTTPGet(char const * const url, char * request, char * response, bool useHTTPS)
-{
-    (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
-    if (connect(url))
-    {
-        get(url, request, useHTTPS);
-        readResponse(response);
-    }
-    return true;
-}
-
-void LinkItOneGPRS::get(char const * const url, char * request, bool useHTTPS)
-{
-    m_client->print("GET ");
-    m_client->print(request);
-    m_client->println(" HTTP/1.1");
-    m_client->print("Host: ");
-    m_client->println(url);
-    m_client->println("Connection: close");
-    m_client->println();
-}
-
-void LinkItOneGPRS::post(char const * const url, char * request, bool useHTTPS)
-{
-    m_client->print("GET ");
-    m_client->print(request);
-    m_client->println(" HTTP/1.1");
-    m_client->print("Host: ");
-    m_client->println(url);
-    m_client->println("Connection: close");
-    m_client->println();
 }
 
 void LinkItOneGPRS::readResponse(char * response)

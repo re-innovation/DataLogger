@@ -210,7 +210,7 @@ class ResponseParser
 class RequestBuilder
 {
     public:
-        RequestBuilder(char * buf, uint16_t maxLength);
+        RequestBuilder();
         ~RequestBuilder();
         
         void setMethodAndURL(const char* method, const char* url);
@@ -218,7 +218,7 @@ class RequestBuilder
         void putHeader(const char* name, const char* value);
         void putBody(const char * body);
         
-        void writeToBuffer(bool addContentLengthHeader = false);
+        void writeToBuffer(char * buf, uint16_t maxLength, bool addContentLengthHeader = false);
         
     private:
         // header/value pairs

@@ -13,9 +13,11 @@
 #include <stdio.h>
 #endif
 
+#include "DLUtility.h"
 #include "DLDataField.h"
 #include "DLService.h"
 #include "DLService.thingspeak.h"
+#include "DLHTTP.h"
 
 /*
  * Public static class members
@@ -24,6 +26,9 @@
 const char THINGSPEAK_DEFAULT_URL[] = "api.thingspeak.com"; 
 
 const char Thingspeak::THINGSPEAK_GET_PATH[] = "/update";
+
+char s_requestBuffer[2048];
+RequestBuilder builder;
 
 /*
  * Public Class Functions
@@ -73,13 +78,8 @@ uint16_t Thingspeak::createGetAPICall(char * buffer, char const * const time)
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
     
-    uint16_t index = 0;
-    
-    // Copy the thingspeak update path into buffer
-    index += sprintf(&buffer[index], THINGSPEAK_GET_PATH);
-    index += sprintf(&buffer[index], "?");
-    index += createGetAPIParamsString(&buffer[index], time);
-    
+    builder.setMethodAndURL("GET", THINGSPEAK_GET_PATH);
+
     return index;
 }
 
