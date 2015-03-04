@@ -24,7 +24,7 @@ class LinkItOneWiFi : public NetworkInterface
         LinkItOneWiFi();
         ~LinkItOneWiFi();
         bool tryConnection(uint8_t timeoutSeconds);
-        bool HTTPGet(char const * const url, char * request, char * response, bool useHTTPS=false);
+        bool sendHTTPRequest(const char * const url, const char * request, char * response, bool useHTTPS);
         bool isConnected(void);
         
     private:
@@ -37,7 +37,7 @@ class LinkItOneGPRS : public NetworkInterface
         LinkItOneGPRS(char * apn, char * username, char * password);
         ~LinkItOneGPRS();
         bool tryConnection(uint8_t timeoutSeconds);
-        bool SendHTTPRequest(char const * const url, char * request, char * response, bool useHTTPS=false);
+        bool sendHTTPRequest(char const * const url, const char * request, char * response, bool useHTTPS=false);
         bool isConnected(void);
 
     private:

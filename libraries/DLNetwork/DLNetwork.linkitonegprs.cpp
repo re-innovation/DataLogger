@@ -67,12 +67,12 @@ bool LinkItOneGPRS::connect(char const * const url)
     return success;
 }
 
-bool LinkItOneGPRS::SendHTTPRequest(char const * const url, char * const request, bool useHTTPS)
+bool LinkItOneGPRS::sendHTTPRequest(const char * const url, const char * request, char * response, bool useHTTPS)
 {
     (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
     if (connect(url))
     {
-        m_client->print("GET ");
+        m_client->print(request);
         readResponse(response);
     }
     return true;
@@ -82,7 +82,7 @@ void LinkItOneGPRS::readResponse(char * response)
 {
     // if there are incoming bytes available
     // from the server, read them and print them:
-    uint8_t i = 0;
+    uint16_t i = 0;
     
     if (m_connected && response)
     {

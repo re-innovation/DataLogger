@@ -14,12 +14,9 @@ class Thingspeak : public ServiceInterface
         void setField(uint8_t fieldIndex, DataField * data);
         char *  getURL(void);
 
-        uint16_t createGetAPICall(char * buffer);
-        uint16_t createGetAPICall(char * buffer, char const * const time);
-        
-        uint16_t createGetAPIParamsString(char * buffer);
-        uint16_t createGetAPIParamsString(char * buffer, char const * const time);
-        
+        uint16_t createGetAPICall(char * buffer, uint16_t maxSize);
+        uint16_t createGetAPICall(char * buffer, uint16_t maxSize, char const * const time);
+
         static const char THINGSPEAK_GET_PATH[];
         
     private:

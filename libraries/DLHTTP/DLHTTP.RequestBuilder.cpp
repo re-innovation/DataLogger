@@ -48,7 +48,7 @@
  * Local Application Includes
  */
 
-#include "DLUtility.Strings.h"
+#include "DLUtility.h"
 #include "DLHTTP.h"
 
 //---------------------------------------------------------------------
@@ -75,6 +75,13 @@ void RequestBuilder::setMethodAndURL(const char* method, const char* url)
     m_url = url;
 }
 
+void RequestBuilder::setURLParam( const char* name, const char* value )
+{
+    if (m_paramCount == MAX_HTTP_URL_PARAMS) { return; }
+    m_params[m_paramCount].name = name;
+    m_params[m_paramCount++].value = value;
+}
+
 void RequestBuilder::putHeader( const char* header, const char* value )
 {
     if (m_headerCount == MAX_HTTP_HEADERS) { return; }
@@ -90,6 +97,8 @@ void RequestBuilder::putBody(const char * body)
 void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addContentLengthHeader)
 {
 
+    uint8_t i = 0;
+
     if (!m_method || !m_url || !buf) { return; }
     
     accumulator.detach();
@@ -100,12 +109,29 @@ void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addConte
     accumulator.writeString(m_method);
     accumulator.writeChar(' ');
     accumulator.writeString(m_url);
+
+    if (m_paramCount > 0)
+    {
+        // Write params after URL
+        accumulator.writeChar('?');
+        for (i = 0; i < m_paramCount; i++)
+        {
+            accumulator.writeString(m_params[i].name);
+            accumulator.writeChar('=');
+            accumulator.writeString(m_params[i].value);
+            if (!lastinloop(i, m_paramCount))
+            {
+                accumulator.writeChar('&');
+            }
+        }
+    }
+
     accumulator.writeChar(' ');
     accumulator.writeString("HTTP/1.1");
     accumulator.writeString(CRLF);
     
     /* Write header lines */
-    uint8_t i = 0;
+    
 
     for (i = 0; i < m_headerCount; i++)
     {
@@ -136,4 +162,12 @@ void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addConte
     /* Request finishes with blank line */
 
     accumulator.writeString(CRLF);
+}
+
+void RequestBuilder::reset(void)
+{
+    m_url = NULL;
+    m_body = NULL;
+    m_paramCount = 0;
+    m_headerCount = 0;
 }

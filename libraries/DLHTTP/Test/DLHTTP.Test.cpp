@@ -44,18 +44,20 @@ void test_header_isSuccessfulyParsed(void)
 
 void test_requestbuilder_BuildsWithMethodAndURLOnly(void)
 {
-    builder.setMethodAndURL("GET", "www.example.com");   
+    builder.setMethodAndURL("GET", "/");   
     builder.writeToBuffer(requestBuffer, 512);
-    TEST_ASSERT_EQUAL_STRING("GET www.example.com HTTP/1.1\r\n\r\n", requestBuffer);
+    TEST_ASSERT_EQUAL_STRING("GET / HTTP/1.1\r\n\r\n", requestBuffer);
 }
 
 void test_requestbuilder_BuildsWithHeaders(void)
 {
+    builder.putHeader("Host", "www.example.com");
     builder.putHeader("Content-Type", "text/html");
     builder.putHeader("Some-Other-Header", "Some-Other-Value");
     builder.writeToBuffer(requestBuffer, 512);
     TEST_ASSERT_EQUAL_STRING(
-        "GET www.example.com HTTP/1.1\r\n"
+        "GET / HTTP/1.1\r\n"
+        "Host: www.example.com\r\n"
         "Content-Type: text/html\r\n"
         "Some-Other-Header: Some-Other-Value\r\n\r\n", requestBuffer);
 }
@@ -65,7 +67,8 @@ void test_requestbuilder_BuildsWithBodyContent(void)
     builder.putBody("This is some data in the body.");
     builder.writeToBuffer(requestBuffer, 512);
     TEST_ASSERT_EQUAL_STRING(
-        "GET www.example.com HTTP/1.1\r\n"
+        "GET / HTTP/1.1\r\n"
+        "Host: www.example.com\r\n"
         "Content-Type: text/html\r\n"
         "Some-Other-Header: Some-Other-Value\r\n"
         "\r\n"
@@ -76,12 +79,29 @@ void test_requestbuilder_BuildsWithContentLengthHeader(void)
 {
     builder.writeToBuffer(requestBuffer, 512, true);
     TEST_ASSERT_EQUAL_STRING(
-        "GET www.example.com HTTP/1.1\r\n"
+        "GET / HTTP/1.1\r\n"
+        "Host: www.example.com\r\n"
         "Content-Type: text/html\r\n"
         "Some-Other-Header: Some-Other-Value\r\n"
         "Content-Length: 30\r\n"
         "\r\n"
         "This is some data in the body.\r\n\r\n", requestBuffer);
+}
+
+void test_requestbuilder_BuildsWithURLParameters(void)
+{
+    builder.reset();
+    builder.setMethodAndURL("GET", "/update"); 
+    builder.setURLParam("Param1", "Param1Value");
+    builder.setURLParam("Param2", "Param2Value");
+    builder.putHeader("Host", "www.example.com");
+    builder.putBody(NULL);
+
+    builder.writeToBuffer(requestBuffer, 512);
+
+    TEST_ASSERT_EQUAL_STRING(
+        "GET /update?Param1=Param1Value&Param2=Param2Value HTTP/1.1\r\n"
+        "Host: www.example.com\r\n\r\n", requestBuffer); 
 }
 
 void test_responseparser_ReadsHTTPStatusLine(void)
@@ -128,7 +148,8 @@ int main(void)
     RUN_TEST(test_requestbuilder_BuildsWithHeaders);
     RUN_TEST(test_requestbuilder_BuildsWithBodyContent);
     RUN_TEST(test_requestbuilder_BuildsWithContentLengthHeader);
-    
+    RUN_TEST(test_requestbuilder_BuildsWithURLParameters);
+
     RUN_TEST(test_responseparser_ReadsHTTPStatusLine);
     RUN_TEST(test_responseparser_ReadsHTTPHeaders);
     

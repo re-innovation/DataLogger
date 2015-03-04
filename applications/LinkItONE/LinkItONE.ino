@@ -114,17 +114,19 @@ static void uploadData(void)
     Serial.print("Attempting upload to ");
     Serial.println(s_thingSpeakService->getURL());
 
-    char request_buffer[200];
-    char response_buffer[200];
-    s_thingSpeakService->createGetAPICall(request_buffer);
+    char request_buffer[300];
+    char response_buffer[200] = "";
+    s_thingSpeakService->createGetAPICall(request_buffer, 300);
 
     Serial.print("Request '");
     Serial.print(request_buffer);
     Serial.println("'");
 
-    if (s_gprsConnection->HTTPGet(s_thingSpeakService->getURL(), request_buffer, response_buffer))
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
     {
-        Serial.print("Got response:");   
+        Serial.print("Got response (");   
+        Serial.print(strlen(response_buffer));
+        Serial.print(" bytes):");   
         Serial.println(response_buffer);
     }
     else
@@ -142,16 +144,19 @@ void setup()
 
     delay(10000);
 
-    Settings_setString(GPRS_APN, "giffgaff.com");
-    Settings_setString(GPRS_USERNAME, "giffgaff");
-    Settings_setString(GPRS_PASSWORD, "");
+    Settings_setString(GPRS_APN, "everywhere");
+    Settings_setString(GPRS_USERNAME, "eesecure");
+    Settings_setString(GPRS_PASSWORD, "secure");
 
+    // Thingspeak URL choices (for development)
+    Settings_setString(THINGSPEAK_URL, "api.thingspeak.com"); // Thingspeak hosted services
     //Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Mouse's heroku instance
-    //Settings_setString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
 
+    // Thingspeak API keys
     Settings_setString(THINGSPEAK_API_KEY, "NNMOIJ91NG0MRNNX"); // My Thingspeak API key
+    //Settings_setString(THINGSPEAK_API_KEY, "0CKUYB7VJI2I9WG9"); // Matt Little's API key
+    //Settings_setString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
     
-
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);

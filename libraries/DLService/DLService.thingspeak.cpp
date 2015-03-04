@@ -68,46 +68,47 @@ void Thingspeak::setField(uint8_t fieldIndex, DataField * pDataField)
     m_data[fieldIndex] = pDataField->GetDataAsFloat();
 }
 
-uint16_t Thingspeak::createGetAPICall(char * buffer)
+uint16_t Thingspeak::createGetAPICall(char * buffer, uint16_t maxSize)
 {
-    return createGetAPICall(buffer, NULL);
+    return createGetAPICall(buffer, maxSize, NULL);
 }
 
-uint16_t Thingspeak::createGetAPICall(char * buffer, char const * const time)
+uint16_t Thingspeak::createGetAPICall(char * buffer, uint16_t maxSize, char const * const time)
 {
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
     
+    char m_fieldNames[_MAX_FIELDS][7];
+    char m_dataStrs[_MAX_FIELDS][10];
+
+    builder.reset();
     builder.setMethodAndURL("GET", THINGSPEAK_GET_PATH);
 
-    return index;
-}
-
-uint16_t Thingspeak::createGetAPIParamsString(char * buffer)
-{
-    return createGetAPIParamsString(buffer, NULL);
-}
-
-uint16_t Thingspeak::createGetAPIParamsString(char * buffer, char const * const time)
-{
-    if (!buffer) { return 0; }
-    if (!m_key) { return 0; }
+    builder.setURLParam("api_key", m_key);
     
-    uint16_t index = 0;
-    index += sprintf(&buffer[index], "key=%s", m_key);
-    
-    uint8_t field = 1;
-     // Use 1 to _MAX_FIELDS+1 indexing as thingspeak labels its fields field1-field6
-    for (field = 1; field < (_MAX_FIELDS+1); field++)
+    uint8_t field = 0;
+    for (field = 0; field < _MAX_FIELDS; field++)
     {
-        index += sprintf(&buffer[index], "&field%d=%.5f", field, m_data[field-1]);
+        // Make the fieldname string
+        strncpy(m_fieldNames[field], "Field", 5);
+        m_fieldNames[field][5] = field + 1 + '0';
+        m_fieldNames[field][6] = '\0';
+
+        // Make the data string
+        (void)sprintf(m_dataStrs[field], "%.5f", m_data[field]);
+
+        builder.setURLParam(m_fieldNames[field], m_dataStrs[field]);
     }
  
     // Copy the time into the buffer (if provided)
     if (time)
     {
-        index += sprintf(&buffer[index], "&created_at=%s", time);
+        builder.setURLParam("created_at", time);
     }
-    
-    return index;  
+
+    builder.putHeader("Host", THINGSPEAK_DEFAULT_URL);
+    builder.putHeader("Connection", "Close");
+
+    builder.writeToBuffer(buffer, maxSize);
+
 }

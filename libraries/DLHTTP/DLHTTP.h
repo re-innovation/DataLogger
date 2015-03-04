@@ -47,6 +47,7 @@
  */
 
 #define MAX_HTTP_HEADERS                (10) // Number of headers that can be sent/recvd in a single request
+#define MAX_HTTP_URL_PARAMS             (10) // Number of URL parameters that can be sent in a single request
 
 #define MAX_HOST_LENGTH                 (30) // Maximum length of host URL
 
@@ -118,6 +119,19 @@ enum {
     INSUFFICIENT_STORAGE = 507,
     NOT_EXTENDED = 510,
 };
+
+//-------------------------------------------------
+// URLParam
+//
+// Simple struct to hold two pointers for name 
+// and value of a URL parameter
+// ------------------------------------------------
+struct urlparam
+{
+    const char * name;
+    const char * value;
+};
+typedef struct urlparam URLParam;
 
 //-------------------------------------------------
 // Header
@@ -214,17 +228,24 @@ class RequestBuilder
         ~RequestBuilder();
         
         void setMethodAndURL(const char* method, const char* url);
-        
+        void setURLParam( const char* name, const char* value );
+
         void putHeader(const char* name, const char* value);
         void putBody(const char * body);
         
         void writeToBuffer(char * buf, uint16_t maxLength, bool addContentLengthHeader = false);
         
+        void reset(void);
+        
     private:
-        // header/value pairs
+        // HTTP header name/value pairs
         Header m_headers[MAX_HTTP_HEADERS];
         uint8_t m_headerCount;
-        
+
+        // URL param name/value pairs
+        URLParam m_params[MAX_HTTP_URL_PARAMS];
+        uint8_t m_paramCount; 
+
         const char * m_method;
         const char * m_url;
         const char * m_body;

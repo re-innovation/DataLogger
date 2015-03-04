@@ -43,7 +43,7 @@ bool LinkItOneWiFi::tryConnection(uint8_t timeoutSeconds)
     return false;
 }
 
-bool LinkItOneWiFi::HTTPGet(char const * const url, char * request, char * response, bool useHTTPS)
+bool LinkItOneWiFi::sendHTTPRequest(const char * const url, const char * request, char * response, bool useHTTPS)
 {
 	// WIFI FUNCTIONALITY NOT YET IMPLEMENTED
 	(void)url;
