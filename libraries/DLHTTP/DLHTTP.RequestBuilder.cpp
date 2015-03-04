@@ -61,6 +61,7 @@ RequestBuilder::RequestBuilder():
     accumulator(NULL, 0)
 {
     m_headerCount = 0;
+    m_paramCount = 0;
     
     m_method = NULL;
     m_url = NULL;
@@ -103,9 +104,9 @@ void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addConte
     
     accumulator.detach();
     accumulator.attach(buf, maxLength); 
+    accumulator.reset();
     
     /* Write status line */
-    accumulator.reset();
     accumulator.writeString(m_method);
     accumulator.writeChar(' ');
     accumulator.writeString(m_url);
@@ -161,7 +162,7 @@ void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addConte
     
     /* Request finishes with blank line */
 
-    accumulator.writeString(CRLF);
+    //accumulator.writeString(CRLF);
 }
 
 void RequestBuilder::reset(void)
