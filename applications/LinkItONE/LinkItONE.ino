@@ -41,6 +41,7 @@
 #include "DLSettings.h"
 #include "DLLocation.h"
 #include "DLService.h"
+#include "DLSecurity.h"
 #include "DLHTTP.h"
 #include "DLNetwork.h"
 #include "DLDataField.h"
@@ -49,12 +50,16 @@
 #include "DLSensor.ADS1x1x.h"
 #include "TaskAction.h"
 
+// Pointers to fuctionality objects
 static ServiceInterface * s_thingSpeakService;
 static NetworkInterface * s_gprsConnection;
 static LocalStorageInterface * s_sdCard;
-
 static ADS1115 s_ADC();
 
+static LocationAlarm s_locationAlarm(onAlarmTripped, 50, NULL);
+static LOCATION_2D s_currentLocation;
+
+// In-RAM data storage
 static DataField s_dataFields[] = {
     DataField(VOLTAGE),
     DataField(VOLTAGE),
@@ -63,6 +68,63 @@ static DataField s_dataFields[] = {
     DataField(CURRENT),
     DataField(CURRENT)
 };
+
+// Tasks
+TaskAction remoteUploadTask(remoteUploadTaskFn, MS_PER_HOUR * 2, INFINITE_TICKS);
+void remoteUploadTaskFn(void)
+{
+    if (!s_gprsConnection->isConnected())
+    {
+        Serial.println("GPRS not connected. Attempting new connection.");
+        tryConnection();
+    }
+
+    // Try to upload to ThingSpeak
+    Serial.print("Attempting upload to ");
+    Serial.println(s_thingSpeakService->getURL());
+
+    char request_buffer[300];
+    char response_buffer[200] = "";
+    s_thingSpeakService->createGetAPICall(request_buffer, 300);
+
+    Serial.print("Request '");
+    Serial.print(request_buffer);
+    Serial.println("'");
+
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
+    {
+        Serial.print("Got response (");   
+        Serial.print(strlen(response_buffer));
+        Serial.print(" bytes):");   
+        Serial.println(response_buffer);
+    }
+    else
+    {
+        Serial.print("Could not connect to ");
+        Serial.println(s_thingSpeakService->getURL());
+    }
+}
+
+TaskAction gpsCheckTask(gpsCheckTaskFn, 10000, INFINITE_TICKS);
+void gpsCheckTaskFn(void)
+{
+    float offset = (float)random(-100,100); // Random offset in meters
+
+    Serial.print("Simulating location change of ");
+    Serial.print(offset);
+    Serial.println("m");
+
+    // Convert offset to decimal degrees
+    offset *= 360.0f;
+    offset /= MEAN_EARTH_CIRCUMFERENCE_M;
+
+    Location_UpdateNow();
+    if ( Location_GetLocation_2D(&s_currentLocation) )
+    {
+        s_currentLocation.latitude += offset;
+        s_locationAlarm.update(&s_currentLocation);
+    }
+}
 
 static void tryConnection(void)
 {
@@ -102,39 +164,9 @@ static void createFakeData(void)
     }
 }
 
-static void uploadData(void)
+void onAlarmTripped(void)
 {
-    if (!s_gprsConnection->isConnected())
-    {
-        Serial.println("GPRS not connected. Attempting new connection.");
-        tryConnection();
-    }
-
-    // Try to upload to ThingSpeak
-    Serial.print("Attempting upload to ");
-    Serial.println(s_thingSpeakService->getURL());
-
-    char request_buffer[300];
-    char response_buffer[200] = "";
-    s_thingSpeakService->createGetAPICall(request_buffer, 300);
-
-    Serial.print("Request '");
-    Serial.print(request_buffer);
-    Serial.println("'");
-
-    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
-    {
-        Serial.print("Got response (");   
-        Serial.print(strlen(response_buffer));
-        Serial.print(" bytes):");   
-        Serial.println(response_buffer);
-    }
-    else
-    {
-        Serial.print("Could not connect to ");
-        Serial.println(s_thingSpeakService->getURL());
-    }
-
+    Serial.println("Location alarm tripped!");
 }
 
 void setup()
@@ -161,13 +193,18 @@ void setup()
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
 
+    Location_Setup(0);
+    Location_UpdateNow();
+    Location_GetLocation_2D(&s_currentLocation);
+    s_locationAlarm.setHome(&s_currentLocation);
+
 }
 
 void loop()
 {
+    //createFakeData();
 
-    createFakeData();
-    uploadData();
+    //remoteUploadTaskFn();
 
-    delay(17000);
+    gpsCheckTask.tick();
 }
