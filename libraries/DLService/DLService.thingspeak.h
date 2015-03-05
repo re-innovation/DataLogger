@@ -17,7 +17,7 @@ class Thingspeak : public ServiceInterface
         uint16_t createGetAPICall(char * buffer, uint16_t maxSize);
         uint16_t createGetAPICall(char * buffer, uint16_t maxSize, char const * const time);
 
-        static const char THINGSPEAK_GET_PATH[];
+        static const char THINGSPEAK_UPDATE_PATH[];
         
     private:
         char m_url[_MAX_API_KEY_LENGTH];

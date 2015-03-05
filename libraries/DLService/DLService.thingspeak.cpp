@@ -25,7 +25,7 @@
 
 const char THINGSPEAK_DEFAULT_URL[] = "api.thingspeak.com"; 
 
-const char Thingspeak::THINGSPEAK_GET_PATH[] = "/update";
+const char Thingspeak::THINGSPEAK_UPDATE_PATH[] = "/update";
 
 char s_requestBuffer[2048];
 RequestBuilder builder;
@@ -78,37 +78,37 @@ uint16_t Thingspeak::createGetAPICall(char * buffer, uint16_t maxSize, char cons
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
     
-    char m_fieldNames[_MAX_FIELDS][7];
-    char m_dataStrs[_MAX_FIELDS][10];
+    char m_body[maxSize];
 
     builder.reset();
-    builder.setMethodAndURL("GET", THINGSPEAK_GET_PATH);
-
-    builder.setURLParam("api_key", m_key);
-    
-    uint8_t field = 0;
-    for (field = 0; field < _MAX_FIELDS; field++)
-    {
-        // Make the fieldname string
-        strncpy(m_fieldNames[field], "Field", 5);
-        m_fieldNames[field][5] = field + 1 + '0';
-        m_fieldNames[field][6] = '\0';
-
-        // Make the data string
-        (void)sprintf(m_dataStrs[field], "%.5f", m_data[field]);
-
-        builder.setURLParam(m_fieldNames[field], m_dataStrs[field]);
-    }
- 
-    // Copy the time into the buffer (if provided)
-    if (time)
-    {
-        builder.setURLParam("created_at", time);
-    }
+    builder.setMethodAndURL("POST", THINGSPEAK_UPDATE_PATH);
 
     builder.putHeader("Host", THINGSPEAK_DEFAULT_URL);
     builder.putHeader("Connection", "Close");
+    builder.putHeader("X-THINGSPEAKAPIKEY", m_key);
+    builder.putHeader("Content-Type", "application/x-www-form-urlencoded");
 
-    builder.writeToBuffer(buffer, maxSize);
+    uint8_t field = 0;
+    uint8_t index = 0;
+    for (field = 0; field < _MAX_FIELDS; field++)
+    {
+        // Make the data string
+        index += sprintf(&m_body[index], "%d=%.5f", field+1, m_data[field]);
+        if (!lastinloop(field, _MAX_FIELDS))
+        {
+            m_body[index++] = '&';
+        }
+    }
+
+    // Copy the time into the buffer (if provided)
+    if (time)
+    {
+        index += sprintf(&m_body[index], "created_at=", time);
+        sprintf(&m_body[index], time);
+    }
+
+    builder.putBody(m_body);
+
+    builder.writeToBuffer(buffer, maxSize, true);
 
 }

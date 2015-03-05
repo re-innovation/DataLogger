@@ -28,7 +28,7 @@
  * Private Variables
  */
 
-/*
+ /*
  * Public Functions 
  */
 
@@ -86,18 +86,32 @@ void LinkItOneGPRS::readResponse(char * response)
     
     if (m_connected && response)
     {
-        if (m_client->available())
-        {
-            response[i++] = m_client->read();
-        }
 
         // if the server's disconnected, stop the m_client:
-        if (!m_client->available() && !m_client->connected())
+        if (m_client->connected())
         {
-            Serial.println();
-            Serial.println("disconnecting.");
+            if(m_client->available())
+            {
+                char next;
+                do
+                {
+                    next = m_client->read();
+                    response[i++] = next > -1 ?  next : '\0';
+                    
+                } while (next > -1);
+            }
+            else
+            {
+                Serial.println("Client not available");
+            }
+        }
+        else
+        {
+
+            Serial.println("Disconnecting from client");
             m_client->stop();
         }
+        
     }
 }
 
