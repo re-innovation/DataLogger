@@ -82,7 +82,7 @@ void LocationAlarm::setAlarmDistance(uint32_t newDistance)
 void LocationAlarm::update(LOCATION_2D * pLocation)
 {
     uint32_t distanceFromHome = Location_diffInMeters(pLocation, &m_home);
-    std::cout << distanceFromHome <<std::endl;
+    
     if (m_alarmDistance < distanceFromHome)
     {
         if(m_pOnTripped)
