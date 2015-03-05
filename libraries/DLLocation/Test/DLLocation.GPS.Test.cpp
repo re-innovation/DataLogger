@@ -39,7 +39,7 @@ static void test_HHMMSSStringIsParsedCorrectly(void)
     uint8_t parsed_m = 0;
     uint8_t parsed_s = 0;
     
-    char toParse[6];
+    char toParse[12];
     
     for (expected_h = 0; expected_h < 24; expected_h++)
     {
@@ -47,7 +47,7 @@ static void test_HHMMSSStringIsParsedCorrectly(void)
         {
             for (expected_s = 0; expected_s < 60; expected_s++)
             {
-                sprintf(toParse, "%02d%02d%02d", expected_h, expected_m, expected_s);
+                sprintf(toParse, "%02d%02d%02d.000", expected_h, expected_m, expected_s);
                 TEST_ASSERT_EQUAL(6, parseHHMMSSTime(toParse, &parsed_h, &parsed_m, &parsed_s));
                 TEST_ASSERT_EQUAL(expected_h, parsed_h);
                 TEST_ASSERT_EQUAL(expected_m, parsed_m);
@@ -94,7 +94,7 @@ static void test_LatitudeStringIsParsedCorrectly(void)
     
     for (lat = 0; lat < 91; lat++)
     {
-        for (millidegrees = 0; millidegrees < 60000; millidegrees++)
+        for (millidegrees = 0; millidegrees < 60000; millidegrees+=1000)
         {
             sprintf(toParse, "%02d%06.3f", lat, (float)millidegrees/1000.0f);
             toParse[8] = ',';
@@ -131,7 +131,7 @@ static void test_LongitudeStringIsParsedCorrectly(void)
     
     for (lon = 0; lon < 180; lon++)
     {
-        for (millidegrees = 0; millidegrees < 60000; millidegrees++)
+        for (millidegrees = 0; millidegrees < 60000; millidegrees+=1000)
         {
             sprintf(toParse, "%03d%06.3f", lon, (float)millidegrees/1000.0f);
             toParse[9] = ',';
@@ -161,7 +161,8 @@ static void test_LongitudeStringIsParsedCorrectly(void)
 
 static void test_completeRMCParsedCorrectly(void)
 {
-    char rmcToParse[] = "$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A";
+    char rmcToParse[] = "$GPRMC,122331.000,A,5255.4560,N,00112.1977,W,0.000,76.05,050315,,,A*6E";
+	
     GPS_DATA data;
     
     TEST_ASSERT_TRUE(GPS_parseGPRMCSentence(rmcToParse, &data));
@@ -170,21 +171,21 @@ static void test_completeRMCParsedCorrectly(void)
     
     // Time
     TEST_ASSERT_EQUAL(12, data.hour);
-    TEST_ASSERT_EQUAL(35, data.min);
-    TEST_ASSERT_EQUAL(19, data.sec);
+    TEST_ASSERT_EQUAL(23, data.min);
+    TEST_ASSERT_EQUAL(31, data.sec);
     
     // Latitude
-    sprintf(onFailMessage, "Result: %f, Expected: %f", data.latitude, 48.1173);
-    TEST_ASSERT_EQUAL_FLOAT_MESSAGE(48.1173, data.latitude, onFailMessage);
+    sprintf(onFailMessage, "Result: %f, Expected: %f", data.latitude, 52.9242);
+    TEST_ASSERT_EQUAL_FLOAT_MESSAGE(52.9242, data.latitude, onFailMessage);
     
     // Longitude
-    sprintf(onFailMessage, "Result: %f, Expected: %f", data.longitude, 11.5167);      
-    TEST_ASSERT_EQUAL_FLOAT_MESSAGE(11.5167, data.longitude, onFailMessage);
+    sprintf(onFailMessage, "Result: %f, Expected: %f", data.longitude, -1.2033);      
+    TEST_ASSERT_EQUAL_FLOAT_MESSAGE(-1.2033, data.longitude, onFailMessage);
     
     // Date
-    TEST_ASSERT_EQUAL(23, data.dd);
+    TEST_ASSERT_EQUAL(5, data.dd);
     TEST_ASSERT_EQUAL(3, data.mm);
-    TEST_ASSERT_EQUAL(94, data.yy);
+    TEST_ASSERT_EQUAL(15, data.yy);
 
 }
 

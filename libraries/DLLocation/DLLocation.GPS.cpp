@@ -118,12 +118,6 @@ uint8_t parseLongitude(const char * pSentence, float * pResult)
     return charsParsed;
 }
 
-static bool rmcSentenceIsValid(const char * pSentenceStart)
-{
-    // RMC sentences have a A=active or V=Void char at position 14
-    return pSentenceStart[14] == 'A';
-}
-
 static uint8_t skipToNextComma(const char * pSentence)
 {
     uint8_t count = 0;
@@ -131,6 +125,13 @@ static uint8_t skipToNextComma(const char * pSentence)
     return count+1;
 }
     
+static bool rmcSentenceIsValid(const char * pSentenceStart)
+{
+    // RMC sentences have a A=active or V=Void char at the third field
+	pSentenceStart += skipToNextComma(pSentenceStart);
+	pSentenceStart += skipToNextComma(pSentenceStart);
+    return *pSentenceStart == 'A';
+}
 
 /*
  * Public Function Definitions
@@ -164,7 +165,8 @@ bool GPS_parseGPRMCSentence(const char * pSentence, GPS_DATA * pData)
     {
         pSentence += 7; // Now pointing at first data, which is time
         pSentence += parseHHMMSSTime(pSentence, &pData->hour, &pData->min, &pData->sec);
-        pSentence += 3 ; // Skip over valid char and comma
+		pSentence += skipToNextComma(pSentence); // Skip over any decimals in the time
+        pSentence += skipToNextComma(pSentence); // Skip over valid char and comma
         pSentence += parseLatitude(pSentence, &pData->latitude) + 1; // +1 skips over comma
         pSentence += parseLongitude(pSentence, &pData->longitude) + 1; // +1 skips over comma
         pSentence += skipToNextComma(pSentence); // Skip over speed
