@@ -42,8 +42,10 @@ static void updateTaskFn(void);
  
 static gpsSentenceInfoStruct s_rawInfo;
 static GPS_DATA s_parsedInfo;
+static bool s_infoIsValid = false;
 
 static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
+
 
 /*
  * Public Functions 
@@ -81,8 +83,12 @@ void Location_SetUpdatePeriod(uint32_t newPeriod)
 
 bool Location_GetLocation_2D(LOCATION_2D * pLocation)
 {
-    pLocation->latitude = s_parsedInfo.latitude;
-    pLocation->longitude = s_parsedInfo.longitude;
+    if (s_infoIsValid)
+    {
+        pLocation->latitude = s_parsedInfo.latitude;
+        pLocation->longitude = s_parsedInfo.longitude;
+    }
+    return s_infoIsValid;
 }
 
 bool Location_GetLocation_3D(LOCATION_3D * pLocation)
@@ -111,8 +117,5 @@ void Location_GetGPSTime(TM * time)
 static void updateTaskFn(void)
 {
     LGPS.getData(&s_rawInfo);
-    GPS_parseGPRMCSentence((char *)&s_rawInfo.GPRMC, &s_parsedInfo);
+    s_infoIsValid = GPS_parseGPRMCSentence((char *)&s_rawInfo.GPRMC, &s_parsedInfo);
 }
-
-
-
