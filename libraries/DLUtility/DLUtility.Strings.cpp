@@ -131,6 +131,20 @@ bool FixedLengthAccumulator::writeString(const char * s)
 }
 
 /*
+ * FixedLengthAccumulator::writeLine
+ *
+ * As per writeString, but appends "\r\n" in addition to copying from s
+ */
+
+bool FixedLengthAccumulator::writeLine(const char * s)
+{
+    bool success = true;
+    success &= writeString(s);
+    success &= writeString("\r\n");
+    return success;
+}
+
+/*
  * FixedLengthAccumulator::reset
  *
  * Makes the buffer appear to be an empty string

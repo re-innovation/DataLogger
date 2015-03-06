@@ -86,6 +86,13 @@ void test_FixedLengthAccumulator_CopiesPartialStringUpToMaxLength(void)
     TEST_ASSERT_EQUAL(99, strlen(accumulator->c_str()));
 }
 
+void test_FixedLengthAccumulator_WritesCRLFUsingWriteLine(void)
+{
+    accumulator->reset();
+    accumulator->writeLine("Should have CRLF at end");
+    TEST_ASSERT_EQUAL_STRING("Should have CRLF at end\r\n", buffer);
+}
+
 //=======MAIN=====
 int main(void)
 {
@@ -98,6 +105,7 @@ int main(void)
   RUN_TEST(test_FixedLengthAccumulator_ResetsCorrectly);
   RUN_TEST(test_FixedLengthAccumulator_AcceptStringLessThanMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_CopiesPartialStringUpToMaxLength);
-  
+  RUN_TEST(test_FixedLengthAccumulator_WritesCRLFUsingWriteLine);
+
   return (UnityEnd());
 }
