@@ -52,7 +52,7 @@
 #define MAX_HOST_LENGTH                 (30) // Maximum length of host URL
 
 #define MAX_HTTP_HEADER_NAME_LENGTH     (30) // Maximum length of single header name
-#define MAX_HTTP_HEADER_VALUE_LENGTH    (60) // Maximum length of single header value
+#define MAX_HTTP_HEADER_VALUE_LENGTH    (80) // Maximum length of single header value
 #define MAX_HTTP_RESPONSE_REASON_LENGTH (40) // Maximum length of HTTP response reason string
 
 // Maximum header length: assume a maximum of 10 chars extra on top of name and value
