@@ -23,9 +23,10 @@ class ServiceInterface
         virtual void setField(uint8_t fieldIndex, DataField * pDataField) = 0;
         virtual char *  getURL(void) = 0;
         
-        virtual uint16_t createGetAPICall(char * buffer, uint16_t maxSize) = 0;
-        virtual uint16_t createGetAPICall(char * buffer, uint16_t maxSize, char const * const time) = 0;
+        virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize) = 0;
+        virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time) = 0;
         
+        virtual void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename) = 0;
 };
 
 ServiceInterface * Service_GetService(SERVICE service);

@@ -4,6 +4,7 @@ CFLAGS=-Wall -Wextra -Werror
 
 SRC_FILES=$(UNITY_PATH)/unity.c
 INC_DIRS=-I$(UNITY_PATH) -IDLTest
+SYMBOLS=-DTEST
 
 ifdef TEST_MODULE
 ifdef TEST_SUBMODULE
@@ -20,8 +21,6 @@ endif
 else
 $(error TEST_MODULE is not set)
 endif
-
-SYMBOLS=-DTEST
 
 all:
 	$(CC) $(CFLAGS) $(INC_DIRS) $(SYMBOLS) $(SRC_FILES) -o $(TARGET)

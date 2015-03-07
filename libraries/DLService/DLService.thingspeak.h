@@ -3,7 +3,12 @@
 
 #define _MAX_URL_LENGTH 50
 #define _MAX_API_KEY_LENGTH 30
+
+#ifndef _MAX_FIELDS // Might be defined by test suite
 #define _MAX_FIELDS 8
+#endif
+
+class FixedLengthAccumulator;
 
 class Thingspeak : public ServiceInterface
 {
@@ -14,13 +19,19 @@ class Thingspeak : public ServiceInterface
         void setField(uint8_t fieldIndex, DataField * data);
         char *  getURL(void);
 
-        uint16_t createGetAPICall(char * buffer, uint16_t maxSize);
-        uint16_t createGetAPICall(char * buffer, uint16_t maxSize, char const * const time);
+        uint16_t createPostAPICall(char * buffer, uint16_t maxSize);
+        uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time);
 
-        static const char THINGSPEAK_UPDATE_PATH[];
+        void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename);
         
     private:
-        char m_url[_MAX_API_KEY_LENGTH];
+
+        void putCSVUploadHeaders(FixedLengthAccumulator * accumulator);
+        
+        static const char THINGSPEAK_UPDATE_PATH[];
+        static const char THINGSPEAK_BULK_UPDATE_PATH[];
+        static const char THINGSPEAK_MULTIPART_BOUNDARY[];
+        char m_url[_MAX_URL_LENGTH];
         char m_key[_MAX_API_KEY_LENGTH];
         float m_data[_MAX_FIELDS];
 };

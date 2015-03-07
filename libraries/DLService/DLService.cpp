@@ -12,7 +12,12 @@
  * Arduino/C++ Library Includes
  */
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#include <stdint.h>
+#include <stdlib.h>
+#endif
 
 /*
  * Local Application Includes
@@ -43,4 +48,7 @@
             char * key = Settings_getString(THINGSPEAK_API_KEY);
             return new Thingspeak(url, key);
     }
+
+    // If here, no service found
+    return NULL;
  }
