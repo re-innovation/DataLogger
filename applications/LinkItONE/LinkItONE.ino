@@ -85,7 +85,7 @@ void remoteUploadTaskFn(void)
 
     char request_buffer[300];
     char response_buffer[200] = "";
-    s_thingSpeakService->createGetAPICall(request_buffer, 300);
+    s_thingSpeakService->createPostAPICall(request_buffer, 300);
 
     Serial.print("Request '");
     Serial.print(request_buffer);
