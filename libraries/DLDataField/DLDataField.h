@@ -28,12 +28,12 @@ class DataField
         ~DataField();
 
         template <typename T>
-        void StoreData(T data);
-        void StoreData(char * str);
-        void StoreData(char const * const str);
-        void GetDataAsString(char * buf, char const * const fmt);
-        float GetDataAsFloat(void);
-        FIELD_TYPE GetType(void);
+        void storeData(T data);
+        void storeData(char * str);
+        void storeData(char const * const str);
+        void getDataAsString(char * buf, char const * const fmt);
+        float getDataAsFloat(void);
+        FIELD_TYPE getType(void);
     private:
         FIELD_TYPE m_fieldType;
         float m_data;

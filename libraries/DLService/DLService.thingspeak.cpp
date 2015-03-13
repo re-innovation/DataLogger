@@ -76,7 +76,7 @@ void Thingspeak::setField(uint8_t fieldIndex, DataField * pDataField)
 {
     if (fieldIndex > 5) { return; }
     
-    m_data[fieldIndex] = pDataField->GetDataAsFloat();
+    m_data[fieldIndex] = pDataField->getDataAsFloat();
 }
 
 uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize)

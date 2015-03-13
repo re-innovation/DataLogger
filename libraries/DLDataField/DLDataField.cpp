@@ -38,28 +38,28 @@ DataField::DataField(FIELD_TYPE fieldType)
 
 DataField::~DataField() {}
 
-FIELD_TYPE DataField::GetType(void)
+FIELD_TYPE DataField::getType(void)
 {
 	return m_fieldType;
 }
 
 template <typename T>
-void DataField::StoreData(T data)
+void DataField::storeData(T data)
 {
 	// Data is always stored internally as a float (except for strings)
 	// See bottom of file for allowable types for T
 	m_data = (float)data;
 }
 
-void DataField::StoreData(char * str) { StoreData((char const * const)str); }
+void DataField::storeData(char * str) { storeData((char const * const)str); }
 
-void DataField::StoreData(char const * const str)
+void DataField::storeData(char const * const str)
 {
 	// Strings are copied into the local buffer
 	strncpy(m_stringData, str, MAX_DATAFIELD_STRING_SIZE);
 }
 
-void DataField::GetDataAsString(char * buf, char const * const fmt)
+void DataField::getDataAsString(char * buf, char const * const fmt)
 {
 	if (m_fieldType == GENERIC_STRING)
 	{
@@ -72,16 +72,16 @@ void DataField::GetDataAsString(char * buf, char const * const fmt)
 	}
 }
 
-float DataField::GetDataAsFloat(void)
+float DataField::getDataAsFloat(void)
 {
 	return (m_fieldType != GENERIC_STRING) ? m_data : 0.0f;
 }
 
 // Explictly instantiate templates for StoreData
-template void DataField::StoreData<uint8_t>(uint8_t);
-template void DataField::StoreData<int8_t>(int8_t);
-template void DataField::StoreData<uint16_t>(uint16_t);
-template void DataField::StoreData<int16_t>(int16_t);
-template void DataField::StoreData<uint32_t>(uint32_t);
-template void DataField::StoreData<int32_t>(int32_t);
-template void DataField::StoreData<float>(float);
+template void DataField::storeData<uint8_t>(uint8_t);
+template void DataField::storeData<int8_t>(int8_t);
+template void DataField::storeData<uint16_t>(uint16_t);
+template void DataField::storeData<int16_t>(int16_t);
+template void DataField::storeData<uint32_t>(uint32_t);
+template void DataField::storeData<int32_t>(int32_t);
+template void DataField::storeData<float>(float);
