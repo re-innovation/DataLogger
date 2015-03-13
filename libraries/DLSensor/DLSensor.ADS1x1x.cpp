@@ -205,12 +205,11 @@ static void writeRegister(uint8_t i2cAddress, uint8_t reg, uint16_t value) {
 @brief  Writes 16-bits to the specified destination register
 */
 /**************************************************************************/
-static uint16_t readRegister(uint8_t i2cAddress, uint8_t reg) {
-    (void)reg;
+static uint16_t readRegister(uint8_t i2cAddress) {
     Wire.beginTransmission(i2cAddress);
     i2cwrite(ADS1x1x_REG_POINTER_CONVERT);
     Wire.endTransmission();
-    Wire.requestFrom(i2cAddress, (uint8_t)reg);
+    Wire.requestFrom(i2cAddress, (uint8_t)2);
     return ((i2cread() << 8) | i2cread());  
 }
 
@@ -337,7 +336,7 @@ uint16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
 
     // Read the conversion results
     // Shift 12-bit results right 4 bits for the ADS1x15
-    return readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> getBitShift();  
+    return readRegister(m_i2cAddress) >> getBitShift();
 }
 
 /**************************************************************************/
@@ -403,7 +402,7 @@ int16_t ADS1x1x::readADC_DifferentialWithConfig(uint16_t differentialConfig)
     // Read the conversion results
     uint8_t bitShift = getBitShift();
 
-    uint16_t res = readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> bitShift;
+    uint16_t res = readRegister(m_i2cAddress) >> bitShift;
     if (bitShift == 0)
     {
         return (int16_t)res;
@@ -435,7 +434,7 @@ int16_t ADS1x1x::getLastConversionResults()
 
 // Read the conversion results
     uint8_t bitShift = getBitShift();
-    uint16_t res = readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> bitShift;
+    uint16_t res = readRegister(m_i2cAddress) >> bitShift;
     if (bitShift == 0)
     {
         return (int16_t)res;

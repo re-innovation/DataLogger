@@ -52,9 +52,9 @@ class ADS1013 : public ADS1x1x
         ADS1013(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
         bool hasComparator(void) { return false; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1014 : public ADS1x1x
@@ -64,11 +64,9 @@ class ADS1014 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
-        
-
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1015 : public ADS1x1x
@@ -79,10 +77,9 @@ class ADS1015 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 4; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
-
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1113 : public ADS1x1x
@@ -91,10 +88,11 @@ class ADS1113 : public ADS1x1x
         ADS1113(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
         bool hasComparator(void) { return false; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 8; }
 };
+
 class ADS1114 : public ADS1x1x
 {
     public:
@@ -102,10 +100,11 @@ class ADS1114 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 8; }
 };
+
 class ADS1115 : public ADS1x1x
 {
     public:
@@ -114,9 +113,8 @@ class ADS1115 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 4; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
-
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 8; }
 };
 #endif
