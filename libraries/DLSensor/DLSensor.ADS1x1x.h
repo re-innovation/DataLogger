@@ -31,7 +31,7 @@ class ADS1x1x
     public:
         ADS1x1x(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
         void      begin(void);
-        uint16_t  readADC_SingleEnded(uint8_t channel);
+        int16_t   readADC_SingleEnded(uint8_t channel);
         int16_t   readADC_Differential(uint8_t channel);
         int16_t   getLastConversionResults();
         void      setGain(ADS_GAIN gain);
