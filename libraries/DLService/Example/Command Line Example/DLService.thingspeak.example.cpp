@@ -7,6 +7,7 @@ You can pipe the output of this example to nc to get responses from URLs
 
 Build and run by just typing "make" at command line
 
+The program will create a POST request and echo it to stdout.
 */
 
 #include <iostream>
