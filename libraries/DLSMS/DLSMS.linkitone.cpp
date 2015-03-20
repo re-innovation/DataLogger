@@ -38,7 +38,7 @@ LinkItOneSMSInterface::~LinkItOneSMSInterface() {}
 bool LinkItOneSMSInterface::send(char * pNumber, char * pMessage)
 {
     
-    if (!pNumber || !pMessage) { return false;}
+    if (!pNumber || !pMessage) { return false; }
 
     bool success = true;
 

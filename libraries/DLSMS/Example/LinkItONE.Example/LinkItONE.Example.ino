@@ -45,7 +45,14 @@ void setup()
     
     s_linkitoneSMSInterface = SMS_GetInterface(SMS_INTERFACE_LINKITONE);
 
-    s_linkitoneSMSInterface->send("07411048041", "Hello, world!");
+    if (s_linkitoneSMSInterface->send("07411048014", "Hello, world!"))
+    {
+    	Serial.println("Message sent!");
+    }
+    else
+   	{
+   		Serial.println("Send failed!");
+   	};
 }
 
 void loop()
