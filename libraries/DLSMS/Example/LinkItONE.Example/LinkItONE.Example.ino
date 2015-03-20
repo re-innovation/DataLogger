@@ -45,7 +45,8 @@ void setup()
     
     s_linkitoneSMSInterface = SMS_GetInterface(SMS_INTERFACE_LINKITONE);
 
-    if (s_linkitoneSMSInterface->send("07411048014", "Hello, world!"))
+    // Enter a mobile number instead of XXXXXXXXXXX!
+    if (s_linkitoneSMSInterface->send("XXXXXXXXXXX", "Hello, world!"))
     {
     	Serial.println("Message sent!");
     }
