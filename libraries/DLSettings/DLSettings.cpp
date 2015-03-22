@@ -1,5 +1,5 @@
 /*
- * settings.cpp
+ * DLSettings.cpp
  * 
  * Holds settings for the application
  *
@@ -85,8 +85,42 @@ int IntSetting::get(void) { return m_setting; }
  * Each setting for the application is either a StringSetting or IntSetting
  */
 
+/* Generate string strings */
+static const char * s_stringSettingNames[] = {
+    FOREACH_STRINGSET(GENERATE_STRING)  
+};
+
+/* Generate int strings */
+static const char * s_intSettingNames[] = {
+    FOREACH_INTSET(GENERATE_STRING)  
+};
+
 static StringSetting s_strings[STRING_SETTINGS_COUNT];
 static IntSetting s_ints[INT_SETTINGS_COUNT];
+
+char const * Settings_getStringName(STRINGSETTING setting)
+{
+    if (setting < STRING_SETTINGS_COUNT)
+    {
+        return s_stringSettingNames[setting];
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+char const * Settings_getIntName(INTSETTING setting)
+{
+    if (setting < INT_SETTINGS_COUNT)
+    {
+        return s_intSettingNames[setting];
+    }
+    else
+    {
+        return NULL;
+    }
+}
 
 bool Settings_stringIsSet(STRINGSETTING setting)
 {
@@ -120,7 +154,7 @@ void Settings_setString(STRINGSETTING setting, char const * const pSet)
     }
 }
 
-bool Settings_intisSet(INTSETTING setting)
+bool Settings_intIsSet(INTSETTING setting)
 {
     if (setting < INT_SETTINGS_COUNT)
     {

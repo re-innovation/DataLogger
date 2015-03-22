@@ -1,32 +1,42 @@
-#ifndef _SETTINGS_H_
-#define _SETTINGS_H_
+#ifndef _DL_SETTINGS_H_
+#define _DL_SETTINGS_H_
 
-/* This enumeration defines every possible string setting for the system,
- * divided into sensible blocks
+/*
+ * Application settings are defined using preprocessor magic.
+ * This is so the enumeration numbers and the strings can be kept in sync.
+ * For example, GPRS_APN and the string "GPRS_APN" are both generated from the same
+ * definition. 
  */
+
+/* Define each string setting for the application */
+
+#define FOREACH_STRINGSET(STRING) \
+    STRING(GPRS_APN) \
+    STRING(GPRS_USERNAME) \
+    STRING(GPRS_PASSWORD) \
+    STRING(THINGSPEAK_URL) \
+    STRING(THINGSPEAK_API_KEY)
+
+/* Define each int setting for the application */
+
+#define FOREACH_INTSET(INT) \
+    INT(CSV_RECORD_INTERVAL)
+
+#define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
+#define GENERATE_STRING(STRING) #STRING, // This turns each setting into a string in an array
+
+/* Generate string enumeration */
 enum stringsetting
 {
-    /*** Network settings ***/
-    /** GPRS **/
-    GPRS_APN,
-    GPRS_USERNAME,
-    GPRS_PASSWORD,
-    
-    /*** Internet Services ***/
-    /** Thingspeak **/
-    THINGSPEAK_URL,
-    THINGSPEAK_API_KEY,
-    
-    /*** MUST be the last entry in the enumeration! ***/
+    FOREACH_STRINGSET(GENERATE_ENUM)
     STRING_SETTINGS_COUNT
 };
 typedef enum stringsetting STRINGSETTING;
 
+/* Generate int enumeration */
 enum intsetting
 {
-    CSV_RECORD_INTERVAL,
-
-    /*** MUST be the last entry in the enumeration! ***/
+    FOREACH_INTSET(GENERATE_ENUM)
     INT_SETTINGS_COUNT
 };
 typedef enum intsetting INTSETTING;
@@ -36,9 +46,11 @@ typedef enum intsetting INTSETTING;
 // or if that setting has not been set, a null value is returned instead.
 // 0 is returned for integers, NULL for strings
 
+char const * Settings_getIntName(INTSETTING setting);
 int Settings_getInt(INTSETTING setting);
 void Settings_setInt(INTSETTING setting, int set);
 
+char const * Settings_getStringName(STRINGSETTING setting);
 char * Settings_getString(STRINGSETTING setting);
 void Settings_setString(STRINGSETTING setting, char const * const pSet);
 
