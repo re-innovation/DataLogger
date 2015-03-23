@@ -1,6 +1,6 @@
 /*
  * DLSettings.Reader.Test.cpp
- * 
+ *
  * Tests the Settings reader class
  *
  * Author: James Fowkes
@@ -37,19 +37,39 @@ void test_ReadingFromInvalidStringReturnsFalse(void)
 	TEST_ASSERT_FALSE(Settings_ReadFromString("SOME INVALID STRING"));
 }
 
-void test_ReadingFromUnrecognizedStringReturnsFalse(void)
+void test_ReadingFromUnrecognizedSettingReturnsFalse(void)
 {
-	TEST_ASSERT_FALSE(Settings_ReadFromString("SOME INVALID STRING"));
+  TEST_ASSERT_FALSE(Settings_ReadFromString("NOT_AN_SETTING_NAME=NOTANINTEGER"));
+}
+
+void test_ReadingFromInvalidIntSettingReturnsFalse(void)
+{
+	TEST_ASSERT_FALSE(Settings_ReadFromString("CSV_RECORD_INTERVAL=NOTANINTEGER"));
+}
+
+void test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting(void)
+{
+  TEST_ASSERT_TRUE(Settings_ReadFromString("CSV_RECORD_INTERVAL=30"));
+  TEST_ASSERT_EQUAL(30, Settings_getInt(CSV_RECORD_INTERVAL));
+}
+
+void test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting(void)
+{
+  TEST_ASSERT_TRUE(Settings_ReadFromString("GPRS_APN=www.exampleapn.com"));
+  TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
 }
 
 int main(void)
 {
-	UnityBegin("DLSettings.Reader.cpp");
+    UnityBegin("DLSettings.Reader.cpp");
 
   	RUN_TEST(test_ReadingFromNULLStringReturnsFalse);
   	RUN_TEST(test_ReadingFromInvalidStringReturnsFalse);
-  	RUN_TEST(test_ReadingFromUnrecognizedStringReturnsFalse);
-  	
+    RUN_TEST(test_ReadingFromUnrecognizedSettingReturnsFalse);
+  	RUN_TEST(test_ReadingFromInvalidIntSettingReturnsFalse);
+    RUN_TEST(test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting);
+    RUN_TEST(test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting);
+
   	UnityEnd();
   	return 0;
 }
