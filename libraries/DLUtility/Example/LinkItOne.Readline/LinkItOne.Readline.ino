@@ -1,7 +1,7 @@
 /*
  * LinkITONE.Readline.h
  *
- * Example of using ReadLineWithReadFunction to read lines from
+ * Example of using readLineWithReadFunction to read lines from
  * files on an SD card in the LinkIt ONE board.
  *
  */
@@ -38,23 +38,23 @@ void setup()
 	
 	Serial.println("Reading from file FileWithCRLFEndings.txt:");
     char lineBuffer[50];
-    uint8_t hndl = s_sdCard->OpenFile("FileWithCRLFEndings.txt", false);
-    while (!s_sdCard->EndOfFile(hndl))
+    uint8_t hndl = s_sdCard->openFile("FileWithCRLFEndings.txt", false);
+    while (!s_sdCard->endOfFile(hndl))
     {
-    	s_sdCard->ReadLine(hndl, lineBuffer, 50);
+    	s_sdCard->readLine(hndl, lineBuffer, 50);
     	Serial.print(lineBuffer);
     }
-    s_sdCard->CloseFile(hndl);
+    s_sdCard->closeFile(hndl);
     
     Serial.println("Reading from file FileWithLFEndings.txt:");
     
-    hndl = s_sdCard->OpenFile("FileWithLFEndings.txt", false);
-    while (!s_sdCard->EndOfFile(hndl))
+    hndl = s_sdCard->openFile("FileWithLFEndings.txt", false);
+    while (!s_sdCard->endOfFile(hndl))
     {
-    	s_sdCard->ReadLine(hndl, lineBuffer, 50);
+    	s_sdCard->readLine(hndl, lineBuffer, 50);
     	Serial.print(lineBuffer);
     }
-    s_sdCard->CloseFile(hndl);
+    s_sdCard->closeFile(hndl);
 }
 
 void loop()

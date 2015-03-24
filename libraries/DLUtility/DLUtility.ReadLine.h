@@ -8,7 +8,7 @@
 typedef char (*READFN)(void);
 
 /*
- * ReadLineWithReadFunction
+ * readLineWithReadFunction
  * Reads a single line from a stream-like source.
  * As this utility library may work with may different non-standard file access
  * libraries, the function is designed to work with a pure-C READFN function pointer.
@@ -22,6 +22,6 @@ typedef char (*READFN)(void);
  *
  * The function returns the number of chars written to buffer excluding any NULL pointer.
  */
-uint32_t ReadLineWithReadFunction(READFN fn, char * buffer, uint32_t n, bool stripCRLF = false);
+uint32_t readLineWithReadFunction(READFN fn, char * buffer, uint32_t n, bool stripCRLF = false);
 
 #endif

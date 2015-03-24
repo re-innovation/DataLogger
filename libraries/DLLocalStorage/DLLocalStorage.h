@@ -18,17 +18,17 @@ typedef int8_t FILE_HANDLE;
 class LocalStorageInterface
 {
     public:
-        virtual bool FileExists(char * filePath) = 0;
-        virtual bool DirectoryExists(char * dirPath) = 0;
-        virtual bool MkDir(char * dirPath) = 0;
-        virtual void Write(FILE_HANDLE file, char * toWrite) = 0;
-        virtual uint32_t ReadBytes(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
-        virtual uint32_t ReadLine(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
-        virtual FILE_HANDLE OpenFile(char * filename, bool forWrite) = 0;
-        virtual void CloseFile(FILE_HANDLE file) = 0;
-        virtual bool EndOfFile(FILE_HANDLE file) = 0;
+        virtual bool fileExists(char const * const filePath) = 0;
+        virtual bool directoryExists(char const * const dirPath) = 0;
+        virtual bool mkDir(char const * const dirPath) = 0;
+        virtual void write(FILE_HANDLE file, char const * const toWrite) = 0;
+        virtual uint32_t readBytes(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
+        virtual uint32_t readLine(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
+        virtual FILE_HANDLE openFile(char const * const filename, bool forWrite) = 0;
+        virtual void closeFile(FILE_HANDLE file) = 0;
+        virtual bool endOfFile(FILE_HANDLE file) = 0;
 };
 
-LocalStorageInterface * LocalStorage_GetLocalStorageInterface(LOCAL_STORAGE_TYPE stroage_type);
+LocalStorageInterface * LocalStorage_GetLocalStorageInterface(LOCAL_STORAGE_TYPE storage_type);
 
 #endif
