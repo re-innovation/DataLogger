@@ -28,7 +28,7 @@
 #include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
 #include "DLLocation.h"
-#include "DLLocation.GPS.h"
+#include "DLGPS.h"
 
 /*
  * Private Functio Prototypes

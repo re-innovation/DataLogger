@@ -36,6 +36,7 @@
 #include "DLUtility.h"
 #include "DLSettings.h"
 #include "DLLocation.h"
+#include "DLGPS.h"
 #include "DLSecurity.h"
 #include "DLSMS.h"
 #include "TaskAction.h"

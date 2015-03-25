@@ -1,7 +1,7 @@
 /*
- * DLGPS.Utility.cpp
+ * DLGPS.cpp
  * 
- * Utilities to help with GPS library
+ * GPS sentence parsing library
  *
  * Author: James Fowkes
  *
@@ -20,7 +20,7 @@
  */
 
 #include "DLUtility.Location.h"
-#include "DLLocation.GPS.h"
+#include "DLGPS.h"
 
 /*
  * Defines and typedefs
