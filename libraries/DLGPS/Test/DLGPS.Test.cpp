@@ -1,5 +1,5 @@
 /*
- * DLLocation.GPS.Test.cpp
+ * DLGPS.Test.cpp
  * 
  * Tests the GPS functionality
  *
@@ -19,7 +19,7 @@
  * Local Application Includes
  */
 
-#include "../DLLocation.GPS.h"
+#include "../DLGPS.h"
 
 /*
  * Unity Test Framework
