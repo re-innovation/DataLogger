@@ -20,6 +20,7 @@
  */
 
 #include "DLUtility.Location.h"
+#include "DLUtility.Time.h"
 #include "DLGPS.h"
 
 /*
@@ -175,4 +176,17 @@ bool GPS_parseGPRMCSentence(const char * pSentence, GPS_DATA * pData)
     }
     
     return success;
+}
+
+void GPS_GetGPSTime(GPS_DATA const * const pData, TM * pTime)
+{
+    if (!pTime) { return; }
+    if (!pData) { return; }
+    
+    pTime->tm_sec = pData->sec;
+    pTime->tm_min = pData->min;
+    pTime->tm_hour = pData->hour;
+    pTime->tm_mday = pData->dd;
+    pTime->tm_mon = pData->mm;
+    pTime->tm_year = pData->yy;
 }

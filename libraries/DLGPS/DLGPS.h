@@ -1,5 +1,5 @@
-#ifndef _GPS_UTILITY_H_
-#define _GPS_UTILITY_H_
+#ifndef _GPS_H_
+#define _GPS_H_
 
 struct gps_data_struct
 {
@@ -16,6 +16,13 @@ struct gps_data_struct
 };
 typedef struct gps_data_struct GPS_DATA;
 
+/* These functions must be implemented by the hardware library */
+void GPS_UpdateNow(void);
+void GPS_GetGPSTime(GPS_DATA const * const pData);
+GPS_DATA const * GPS_GetInfo(void);
+bool GPS_InfoIsValid(void);
+
+/* These functions are implemented by the generic GPS library */
 bool GPS_parseGPRMCSentence(const char * pSentence, GPS_DATA * pData);
 
 #ifdef TEST

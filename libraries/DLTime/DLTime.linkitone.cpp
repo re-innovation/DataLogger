@@ -63,8 +63,8 @@ bool Time_GetTime(TM * tm, TIME_TYPE type)
         tm->tm_isdst = false; // Assume that datetime is never with DST
         break;
     case TIME_GPS:
-        Time_GetGPSTime(tm);
-        success = true;
+        GPS_UpdateNow();
+        GPS_GetGPSTime(GPS_GetInfo(), tm);
         break;
     case TIME_NETWORK:
         // TODO: Get time through network resources
