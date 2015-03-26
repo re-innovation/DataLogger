@@ -64,7 +64,7 @@ bool LinkItOneSD::mkDir(char const * const dirPath)
     return LSD.mkdir((char*)dirPath);
 }
 
-char readOneByteFromFile(void)
+static char readOneByteFromFile(void)
 {
 	return s_file.available() ? s_file.read() : '\0';
 }
@@ -114,7 +114,7 @@ uint32_t LinkItOneSD::readBytes(FILE_HANDLE file, char * buffer, uint32_t n)
 	}
 }
 
-uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n)
+uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool stripCRLF)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
 	bool fileAvailableForRead = true;
@@ -126,7 +126,7 @@ uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n)
 
 	if (fileAvailableForRead && buffer)
 	{
-		readLineWithReadFunction(readOneByteFromFile, buffer, n);
+		readLineWithReadFunction(readOneByteFromFile, buffer, n, stripCRLF);
 	}
 
 	return readCount;

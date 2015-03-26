@@ -23,7 +23,7 @@ class LocalStorageInterface
         virtual bool mkDir(char const * const dirPath) = 0;
         virtual void write(FILE_HANDLE file, char const * const toWrite) = 0;
         virtual uint32_t readBytes(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
-        virtual uint32_t readLine(FILE_HANDLE file, char * buffer, uint32_t n) = 0;
+        virtual uint32_t readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool stripCRLF) = 0;
         virtual FILE_HANDLE openFile(char const * const filename, bool forWrite) = 0;
         virtual void closeFile(FILE_HANDLE file) = 0;
         virtual bool endOfFile(FILE_HANDLE file) = 0;

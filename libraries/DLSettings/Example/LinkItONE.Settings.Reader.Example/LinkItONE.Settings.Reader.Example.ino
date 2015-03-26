@@ -37,8 +37,8 @@
 #include "DLUtility.h"
 #include "DLLocalStorage.h"
 
-static char const s_settingsFilename[] = "Datalogger.Settings";
-static LocalStorageInterface * s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+static char s_settingsFilename[] = "Datalogger.Settings";
+static LocalStorageInterface * s_sdCard;
 static char lineBuffer[100];
 
 void setup()
@@ -47,19 +47,30 @@ void setup()
     Serial.begin(115200);
 
     delay(10000);
+    
+    s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
 
-    if (!s_sdCard->fileExists(s_settingsFilename))
+    Serial.println("*** Settings reader example ***");
+    if (s_sdCard->fileExists(s_settingsFilename))
+    //if (LSD.exists(s_settingsFilename))
+    {
+        Serial.print("Reading settings from '");
+        Serial.print(s_settingsFilename);
+        Serial.println("'.");
+    }
+    else
     {
         Serial.print("Settings file '");
         Serial.print(s_settingsFilename);
-        Serial.println(" not found.");
+        Serial.println("' not found.");
         return;
     }
 
     uint8_t hndl = s_sdCard->openFile(s_settingsFilename, false);
     while (!s_sdCard->endOfFile(hndl))
     {
-        s_sdCard->readLine(hndl, lineBuffer, 50);
+        // Read from file into lineBuffer and strip CRLF endings
+        s_sdCard->readLine(hndl, lineBuffer, 50, true);
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
