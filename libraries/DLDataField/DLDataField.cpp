@@ -25,6 +25,7 @@
  */
 
 #include "DLDataField.h"
+#include "DLUtility.h"
 
 /*
  * Public Functions 
@@ -33,7 +34,6 @@
 DataField::DataField(FIELD_TYPE fieldType)
 {
  	m_fieldType = fieldType;
- 	m_data = 0.0f;
 }
 
 DataField::~DataField() {}
@@ -44,44 +44,97 @@ FIELD_TYPE DataField::getType(void)
 }
 
 template <typename T>
-void DataField::storeData(T data)
+NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint8_t N) : DataField(type)
 {
-	// Data is always stored internally as a float (except for strings)
-	// See bottom of file for allowable types for T
-	m_data = (float)data;
-}
-
-void DataField::storeData(char * str) { storeData((char const * const)str); }
-
-void DataField::storeData(char const * const str)
-{
-	// Strings are copied into the local buffer
-	strncpy(m_stringData, str, MAX_DATAFIELD_STRING_SIZE);
-}
-
-void DataField::getDataAsString(char * buf, char const * const fmt)
-{
-	if (m_fieldType == GENERIC_STRING)
+	m_data = new T[N];
+	
+	if (m_data)
 	{
-		// Strings are a special case where format is not used
-		strncpy(buf, m_stringData, MAX_DATAFIELD_STRING_SIZE);
+		fillArray(m_data, (T)0, N);
 	}
-	else
-	{
-		sprintf(buf, fmt, m_data);
-	}
+
+	m_index = 0;
+	m_maxIndex = N;
 }
 
-float DataField::getDataAsFloat(void)
+template <typename T>
+NumericDataField<T>::~NumericDataField()
 {
-	return (m_fieldType != GENERIC_STRING) ? m_data : 0.0f;
+	delete[] m_data;
 }
 
-// Explictly instantiate templates for StoreData
-template void DataField::storeData<uint8_t>(uint8_t);
-template void DataField::storeData<int8_t>(int8_t);
-template void DataField::storeData<uint16_t>(uint16_t);
-template void DataField::storeData<int16_t>(int16_t);
-template void DataField::storeData<uint32_t>(uint32_t);
-template void DataField::storeData<int32_t>(int32_t);
-template void DataField::storeData<float>(float);
+template <typename T>
+T NumericDataField<T>::getData(uint8_t index)
+{
+	return (index < m_maxIndex) ? m_data[index] : 0;
+}
+
+template <typename T>
+void NumericDataField<T>::storeData(T data)
+{
+	m_data[m_index] = (float)data;
+	incrementwithrollover(m_index, m_maxIndex);
+}
+
+template <typename T>
+void NumericDataField<T>::getDataAsString(char * buf, char const * const fmt, uint8_t index)
+{
+	sprintf(buf, fmt, m_data[index]); // Write data point to buffer
+}
+
+StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N) : DataField(type)
+{
+	m_data = new char*[N];
+	
+	if (m_data)
+	{
+		uint8_t i = 0;
+		for (i = 0; i < N; i++)
+		{
+			m_data[i] = new char[len];
+		}
+	}
+
+	m_index = 0;
+	m_maxIndex = N;
+	m_maxLength = len;
+}
+
+StringDataField::~StringDataField()
+{
+	uint8_t i = 0;
+	for (i = 0; i < m_maxIndex; i++)
+	{
+		delete[] m_data[i];
+	}
+
+	delete[] m_data;
+}
+
+void StringDataField::storeData(char * data)
+{
+	strncpy(m_data[m_index], data, m_maxLength);
+	incrementwithrollover(m_index, m_maxIndex);
+}
+
+char * StringDataField::getData(uint8_t index)
+{
+	return (index < m_maxIndex) ? m_data[index] : NULL; 
+}
+
+void StringDataField::copy(char * buf, uint8_t index)
+{
+	if (index < m_maxIndex)
+	{
+		strncpy(buf, m_data[index], m_maxLength);
+	}
+}
+
+// Explictly instantiate templates for NumericDataField
+template class NumericDataField<uint8_t>;
+template class NumericDataField<int8_t>;
+template class NumericDataField<uint16_t>;
+template class NumericDataField<int16_t>;
+template class NumericDataField<uint32_t>;
+template class NumericDataField<int32_t>;
+template class NumericDataField<float>;

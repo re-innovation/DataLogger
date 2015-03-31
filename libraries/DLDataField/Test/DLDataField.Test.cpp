@@ -12,7 +12,10 @@
  * C++ Library Includes
  */
 
+#include <stdint.h>
 #include <string.h>
+
+#include <iostream>
 
 /*
  * Local Application Includes
@@ -26,99 +29,114 @@
 
 #include "unity.h"
 
-static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
-{
-	static DataField dataField = DataField(VOLTAGE);
-	TEST_ASSERT_EQUAL(VOLTAGE, dataField.GetType());
-	TEST_ASSERT_EQUAL(0.0f, dataField.GetDataAsFloat());
+static int16_t intDataArray[] = {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4};
+static char strDataArray[][5] = {"N","NE", "E", "SE", "S"};
 
-	dataField = DataField(CURRENT);
-	TEST_ASSERT_EQUAL(CURRENT, dataField.GetType());
-	TEST_ASSERT_EQUAL(0.0f, dataField.GetDataAsFloat());
+static void fillWithTestIntData(NumericDataField<int16_t> * pDataField)
+{
+	uint8_t i;
+	for (i = 0; i < 10; ++i)
+	{
+		pDataField->storeData(intDataArray[i]);
+	}
 }
 
-static void test_DatafieldStoreAsDifferentNumericTypes_ThenGetAsFloatWorks(void)
+static void fillWithTestStringData(StringDataField * pDataField)
 {
-	static DataField dataField = DataField(VOLTAGE);
-	
-	dataField.StoreData(100.0f);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
+	uint8_t i;
+	for (i = 0; i < 5; ++i)
+	{
+		pDataField->storeData(strDataArray[i]);
+	}
+}
 
-	dataField.StoreData((uint8_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
-	dataField.StoreData((int8_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
-	dataField.StoreData((uint16_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
-	dataField.StoreData((int16_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
-	dataField.StoreData((uint32_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
-	dataField.StoreData((int32_t)100);
-	TEST_ASSERT_EQUAL(100.0f, dataField.GetDataAsFloat());
+static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
+{
+	static NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 1);
+	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
+	TEST_ASSERT_EQUAL(0, dataField.getData(0));
 }
 
 static void test_DatafieldStoreFloats_CorrectlyFormattedAsStrings(void)
 {
-	static DataField dataField = DataField(VOLTAGE);
+	static NumericDataField<float> dataField = NumericDataField<float>(VOLTAGE, 1);
 	static char buffer[20];
-	dataField.StoreData(100.12345f);
+	dataField.storeData(100.12345f);
 	
-	dataField.GetDataAsString(buffer, "%.0f");
+	dataField.getDataAsString(buffer, "%.0f", 0);
 	TEST_ASSERT_EQUAL_STRING("100", buffer);
 
-	dataField.GetDataAsString(buffer, "%.5f");
+	dataField.getDataAsString(buffer, "%.5f", 0);
 	TEST_ASSERT_EQUAL_STRING("100.12345", buffer);
 }
 
 static void test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue(void)
 {
-	static DataField dataField = DataField(GENERIC_STRING);
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
 	static char buffer[20];
-	dataField.GetDataAsString(buffer, "%s");
+	dataField.copy(buffer, 0);
 	TEST_ASSERT_EQUAL(0, strlen(buffer));
 }
 
 static void test_DatafieldStoreAsStringThenSet_ReturnsSameString(void)
 {
-	static DataField dataField = DataField(GENERIC_STRING);	
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
 	static char buffer[20];
-	dataField.StoreData("TESTSTRING");
-	dataField.GetDataAsString(buffer, "%s");
+	dataField.storeData((char *)"TESTSTRING");
+	dataField.copy(buffer, 0);
 	TEST_ASSERT_EQUAL_STRING("TESTSTRING", buffer);
 }
 
 static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void)
 {
-	static DataField dataField = DataField(GENERIC_STRING);	
-	static char buffer[20];
-	static char expectedStr[20];
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
+	static char buffer[21] = "01234567890123456789";
+	static char expectedStr[21];
 	static char testStr[] = "THIS IS A REALLY LONG STRING THAT SHOULD BE CLIPPED!";
-	dataField.StoreData(testStr);
-	dataField.GetDataAsString(buffer, "%s");
-	strncpy(expectedStr, testStr, MAX_DATAFIELD_STRING_SIZE);
-	TEST_ASSERT_EQUAL(MAX_DATAFIELD_STRING_SIZE, strlen(buffer));
+	dataField.storeData((char*)testStr);
+	dataField.copy(buffer, 0);
+	strncpy(expectedStr, testStr, 20);
+	TEST_ASSERT_EQUAL(20, strlen(buffer));
 	TEST_ASSERT_EQUAL_STRING(expectedStr, buffer);	
 }
 
-static void test_DatafieldSetTypeAsStringAndSetFloatValue_ReturnsZeroAsFloatValue(void)
+static void test_DatafieldStoreArrayOfInts_CorrectlyStoresInts(void)
 {
-	static DataField dataField = DataField(GENERIC_STRING);
-	dataField.StoreData(100.f);
-	TEST_ASSERT_EQUAL(0.0f, dataField.GetDataAsFloat());
+	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	fillWithTestIntData(&dataField);
+
+	int16_t i;
+	for (i = 0; i < 10; ++i)
+	{
+		TEST_ASSERT_EQUAL(intDataArray[i], dataField.getData(i));
+	}
 }
+
+static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
+{
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 10);
+	fillWithTestStringData(&dataField);
+
+	int16_t i;
+	for (i = 0; i < 5; ++i)
+	{
+		TEST_ASSERT_EQUAL_STRING(strDataArray[i], dataField.getData(i));
+	}
+}
+
 
 int main(void)
 {
   UnityBegin("DLDataField.cpp");
 
   RUN_TEST(test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue);
-  RUN_TEST(test_DatafieldStoreAsDifferentNumericTypes_ThenGetAsFloatWorks);
   RUN_TEST(test_DatafieldStoreFloats_CorrectlyFormattedAsStrings);
   RUN_TEST(test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue);
   RUN_TEST(test_DatafieldStoreAsStringThenSet_ReturnsSameString);
   RUN_TEST(test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength);
-  RUN_TEST(test_DatafieldSetTypeAsStringAndSetFloatValue_ReturnsZeroAsFloatValue);
+
+  RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresInts);
+  RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
 
   UnityEnd();
   return 0;
