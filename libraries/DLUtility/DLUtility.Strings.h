@@ -28,7 +28,8 @@ class FixedLengthAccumulator
         bool isFull(void);
         void attach(char * buffer, uint16_t length);
         void detach(void);
-        
+        uint16_t length(void);
+
     private:
         char * m_buffer;
         uint16_t m_maxLength;

@@ -93,6 +93,18 @@ void test_FixedLengthAccumulator_WritesCRLFUsingWriteLine(void)
     TEST_ASSERT_EQUAL_STRING("Should have CRLF at end\r\n", buffer);
 }
 
+void test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength(void)
+{
+    accumulator->reset();
+    TEST_ASSERT_EQUAL(0, accumulator->length());
+    accumulator->writeString("Thislineis26characterslong");
+    TEST_ASSERT_EQUAL(26, accumulator->length());
+    accumulator->writeChar('a');
+    TEST_ASSERT_EQUAL(27, accumulator->length());
+    accumulator->writeString("MAX OUT THE ACCUMULATOR - MAX OUT THE ACCUMULATOR - MAX OUT THE ACCUMULATOR");
+    TEST_ASSERT_EQUAL(99, accumulator->length());
+}
+
 //=======MAIN=====
 int main(void)
 {
@@ -106,6 +118,6 @@ int main(void)
   RUN_TEST(test_FixedLengthAccumulator_AcceptStringLessThanMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_CopiesPartialStringUpToMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_WritesCRLFUsingWriteLine);
-
+  RUN_TEST(test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength);
   return (UnityEnd());
 }

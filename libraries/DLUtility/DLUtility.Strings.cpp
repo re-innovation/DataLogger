@@ -206,3 +206,14 @@ void FixedLengthAccumulator::detach(void)
     m_maxLength = 0;
     m_writeIndex = 0;
 }
+
+/*
+ * FixedLengthAccumulator::length
+ *
+ * Returns the current length of the written buffer based on write index
+ */
+
+uint16_t FixedLengthAccumulator::length(void)
+{
+    return m_writeIndex;
+}
