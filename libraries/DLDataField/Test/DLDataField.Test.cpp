@@ -112,9 +112,31 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyStoresInts(void)
 	}
 }
 
+static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
+{
+	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	fillWithTestIntData(&dataField);
+
+	dataField.storeData(5);
+	dataField.storeData(6);
+	dataField.storeData(7);
+
+	int16_t i;
+	// Datafield should have stored last 7 points in data array
+	for (i = 0; i < 7; ++i)
+	{
+		TEST_ASSERT_EQUAL(intDataArray[i+3], dataField.getData(i));
+	}
+
+	// Newest three additions should be in last three entries
+	TEST_ASSERT_EQUAL(5, dataField.getData(7));
+	TEST_ASSERT_EQUAL(6, dataField.getData(8));
+	TEST_ASSERT_EQUAL(7, dataField.getData(9));
+}
+
 static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
 {
-	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 10);
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
 	fillWithTestStringData(&dataField);
 
 	int16_t i;
@@ -124,20 +146,44 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
 	}
 }
 
+static void test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer(void)
+{
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
+	fillWithTestStringData(&dataField);
+
+	dataField.storeData((char*)"SW");
+	dataField.storeData((char*)"W");
+	dataField.storeData((char*)"NW");
+
+	int16_t i;
+	// Datafield should have stored last 2 points in data array
+	for (i = 0; i < 2; ++i)
+	{
+		TEST_ASSERT_EQUAL_STRING(strDataArray[i+3], dataField.getData(i));
+	}
+
+	// Newest three additions should be in last three entries
+	TEST_ASSERT_EQUAL_STRING("SW", dataField.getData(2));
+	TEST_ASSERT_EQUAL_STRING("W", dataField.getData(3));
+	TEST_ASSERT_EQUAL_STRING("NW", dataField.getData(4));
+}
 
 int main(void)
 {
-  UnityBegin("DLDataField.cpp");
+    UnityBegin("DLDataField.cpp");
 
-  RUN_TEST(test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue);
-  RUN_TEST(test_DatafieldStoreFloats_CorrectlyFormattedAsStrings);
-  RUN_TEST(test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue);
-  RUN_TEST(test_DatafieldStoreAsStringThenSet_ReturnsSameString);
-  RUN_TEST(test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength);
+    RUN_TEST(test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue);
+    RUN_TEST(test_DatafieldStoreFloats_CorrectlyFormattedAsStrings);
+    RUN_TEST(test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue);
+    RUN_TEST(test_DatafieldStoreAsStringThenSet_ReturnsSameString);
+    RUN_TEST(test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength);
 
-  RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresInts);
-  RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
+    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresInts);
+    RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
+    
+    RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
+    RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);
 
-  UnityEnd();
-  return 0;
+    UnityEnd();
+    return 0;
 }

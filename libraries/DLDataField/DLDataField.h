@@ -24,13 +24,18 @@ typedef enum field_type FIELD_TYPE;
 class DataField
 {
     public:
-        DataField(FIELD_TYPE fieldType);
+        DataField(FIELD_TYPE fieldType, uint8_t length);
         ~DataField();
         FIELD_TYPE getType(void);
         
     protected:
+
+        void incrementIndexes(void);
+        uint8_t getRealReadIndex(uint8_t requestedIndex);
+
         FIELD_TYPE m_fieldType;
-        uint8_t m_index;
+        bool m_full; // Set to true when buffer is first filled
+        uint8_t m_index[2];
         uint8_t m_maxIndex;
 };
 
@@ -47,6 +52,9 @@ class NumericDataField : public DataField
 
     private:
         T * m_data;
+        #ifdef TEST
+        void printContents(void);
+        #endif
 };
 
 class StringDataField : public DataField

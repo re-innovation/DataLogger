@@ -20,6 +20,10 @@
 #include <string.h>
 #endif
 
+#ifdef TEST
+#include <iostream>
+#endif
+
 /*
  * Local Application Includes
  */
@@ -28,12 +32,22 @@
 #include "DLUtility.h"
 
 /*
+ * Defines and Typedefs
+ */
+
+// The read/write indexes for data arrays are stored in a two-value array.
+#define R 0 // First entry is the read index
+#define W 1 // Second entry is the write index
+
+/*
  * Public Functions 
  */
 
-DataField::DataField(FIELD_TYPE fieldType)
+DataField::DataField(FIELD_TYPE fieldType, uint8_t length)
 {
  	m_fieldType = fieldType;
+ 	m_full = false;
+ 	m_maxIndex = length - 1;
 }
 
 DataField::~DataField() {}
@@ -43,8 +57,30 @@ FIELD_TYPE DataField::getType(void)
 	return m_fieldType;
 }
 
+void DataField::incrementIndexes(void)
+{
+	incrementwithrollover(m_index[W], m_maxIndex);
+	if (m_index[W] == 0) { m_full = true; } // Write index has rolled over, so buffer is full
+
+	if (m_full)
+	{
+		// When full, the write index points to the oldest value (where data should be read from)
+		m_index[R] = m_index[W];
+	}
+}
+
+uint8_t DataField::getRealReadIndex(uint8_t requestedIndex)
+{
+	/* Translate request for index based on 0 being oldest stored value
+	into index based on circular array storage */
+	requestedIndex += m_index[R];
+	if (requestedIndex > m_maxIndex) { requestedIndex -= m_maxIndex+1; } // Wrap around the buffer
+
+	return requestedIndex;
+}
+
 template <typename T>
-NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint8_t N) : DataField(type)
+NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint8_t N) : DataField(type, N)
 {
 	m_data = new T[N];
 	
@@ -53,8 +89,8 @@ NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint8_t N) : DataField(ty
 		fillArray(m_data, (T)0, N);
 	}
 
-	m_index = 0;
-	m_maxIndex = N;
+	m_index[R] = 0;
+	m_index[W] = 0;
 }
 
 template <typename T>
@@ -66,14 +102,15 @@ NumericDataField<T>::~NumericDataField()
 template <typename T>
 T NumericDataField<T>::getData(uint8_t index)
 {
-	return (index < m_maxIndex) ? m_data[index] : 0;
+	index = getRealReadIndex(index);
+	return m_data[index];
 }
 
 template <typename T>
 void NumericDataField<T>::storeData(T data)
 {
-	m_data[m_index] = (float)data;
-	incrementwithrollover(m_index, m_maxIndex);
+	m_data[m_index[W]] = (float)data;
+	incrementIndexes();
 }
 
 template <typename T>
@@ -82,7 +119,20 @@ void NumericDataField<T>::getDataAsString(char * buf, char const * const fmt, ui
 	sprintf(buf, fmt, m_data[index]); // Write data point to buffer
 }
 
-StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N) : DataField(type)
+#ifdef TEST
+template <typename T>
+void NumericDataField<T>::printContents(void)
+{
+	uint8_t i;
+	for (i = 0; i <= m_maxIndex; ++i)
+	{
+		std::cout << m_data[i] << ",";
+	}
+	std::cout << std::endl;
+}
+#endif
+
+StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N) : DataField(type, N)
 {
 	m_data = new char*[N];
 	
@@ -95,8 +145,8 @@ StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N) : Data
 		}
 	}
 
-	m_index = 0;
-	m_maxIndex = N;
+	m_index[R] = 0;
+	m_index[W] = 0;
 	m_maxLength = len;
 }
 
@@ -113,21 +163,20 @@ StringDataField::~StringDataField()
 
 void StringDataField::storeData(char * data)
 {
-	strncpy(m_data[m_index], data, m_maxLength);
-	incrementwithrollover(m_index, m_maxIndex);
+	strncpy(m_data[m_index[W]], data, m_maxLength);
+	incrementIndexes();
 }
 
 char * StringDataField::getData(uint8_t index)
 {
-	return (index < m_maxIndex) ? m_data[index] : NULL; 
+	index = getRealReadIndex(index);
+	return m_data[index];
 }
 
 void StringDataField::copy(char * buf, uint8_t index)
 {
-	if (index < m_maxIndex)
-	{
-		strncpy(buf, m_data[index], m_maxLength);
-	}
+	index = getRealReadIndex(index);
+	strncpy(buf, m_data[index], m_maxLength);
 }
 
 // Explictly instantiate templates for NumericDataField
