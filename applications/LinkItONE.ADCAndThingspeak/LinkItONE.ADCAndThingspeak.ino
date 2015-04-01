@@ -53,19 +53,19 @@ static ADS1115 s_ADCs[] = {
 };
 
 // In-RAM data storage
-static DataField s_dataFields[] = {
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT)
+static NumericDataField<float> s_dataFields[] = {
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1)
 };
 
 // Tasks
@@ -118,7 +118,7 @@ void readFromADCs(void)
         {
             field = (adc*4)+ch;
             s_dataFields[field].storeData(s_ADCs[adc].readADC_SingleEnded(ch));
-            s_thingSpeakService->setField(field, &s_dataFields[field]);
+            s_thingSpeakService->setField(field, s_dataFields[field].getData(0));
         }
     }
 }

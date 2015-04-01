@@ -72,11 +72,11 @@ char * Thingspeak::getURL(void)
     return m_url;
 }
 
-void Thingspeak::setField(uint8_t fieldIndex, DataField * pDataField)
+void Thingspeak::setField(uint8_t fieldIndex, float data)
 {
     if (fieldIndex > 5) { return; }
     
-    m_data[fieldIndex] = pDataField->getDataAsFloat();
+    m_data[fieldIndex] = data;
 }
 
 uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize)

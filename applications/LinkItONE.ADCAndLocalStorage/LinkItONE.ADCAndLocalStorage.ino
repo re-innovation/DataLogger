@@ -28,7 +28,7 @@
  * LinkIt One Includes
  */
 
-#include <LGPRS.h>
+#include <LSD.h>
 
 /*
  * DataLogger Includes
@@ -50,19 +50,19 @@ static ADS1115 s_ADCs[] = {
 };
 
 // In-RAM data storage
-static DataField s_dataFields[] = {
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(VOLTAGE),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT),
-    DataField(CURRENT)
+static NumericDataField<float> s_dataFields[] = {
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(VOLTAGE, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1),
+    NumericDataField<float>(CURRENT, 1)
 };
 
 static LocalStorageInterface * s_sdCard;

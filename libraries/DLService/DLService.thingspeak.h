@@ -16,7 +16,7 @@ class Thingspeak : public ServiceInterface
         Thingspeak(char const * const url, char const * const key);
         ~Thingspeak();
     
-        void setField(uint8_t fieldIndex, DataField * data);
+        void setField(uint8_t fieldIndex, float data);
         char *  getURL(void);
 
         uint16_t createPostAPICall(char * buffer, uint16_t maxSize);

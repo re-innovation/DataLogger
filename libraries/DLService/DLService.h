@@ -20,7 +20,7 @@ class DataField;
 class ServiceInterface
 {
     public:
-        virtual void setField(uint8_t fieldIndex, DataField * pDataField) = 0;
+        virtual void setField(uint8_t fieldIndex, float data) = 0;
         virtual char *  getURL(void) = 0;
         
         virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize) = 0;
