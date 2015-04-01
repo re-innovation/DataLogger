@@ -32,6 +32,56 @@ void test_toLowerStr_CorrectlyLowercasesMixedCaseString(void)
     TEST_ASSERT_EQUAL_STRING("mixed case string", buffer);
 }
 
+void test_strncpy_safe_CorrectlyCopiesStringLessThanMaxLength(void)
+{
+    char destination[10];
+    char source[] = "ABC";
+
+    strncpy_safe(destination, source, sizeof(destination));
+
+    TEST_ASSERT_EQUAL_STRING("ABC", destination);
+}
+
+void test_strncpy_safe_CorrectlyCopiesStringEqualToThanMaxLength(void)
+{
+    char destination[10];
+    char source[] = "ABCDEFGHI";
+
+    strncpy_safe(destination, source, sizeof(destination));
+
+    TEST_ASSERT_EQUAL_STRING("ABCDEFGHI", destination);
+}
+
+void test_strncpy_safe_CorrectlyCopiesStringGreaterThanMaxLength(void)
+{
+    char destination[10];
+    char source[] = "ABCDEFGHIJKLMNO";
+
+    strncpy_safe(destination, source, sizeof(destination));
+
+    TEST_ASSERT_EQUAL_STRING("ABCDEFGHI", destination);
+}
+
+void test_strncpy_safe_CorrectlyCopiesStringOfRequestedLength(void)
+{
+    char destination[10];
+    char source[] = "ABCDEFGHIJKLMNO";
+
+    strncpy_safe(destination, source, 4);
+
+    TEST_ASSERT_EQUAL_STRING("ABC", destination);
+}
+
+void test_strncpy_safe_CorrectlyCopiesAllOfSourseWhenRequestingMoreThanLength(void)
+{
+    char destination[20];
+    char source[] = "ABCDEFGHIJKLMNO";
+
+    strncpy_safe(destination, source, 100);
+
+    TEST_ASSERT_EQUAL_STRING("ABCDEFGHIJKLMNO", destination);
+}
+
 void test_FixedLengthAccumulator_InitsCorrectly(void)
 {
     accumulator = new FixedLengthAccumulator(buffer, 100);
@@ -112,6 +162,13 @@ int main(void)
   RUN_TEST(test_toLowerStr_DoesNothingToEmptyString);
   RUN_TEST(test_toLowerStr_DoesNothingToLowerCaseString);
   RUN_TEST(test_toLowerStr_CorrectlyLowercasesMixedCaseString);
+  
+  RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringLessThanMaxLength);
+  RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringEqualToThanMaxLength);
+  RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringGreaterThanMaxLength);
+  RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringOfRequestedLength);
+  RUN_TEST(test_strncpy_safe_CorrectlyCopiesAllOfSourseWhenRequestingMoreThanLength);
+  
   RUN_TEST(test_FixedLengthAccumulator_InitsCorrectly);
   RUN_TEST(test_FixedLengthAccumulator_FillsUpToMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_ResetsCorrectly);

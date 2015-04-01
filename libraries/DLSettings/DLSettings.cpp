@@ -20,6 +20,7 @@
  */
 
 #include "DLSettings.h"
+#include "DLUtility.h"
 
 /*
  * Define two small classes to hold write-once read-many integer and string settings
@@ -69,8 +70,7 @@ void StringSetting::set(char const * const pSetting)
     {
         uint8_t length = strlen(pSetting);
         m_pSetting = new char[length+1];
-        strncpy(m_pSetting, pSetting, length);
-		m_pSetting[length] = '\0';
+        strncpy_safe(m_pSetting, pSetting, length+1);
     }
 }
 char * StringSetting::get(void) { return m_pSetting; }

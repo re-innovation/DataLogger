@@ -5,6 +5,7 @@
 
 void toLowerStr(char * pStr);
 char * skipSpaces(const char * line);
+uint32_t strncpy_safe(char * dst, char const * src, uint32_t max);
 
 /*
  * FixedLengthAccumulator

@@ -69,6 +69,43 @@ char * skipSpaces(const char * line)
     return (char*)line;
 }
 
+/*
+ * strncpy_safe
+ *
+ * Provides a wrapper around strncpy to avoid NULL terminator issues and the like
+ * Also returns the number of characters copied
+ */
+
+uint32_t strncpy_safe(char * dst, char const * src, uint32_t max)
+{
+    if (!dst || !src) { return 0; }
+    if (max == 0) { return 0; }
+
+    if (max == 1) { dst[0] = '\0'; return 0; }
+
+    max--; // Copy up to max-1 chars;
+    
+    uint32_t count = 0;
+    bool stop = (*src == '\0') || (count == max);
+
+    while (!stop)
+    {
+        *dst++ = *src++;
+        count++;
+        stop = (*src == '\0') || (count == max);
+    }
+
+    // Only NULL-terminate if max is greater than zero
+    if (max > 0)
+    {
+        *dst = '\0';
+    }
+
+    return count;
+}
+
+
+
 /* FixedLengthAccumulator class */
 
 /*

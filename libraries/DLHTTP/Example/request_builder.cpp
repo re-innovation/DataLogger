@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
         if (slash)
         {
             builder.setMethodAndURL(method, slash);
-            strncpy(getURL, url, slash - url);
+            strncpy_safe(getURL, url, slash - url);
             builder.putHeader("Host", getURL);
         }
         else
