@@ -177,6 +177,22 @@ static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(
 	TEST_ASSERT_EQUAL_STRING("", invalidDataField.getTypeString());
 }
 
+static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength(void)
+{
+	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	fillWithTestIntData(&dataField);
+
+	TEST_ASSERT_EQUAL(-3, dataField.getData(98357952));
+}
+
+static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength(void)
+{
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
+	fillWithTestStringData(&dataField);
+
+	TEST_ASSERT_EQUAL_STRING("E", dataField.getData(98357957));
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.cpp");
@@ -189,10 +205,12 @@ int main(void)
 
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresInts);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
+    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength);
     
     RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
     RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);
-
+	RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength);
+    
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
 
     UnityEnd();

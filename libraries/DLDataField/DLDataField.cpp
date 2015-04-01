@@ -94,13 +94,12 @@ void DataField::incrementIndexes(void)
 	}
 }
 
-uint8_t DataField::getRealReadIndex(uint8_t requestedIndex)
+uint32_t DataField::getRealReadIndex(uint32_t requestedIndex)
 {
 	/* Translate request for index based on 0 being oldest stored value
 	into index based on circular array storage */
 	requestedIndex += m_index[R];
-	if (requestedIndex > m_maxIndex) { requestedIndex -= m_maxIndex+1; } // Wrap around the buffer
-
+	requestedIndex %= (m_maxIndex + 1);
 	return requestedIndex;
 }
 
@@ -130,7 +129,7 @@ NumericDataField<T>::~NumericDataField()
 }
 
 template <typename T>
-T NumericDataField<T>::getData(uint8_t index)
+T NumericDataField<T>::getData(uint32_t index)
 {
 	index = getRealReadIndex(index);
 	return m_data[index];
@@ -197,13 +196,13 @@ void StringDataField::storeData(char * data)
 	incrementIndexes();
 }
 
-char * StringDataField::getData(uint8_t index)
+char * StringDataField::getData(uint32_t index)
 {
 	index = getRealReadIndex(index);
 	return m_data[index];
 }
 
-void StringDataField::copy(char * buf, uint8_t index)
+void StringDataField::copy(char * buf, uint32_t index)
 {
 	index = getRealReadIndex(index);
 	strncpy(buf, m_data[index], m_maxLength);

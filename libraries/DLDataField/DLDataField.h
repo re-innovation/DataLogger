@@ -33,12 +33,12 @@ class DataField
     protected:
 
         void incrementIndexes(void);
-        uint8_t getRealReadIndex(uint8_t requestedIndex);
+        uint32_t getRealReadIndex(uint32_t requestedIndex);
 
         FIELD_TYPE m_fieldType;
         bool m_full; // Set to true when buffer is first filled
-        uint8_t m_index[2];
-        uint8_t m_maxIndex;
+        uint32_t m_index[2];
+        uint32_t m_maxIndex;
 };
 
 template <typename T>
@@ -49,7 +49,7 @@ class NumericDataField : public DataField
         ~NumericDataField();
 
         void storeData(T data);
-        T getData(uint8_t index);
+        T getData(uint32_t index);
         void getDataAsString(char * buf, char const * const fmt, uint8_t index);
 
     private:
@@ -68,8 +68,8 @@ class StringDataField : public DataField
         ~StringDataField();
 
         void storeData(char * data);
-        char * getData(uint8_t index);
-        void copy(char * buf, uint8_t index);
+        char * getData(uint32_t index);
+        void copy(char * buf, uint32_t index);
     private:
         char ** m_data;
         uint8_t m_maxLength;
