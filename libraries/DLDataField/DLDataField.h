@@ -9,6 +9,7 @@ enum field_type
 
     // Temperature values
     TEMPERATURE_C,
+    TEMPERATURE_F,
     TEMPERATURE_K,
     
     // Solar values
@@ -26,7 +27,8 @@ class DataField
     public:
         DataField(FIELD_TYPE fieldType, uint8_t length);
         ~DataField();
-        FIELD_TYPE getType(void);
+        FIELD_TYPE getType(void);    
+        char const * getTypeString(void);
         
     protected:
 

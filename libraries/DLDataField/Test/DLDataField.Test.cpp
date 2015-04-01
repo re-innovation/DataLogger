@@ -168,6 +168,15 @@ static void test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer(void)
 	TEST_ASSERT_EQUAL_STRING("NW", dataField.getData(4));
 }
 
+static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(void)
+{
+	StringDataField dataField = StringDataField(DEGREES_DIRECTION, 3, 5);
+	TEST_ASSERT_EQUAL_STRING("Wind Direction", dataField.getTypeString());
+
+	StringDataField invalidDataField = StringDataField((FIELD_TYPE)(DEGREES_DIRECTION+1), 3, 5);
+	TEST_ASSERT_EQUAL_STRING("", invalidDataField.getTypeString());
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.cpp");
@@ -183,6 +192,8 @@ int main(void)
     
     RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
     RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);
+
+    RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
 
     UnityEnd();
     return 0;

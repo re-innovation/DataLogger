@@ -40,7 +40,32 @@
 #define W 1 // Second entry is the write index
 
 /*
- * Public Functions 
+ * Private Functions 
+ */
+
+static char const * _getTypeString(FIELD_TYPE type)
+{
+
+	static char const * fieldtypestrings[] = {
+    	"Voltage, V", // VOLTAGE
+    	"Current, A", // CURRENT
+
+    	"Temp, C", // TEMPERATURE_C
+    	"Temp, F", // TEMPERATURE_F
+    	"Temp, K", // TEMPERATURE_K
+    
+    	"Irradiance, W/m2", // IRRADIANCE_WpM2
+
+    	"Wind Direction", // CARDINAL_DIRECTION
+    	"Wind Direction" // DEGREES_DIRECTION		
+	};
+
+	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";
+	
+}
+
+/*
+ * DataField Class Functions 
  */
 
 DataField::DataField(FIELD_TYPE fieldType, uint8_t length)
@@ -77,6 +102,11 @@ uint8_t DataField::getRealReadIndex(uint8_t requestedIndex)
 	if (requestedIndex > m_maxIndex) { requestedIndex -= m_maxIndex+1; } // Wrap around the buffer
 
 	return requestedIndex;
+}
+
+char const * DataField::getTypeString(void)
+{
+	return _getTypeString(m_fieldType);
 }
 
 template <typename T>
