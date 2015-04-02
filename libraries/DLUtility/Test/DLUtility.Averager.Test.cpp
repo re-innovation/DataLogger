@@ -6,37 +6,34 @@
 #include "unity.h"
 
 #include "../DLUtility.Averager.h"
+#include "../DLUtility.HelperMacros.h"
 
 /*
  * Defines and Typedefs
  */
 
-#define TEST_RESET(averager_type, data_type, expected_result_var) \
-{ \
-data_type result; \
-pAverager = AVERAGER_GetAverager(averager_type, 20); \
-\
-AVERAGER_Reset(pAverager, &expected_result_var); \
-AVERAGER_GetAverage(pAverager, &result); \
-TEST_ASSERT_EQUAL(expected_result_var, result); \
-\
-AVERAGER_Reset(pAverager, NULL); \
-AVERAGER_GetAverage(pAverager, &result); \
-TEST_ASSERT_EQUAL(0, result); \
-\
-AVERAGER_Reset(pAverager, NULL); \
-AVERAGER_GetAverage(pAverager, &result); \
-TEST_ASSERT_EQUAL(0, result); \
+template <typename T>
+void testReset(T expected_result)
+{
+	Averager<T> averager = Averager<T>(20);
+	averager.reset(&expected_result);
+
+	TEST_ASSERT_EQUAL(expected_result, averager.getAverage());
+
+	T zero = 0;
+	averager.reset(&zero);
+	TEST_ASSERT_EQUAL(0, averager.getAverage());
+
+	averager.reset(NULL);
+	TEST_ASSERT_EQUAL(0, averager.getAverage());
 }
 
-#define TEST_RUNNING(averager_type, data_type, data_ptr, expected_result_var) \
-{ \
-data_type result; \
-pAverager = AVERAGER_GetAverager(averager_type, 20); \
-pCurrentData = data_ptr; \
-fillRunningAverager(sizeof(data_type)); \
-AVERAGER_GetAverage(pAverager, &result); \
-TEST_ASSERT_EQUAL(expected_result_var, result); \
+template <typename T>
+void testRunning(T * data_ptr, uint16_t size, T expected_result)
+{
+	Averager<T> averager = Averager<T>(size);
+	averager.fillFromArray(data_ptr, size);
+	TEST_ASSERT_EQUAL(expected_result, averager.getAverage());
 }
 
 /*
@@ -73,9 +70,6 @@ static uint32_t u32data[] =
 		31211219, 277576, 192502949, 149911801};	
 static uint32_t u32dataAverage = 137303231;
 
-static AVERAGER *pAverager;
-static void *pCurrentData;
-
 static int8_t s8resetValue = -10;
 static uint8_t u8resetValue = 10;
 static int16_t s16resetValue = -10;
@@ -93,43 +87,19 @@ void tearDown(void)
 
 }
 
-void test_AveragerInit(void)
-{
-	pAverager = AVERAGER_GetAverager(S8, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-	pAverager = AVERAGER_GetAverager(U8, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-	pAverager = AVERAGER_GetAverager(S16, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-	pAverager = AVERAGER_GetAverager(U16, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-	pAverager = AVERAGER_GetAverager(S32, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-	pAverager = AVERAGER_GetAverager(U32, 20);
-	TEST_ASSERT_NOT_EQUAL(NULL, pAverager);
-}
+void test_AveragerS8Running(void) {	testRunning(s8data, N_ELE(s8data), s8dataAverage); }
+void test_AveragerU8Running(void) {	testRunning(u8data, N_ELE(u8data), u8dataAverage); }
+void test_AveragerS16Running(void) { testRunning(s16data, N_ELE(s16data), s16dataAverage); }
+void test_AveragerU16Running(void) { testRunning(u16data, N_ELE(u16data), u16dataAverage); }
+void test_AveragerS32Running(void) { testRunning(s32data, N_ELE(s32data), s32dataAverage); }
+void test_AveragerU32Running(void) { testRunning(u32data, N_ELE(u32data), u32dataAverage); }
 
-static void fillRunningAverager(uint8_t size)
-{
-	for (uint8_t i = 0; i < 20; ++i)
-	{
-		AVERAGER_NewData(pAverager, (char*)pCurrentData + (i*size));
-	}	
-}
-
-void test_AveragerS8Running(void) {	TEST_RUNNING(S8, int8_t, s8data, s8dataAverage); }
-void test_AveragerU8Running(void) {	TEST_RUNNING(U8, uint8_t, u8data, u8dataAverage); }
-void test_AveragerS16Running(void) { TEST_RUNNING(S16, int16_t, s16data, s16dataAverage); }
-void test_AveragerU16Running(void) { TEST_RUNNING(U16, uint16_t, u16data, u16dataAverage); }
-void test_AveragerS32Running(void) { TEST_RUNNING(S32, int32_t, s32data, s32dataAverage); }
-void test_AveragerU32Running(void) { TEST_RUNNING(U32, uint32_t, u32data, u32dataAverage); }
-
-void test_AveragerS8Reset(void) { TEST_RESET(S8, int8_t, s8resetValue); }
-void test_AveragerU8Reset(void) { TEST_RESET(U8, uint8_t, u8resetValue); }
-void test_AveragerS16Reset(void) { TEST_RESET(S16, int16_t, s16resetValue); }
-void test_AveragerU16Reset(void) { TEST_RESET(U16, uint16_t, u16resetValue); }
-void test_AveragerS32Reset(void) { TEST_RESET(S16, int16_t, s32resetValue); }
-void test_AveragerU32Reset(void) { TEST_RESET(U16, uint16_t, u32resetValue); }
+void test_AveragerS8Reset(void) { testReset(s8resetValue); }
+void test_AveragerU8Reset(void) { testReset(u8resetValue); }
+void test_AveragerS16Reset(void) { testReset(s16resetValue); }
+void test_AveragerU16Reset(void) { testReset(u16resetValue); }
+void test_AveragerS32Reset(void) { testReset(s32resetValue); }
+void test_AveragerU32Reset(void) { testReset(u32resetValue); }
 
 //=======Test Reset Option=====
 void resetTest()
@@ -141,23 +111,22 @@ void resetTest()
 //=======MAIN=====
 int main(void)
 {
-  UnityBegin("DLUtility.Averager.Test.cpp");
- 
-  RUN_TEST(test_AveragerInit);
-  RUN_TEST(test_AveragerS8Running);
-  RUN_TEST(test_AveragerU8Running);
-  RUN_TEST(test_AveragerS16Running);
-  RUN_TEST(test_AveragerU16Running);
-  RUN_TEST(test_AveragerS32Running);
-  RUN_TEST(test_AveragerU32Running);
-  
-  RUN_TEST(test_AveragerS8Reset);
-  RUN_TEST(test_AveragerS16Reset);
-  RUN_TEST(test_AveragerS32Reset);
-  
-  RUN_TEST(test_AveragerU8Reset);
-  RUN_TEST(test_AveragerU16Reset);
-  RUN_TEST(test_AveragerU32Reset);
-  
-  return (UnityEnd());
+	UnityBegin("DLUtility.Averager.Test.cpp");
+
+	RUN_TEST(test_AveragerS8Running);
+	RUN_TEST(test_AveragerU8Running);
+	RUN_TEST(test_AveragerS16Running);
+	RUN_TEST(test_AveragerU16Running);
+	RUN_TEST(test_AveragerS32Running);
+	RUN_TEST(test_AveragerU32Running);
+
+	RUN_TEST(test_AveragerS8Reset);
+	RUN_TEST(test_AveragerS16Reset);
+	RUN_TEST(test_AveragerS32Reset);
+
+	RUN_TEST(test_AveragerU8Reset);
+	RUN_TEST(test_AveragerU16Reset);
+	RUN_TEST(test_AveragerU32Reset);
+
+	return (UnityEnd());
 }

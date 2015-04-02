@@ -5,25 +5,25 @@
  * Defines and Typedefs
  */
 
-enum integertype
+template <typename T>
+class Averager
 {
-	S8,
-	U8,
-	S16,
-	U16,
-	S32,
-	U32
+	public:
+		Averager(uint16_t size);
+		void reset(T * value);
+		uint16_t size(void);
+		T getAverage(void);
+		void newData(T NewData);
+		
+		#ifdef TEST
+		void fillFromArray(T * array, uint16_t size);
+		#endif
+
+	private:
+		T * m_data;
+		uint16_t m_write;
+		uint16_t m_maxIndex;
+		bool m_full;
 };
-typedef enum integertype INTEGERTYPE;
-
-typedef struct averager AVERAGER;
-
-AVERAGER * AVERAGER_GetAverager(INTEGERTYPE eType, uint8_t size);
-
-void AVERAGER_NewData(AVERAGER * pAverager, void * pNewData);
-
-void AVERAGER_GetAverage(AVERAGER * pAverager, void * pResult);
-
-void AVERAGER_Reset(AVERAGER * pAverager, void * pValue);
 
 #endif

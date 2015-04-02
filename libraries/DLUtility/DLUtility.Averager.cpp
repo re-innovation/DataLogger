@@ -16,247 +16,104 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
+ 
 /*
  * Generic Library Includes
  */
 
 #include "DLUtility.Averager.h"
 #include "DLUtility.HelperMacros.h"
+#include "DLUtility.ArrayFunctions.h"
 
 /*
  * Defines and Typedefs
  */
 
- // This struct typedef'd in header file
-struct averager
+/*
+ * Averager Class Definition
+ */
+
+template <typename T>
+Averager<T>::Averager(uint16_t size)
 {
-	void * data;
-	INTEGERTYPE type;
-	uint8_t maxIndex;
-	uint8_t iWrite;
-	bool full;
-};
-
-typedef int64_t SUMMING_TYPE;
-
-#define DEFINE_RESET_AVERAGER_FUNCTION(type, data_type) \
-static void Reset##type##Data(AVERAGER* pAverager, void* pValue) \
-{ \
-	data_type value = (pValue) ? *(data_type*)pValue : 0; \
-	for (uint8_t n = 0; n <= pAverager->maxIndex; n++) \
-	{ \
-		((data_type*)pAverager->data)[n] = value; \
-	} \
+	m_data = new T[size];
+	m_write = 0;
+	m_maxIndex = size -1;
+	m_full = false;
 }
 
-/*
- * Private Function Prototypes
- */
- 
-/*
- * Private Variables
- */
-
-/*
- * Private Function Definitions
- */
-
-DEFINE_RESET_AVERAGER_FUNCTION(S8, int8_t)
-DEFINE_RESET_AVERAGER_FUNCTION(U8, uint8_t)
-DEFINE_RESET_AVERAGER_FUNCTION(S16, int16_t)
-DEFINE_RESET_AVERAGER_FUNCTION(U16, uint16_t)
-DEFINE_RESET_AVERAGER_FUNCTION(S32, int32_t)
-DEFINE_RESET_AVERAGER_FUNCTION(U32, uint32_t)
-
-static void * allocateDataPointer(INTEGERTYPE eType, uint8_t nElements)
+template <typename T>
+uint16_t Averager<T>::size(void)
 {
-	switch(eType)
+	return m_maxIndex + 1;
+}
+
+template <typename T>
+void Averager<T>::reset(T * value)
+{
+	/* The value is passed as a pointer so that NULL can
+	represent resetting to zero length (rather than resetting to full of zeroes) */
+	if (!value)
 	{
-	case S8:
-		return new int8_t(nElements);
-	case U8:
-		return new uint8_t(nElements);
-	case S16:
-		return new int16_t(nElements);
-	case U16:
-		return new uint16_t(nElements);
-	case S32:
-		return new int32_t(nElements);
-	case U32:
-		return new uint32_t(nElements);
-	default:
-		return NULL;
+		fillArray(m_data, (T)0, size());
 	}
-}
-
-static int32_t getData(AVERAGER * pAverager, uint8_t n)
-{
-	switch(pAverager->type)
+	else
 	{
-	case S8:
-		return (int32_t)(((int8_t*)pAverager->data)[n]);
-	case U8:
-		return (int32_t)(((uint8_t*)pAverager->data)[n]);
-	case S16:
-		return (int32_t)(((int16_t*)pAverager->data)[n]);
-	case U16:
-		return (int32_t)(((uint16_t*)pAverager->data)[n]);
-	case S32:
-		return (int32_t)(((int32_t*)pAverager->data)[n]);
-	case U32:
-		return (int32_t)(((uint32_t*)pAverager->data)[n]);
-	default:
-		return 0;
+		fillArray(m_data, *value, size());
 	}
+
+	m_write = 0;
+	m_full = (value != NULL); 
 }
 
-static SUMMING_TYPE getAverage(AVERAGER * pAverager)
+template <typename T>
+T Averager<T>::getAverage(void)
 {
-	SUMMING_TYPE sum = 0;
-	uint8_t count = 0;
-	if (pAverager)
+	int64_t sum = 0;
+	uint16_t count = 0;
+
+	if (m_write || m_full)
 	{
-		if (pAverager->iWrite || pAverager->full)
+		uint16_t n = 0;
+		count = m_full ? m_maxIndex : m_write - 1;
+		for (n = 0; n <= count; n++)
 		{
-			uint8_t n = 0;
-			count = pAverager->full ? pAverager->maxIndex : pAverager->iWrite - 1;
-			for (n = 0; n <= count; n++)
-			{
-				sum += getData(pAverager, n);
-			}
-		}
-		else
-		{
-			sum = 0;
+			sum += m_data[n];
 		}
 	}
 	else
 	{
 		sum = 0;
 	}
+
 	sum = div_round(sum, count+1);
 	return sum;
 }
 
-/*
- * Public Function Definitions
- */
-
-AVERAGER * AVERAGER_GetAverager(INTEGERTYPE eType, uint8_t size)
+template <typename T>
+void Averager<T>::newData(T newData)
 {
-	AVERAGER* pAverager = NULL;
-	
-	if (size)
-	{
-		pAverager = new struct averager;
-		if (pAverager)
-		{
-			pAverager->data = allocateDataPointer(eType, size);
-			
-			if (pAverager->data)
-			{
-				pAverager->type = eType;
-				pAverager->iWrite = 0;
-				pAverager->maxIndex = size - 1;
-				pAverager->full = false;
-			}
-			else
-			{
-				pAverager = NULL;
-			}
-		}
-	}
-	return pAverager;
+	m_data[m_write] = newData;
+	m_full |= (m_write == m_maxIndex);
+	incrementwithrollover(m_write, m_maxIndex);
 }
 
-void AVERAGER_NewData(AVERAGER * pAverager, void * pNewData)
+#ifdef TEST
+template <typename T>
+void Averager<T>::fillFromArray(T * array, uint16_t size)
 {
-	if (pAverager)
+	uint16_t i;
+	for (i = 0; i < size; ++i)
 	{
-		switch(pAverager->type)
-		{
-		case S8:
-			((int8_t*)pAverager->data)[pAverager->iWrite] = *(int8_t*)pNewData;
-			break;
-		case U8:
-			((int8_t*)pAverager->data)[pAverager->iWrite] = *(uint8_t*)pNewData;
-			break;
-		case S16:
-			((int16_t*)pAverager->data)[pAverager->iWrite] = *(int16_t*)pNewData;
-			break;
-		case U16:
-			((uint16_t*)pAverager->data)[pAverager->iWrite] = *(uint16_t*)pNewData;
-			break;
-		case S32:
-			((int32_t*)pAverager->data)[pAverager->iWrite] = *(int32_t*)pNewData;
-			break;
-		case U32:
-			((uint32_t*)pAverager->data)[pAverager->iWrite] = *(uint32_t*)pNewData;
-			break;
-		}
-		pAverager->full |= (pAverager->iWrite == pAverager->maxIndex);
-		incrementwithrollover(pAverager->iWrite, pAverager->maxIndex);
+		newData(array[i]);
 	}
 }
+#endif
 
-void AVERAGER_GetAverage(AVERAGER * pAverager, void * pResult)
-{
-	if (pAverager && pResult)
-	{
-		switch(pAverager->type)
-		{
-		case S8:
-			*(int8_t*)pResult = (int8_t)getAverage(pAverager);
-			break;
-		case U8:
-			*(uint8_t*)pResult = (uint8_t)getAverage(pAverager);
-			break;
-		case S16:
-			*(int16_t*)pResult = (int16_t)getAverage(pAverager);
-			break;
-		case U16:
-			*(uint16_t*)pResult = (uint16_t)getAverage(pAverager);
-			break;
-		case S32:
-			*(int32_t*)pResult = (int32_t)getAverage(pAverager);
-			break;
-		case U32:
-			*(uint32_t*)pResult = (uint32_t)getAverage(pAverager);
-			break;
-		}
-	}
-}
-
-void AVERAGER_Reset(AVERAGER * pAverager, void * pValue)
-{
-	if (pAverager)
-	{
-		switch(pAverager->type)
-		{
-		case S8:
-			ResetS8Data(pAverager, pValue);
-			break;
-		case U8:
-			ResetU8Data(pAverager, pValue);
-			break;
-		case S16:
-			ResetS16Data(pAverager, pValue);
-			break;
-		case U16:
-			ResetU16Data(pAverager, pValue);
-			break;
-		case S32:
-			ResetS32Data(pAverager, pValue);
-			break;
-		case U32:
-			ResetU32Data(pAverager, pValue);
-			break;
-		}
-		
-		pAverager->iWrite = 0;
-		/* If no pValue supplied, client wanted to fill with "NULL" zeros 
-		- i.e. zeros not to be counted in future averages */
-		pAverager->full = (pValue != NULL); 
-	}	
-}
+template class Averager<float>;
+template class Averager<uint8_t>;
+template class Averager<int8_t>;
+template class Averager<uint16_t>;
+template class Averager<int16_t>;
+template class Averager<uint32_t>;
+template class Averager<int32_t>;
