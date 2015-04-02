@@ -55,7 +55,7 @@ class NumericDataField : public DataField
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
-
+        
     private:
         T * m_data;
         #ifdef TEST
@@ -86,11 +86,12 @@ class StringDataField : public DataField
 uint32_t DataField_writeHeadersToBuffer(
     char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 
+/* These functions are in-progress and don't really do the job they say they do quite right.
 template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
     char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 
 uint32_t DataField_writeStringDataToBuffer(
     char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
-
+*/
 #endif
