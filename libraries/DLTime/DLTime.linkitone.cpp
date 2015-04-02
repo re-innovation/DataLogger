@@ -73,3 +73,15 @@ bool Time_GetTime(TM * tm, TIME_TYPE type)
     
     return success;
 }
+
+void Time_SetPlatformTime(TM * tm)
+{
+    datetimeInfo dt;
+    dt.sec = tm->tm_sec;
+    dt.min = tm->tm_min;
+    dt.hour = tm->tm_hour;
+    dt.day = tm->tm_mday;
+    dt.mon = tm->tm_mon;
+    dy.year = tm->tm_year;
+    LDateTime.setTime(&dt);
+}

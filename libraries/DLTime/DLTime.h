@@ -19,4 +19,6 @@ typedef enum time_type_enum TIME_TYPE;
 
 bool Time_GetTime(TM * tm, TIME_TYPE type);
 
+void Time_SetPlatformTime(TM * tm);
+
 #endif
