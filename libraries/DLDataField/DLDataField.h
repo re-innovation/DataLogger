@@ -29,7 +29,7 @@ class DataField
         ~DataField();
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
-        
+
     protected:
 
         void incrementIndexes(void);
@@ -39,6 +39,7 @@ class DataField
         bool m_full; // Set to true when buffer is first filled
         uint32_t m_index[2];
         uint32_t m_maxIndex;
+
 };
 
 template <typename T>
@@ -51,6 +52,9 @@ class NumericDataField : public DataField
         void storeData(T data);
         T getData(uint32_t index);
         void getDataAsString(char * buf, char const * const fmt, uint8_t index);
+
+        bool isString(void) { return false; }
+        bool isNumeric(void) { return true; }
 
     private:
         T * m_data;
@@ -67,12 +71,26 @@ class StringDataField : public DataField
         StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N);
         ~StringDataField();
 
-        void storeData(char * data);
+        void storeData(char const * data);
         char * getData(uint32_t index);
         void copy(char * buf, uint32_t index);
+
+        bool isString(void) { return true; }
+        bool isNumeric(void) { return false; }
+        
     private:
         char ** m_data;
         uint8_t m_maxLength;
 };
+
+uint32_t DataField_writeHeadersToBuffer(
+    char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
+
+template <typename T>
+uint32_t DataField_writeNumericDataToBuffer(
+    char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+
+uint32_t DataField_writeStringDataToBuffer(
+    char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 
 #endif

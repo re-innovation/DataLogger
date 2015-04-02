@@ -47,14 +47,14 @@ static char const * _getTypeString(FIELD_TYPE type)
 {
 
 	static char const * fieldtypestrings[] = {
-    	"Voltage, V", // VOLTAGE
-    	"Current, A", // CURRENT
+    	"Voltage (V)", // VOLTAGE
+    	"Current (A)", // CURRENT
 
-    	"Temp, C", // TEMPERATURE_C
-    	"Temp, F", // TEMPERATURE_F
-    	"Temp, K", // TEMPERATURE_K
+    	"Temp (C)", // TEMPERATURE_C
+    	"Temp (F)", // TEMPERATURE_F
+    	"Temp (K)", // TEMPERATURE_K
     
-    	"Irradiance, W/m2", // IRRADIANCE_WpM2
+    	"Irradiance (W/m2)", // IRRADIANCE_WpM2
 
     	"Wind Direction", // CARDINAL_DIRECTION
     	"Wind Direction" // DEGREES_DIRECTION		
@@ -190,9 +190,9 @@ StringDataField::~StringDataField()
 	delete[] m_data;
 }
 
-void StringDataField::storeData(char * data)
+void StringDataField::storeData(char const * data)
 {
-	strncpy(m_data[m_index[W]], data, m_maxLength);
+	strncpy_safe(m_data[m_index[W]], data, m_maxLength);
 	incrementIndexes();
 }
 
@@ -205,7 +205,73 @@ char * StringDataField::getData(uint32_t index)
 void StringDataField::copy(char * buf, uint32_t index)
 {
 	index = getRealReadIndex(index);
-	strncpy(buf, m_data[index], m_maxLength);
+	strncpy_safe(buf, m_data[index], m_maxLength);
+}
+
+uint32_t DataField_writeHeadersToBuffer(
+		char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength)
+{
+	if (!buffer) { return 0; }
+
+	uint8_t i;
+	
+	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
+
+	for (i = 0; i < arrayLength; ++i)
+	{
+		headerAccumulator.writeString(datafields[i].getTypeString());
+		if (!lastinloop(i, arrayLength))
+		{
+			headerAccumulator.writeString(", ");
+		}
+	}
+
+	return headerAccumulator.length();
+}
+
+template <typename T>
+uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
+{
+	if (!buffer) { return 0; }
+
+	uint8_t i;
+	char numericBuffer[10];
+
+	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
+
+	for (i = 0; i < arrayLength; ++i)
+	{
+		datafields[i].getDataAsString(numericBuffer, format, 0);
+		headerAccumulator.writeString(numericBuffer);		
+		if (!lastinloop(i, arrayLength))
+		{
+			headerAccumulator.writeString(", ");
+		}
+	}
+
+	return headerAccumulator.length();
+}
+
+uint32_t DataField_writeStringDataToBuffer(
+	char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength)
+{
+if (!buffer) { return 0; }
+
+	uint8_t i;
+
+	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
+
+	for (i = 0; i < arrayLength; ++i)
+	{
+		headerAccumulator.writeString(datafields[i].getData(0));		
+		if (!lastinloop(i, arrayLength))
+		{
+			headerAccumulator.writeString(", ");
+		}
+	}
+
+	return headerAccumulator.length();	
 }
 
 // Explictly instantiate templates for NumericDataField
@@ -216,3 +282,18 @@ template class NumericDataField<int16_t>;
 template class NumericDataField<uint32_t>;
 template class NumericDataField<int32_t>;
 template class NumericDataField<float>;
+
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<float> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<uint8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<int8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<uint16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<int16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<uint32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+template uint32_t DataField_writeNumericDataToBuffer(
+	char * buffer, NumericDataField<int32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);

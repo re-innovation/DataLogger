@@ -95,8 +95,8 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 	static char testStr[] = "THIS IS A REALLY LONG STRING THAT SHOULD BE CLIPPED!";
 	dataField.storeData((char*)testStr);
 	dataField.copy(buffer, 0);
-	strncpy(expectedStr, testStr, 20);
-	TEST_ASSERT_EQUAL(20, strlen(buffer));
+	strncpy(expectedStr, testStr, 19);
+	TEST_ASSERT_EQUAL(19, strlen(buffer));
 	TEST_ASSERT_EQUAL_STRING(expectedStr, buffer);	
 }
 
@@ -193,6 +193,56 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThan
 	TEST_ASSERT_EQUAL_STRING("E", dataField.getData(98357957));
 }
 
+static void test_writeDataFieldHeadersToBuffer_WritesCorrectFields(void)
+{
+	DataField fieldArray[] = {
+		NumericDataField<float>(VOLTAGE, 1),
+		NumericDataField<float>(CURRENT, 1),
+		StringDataField(CARDINAL_DIRECTION, 3, 1)
+	};
+
+	char buffer[100];
+	DataField_writeHeadersToBuffer(buffer, fieldArray, 3, 100);
+
+	TEST_ASSERT_EQUAL_STRING("Voltage (V), Current (A), Wind Direction", buffer);
+}
+
+static void test_writeNumericDataFieldsToBuffer_WritesCorrectValues(void)
+{
+	NumericDataField<float> fieldArray[] = {
+		NumericDataField<float>(VOLTAGE, 1),
+		NumericDataField<float>(CURRENT, 1),
+		NumericDataField<float>(TEMPERATURE_C, 1),
+	};
+
+	fieldArray[0].storeData(-13.4533);
+	fieldArray[1].storeData(8635.5542);
+	fieldArray[2].storeData(34.0);
+
+	char buffer[100];
+	DataField_writeNumericDataToBuffer(buffer, fieldArray, "%.2f", 3, 100);
+
+	TEST_ASSERT_EQUAL_STRING("-13.45, 8635.55, 34.00", buffer);
+}
+
+static void test_writeStringDataFieldsToBuffer_WritesCorrectValues(void)
+{
+	StringDataField fieldArray[] = {
+		StringDataField(CARDINAL_DIRECTION, 3, 1),
+		StringDataField(CARDINAL_DIRECTION, 3, 1),
+		StringDataField(CARDINAL_DIRECTION, 3, 1),
+	};
+
+	fieldArray[0].storeData("N");
+	fieldArray[1].storeData("NE");
+	fieldArray[2].storeData("E");
+
+	char buffer[100];
+	DataField_writeStringDataToBuffer(buffer, fieldArray, 3, 100);
+
+	TEST_ASSERT_EQUAL_STRING("N, NE, E", buffer);
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.cpp");
@@ -212,6 +262,10 @@ int main(void)
 	RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength);
     
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
+
+    RUN_TEST(test_writeDataFieldHeadersToBuffer_WritesCorrectFields);
+    RUN_TEST(test_writeNumericDataFieldsToBuffer_WritesCorrectValues);
+    RUN_TEST(test_writeStringDataFieldsToBuffer_WritesCorrectValues);
 
     UnityEnd();
     return 0;
