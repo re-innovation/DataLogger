@@ -1,7 +1,7 @@
 /*
- * data_field.cpp
+ * DLDataField.cpp
  * 
- * Stores single item of data and provides get/set functoinality
+ * Stores single item of data and provides get/set functionality
  *
  * Author: James Fowkes
  *
