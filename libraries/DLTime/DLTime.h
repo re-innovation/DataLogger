@@ -9,7 +9,7 @@ enum time_type_enum
 {
     TIME_PLATFORM,  // Time from local platform (e.g. RTC)
     TIME_GPS,       // Time from GPS source
-    TIME_NTP,       // Time from NTP source
+    TIME_NETWORK,   // Time from network source
 };
 typedef enum time_type_enum TIME_TYPE;
 

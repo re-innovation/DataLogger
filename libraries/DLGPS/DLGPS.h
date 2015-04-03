@@ -18,7 +18,7 @@ typedef struct gps_data_struct GPS_DATA;
 
 /* These functions must be implemented by the hardware library */
 void GPS_UpdateNow(void);
-void GPS_GetGPSTime(GPS_DATA const * const pData);
+void GPS_GetGPSTime(GPS_DATA const * const pData, TM * pTime);
 GPS_DATA const * GPS_GetInfo(void);
 bool GPS_InfoIsValid(void);
 
