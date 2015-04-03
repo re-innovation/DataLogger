@@ -7,7 +7,7 @@
  *
  * Basic summary:
  *
- * - Reads from RTC, echoes to serial, randomly adds up to +/- 30 minutes and repeats
+ * - Reads from RTC, echoes to serial, randomly adds up to 60 minutes, writes back to RTC and repeats
  */
 
 /*
@@ -53,15 +53,21 @@ void loop()
 {
     Time_GetTime(&s_time, TIME_PLATFORM);
 
-    Serial.print("Got time");
+    Serial.print("Got time ");
+    
+    if (s_time.tm_hour < 10) { Serial.print("0"); }
     Serial.print(s_time.tm_hour);
     Serial.print(":");
+
+    if (s_time.tm_min < 10) { Serial.print("0"); }
     Serial.print(s_time.tm_min);
     Serial.print(":");
+
+    if (s_time.tm_sec < 10) { Serial.print("0"); }
     Serial.println(s_time.tm_sec);
 
     Serial.print("Adding ");
-    uint16_t randomSeconds = random(-1800, 1800);
+    uint16_t randomSeconds = random(0, 3600);
     Serial.print(randomSeconds);
     Serial.print(" seconds.");
 
