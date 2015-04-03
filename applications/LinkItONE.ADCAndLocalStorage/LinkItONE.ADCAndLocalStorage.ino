@@ -46,8 +46,15 @@
 #include "DLSettings.h"
 #include "DLDataField.h"
 #include "DLSensor.ADS1x1x.h"
+#include "DLCSV.h"
 
 #include "TaskAction.h"
+
+/*
+ * Application Includes
+ */
+
+#include "app.data_conversion.h"
 
 // Pointers to fuctionality objects
 
@@ -57,66 +64,121 @@ static ADS1115 s_ADCs[] = {
     ADS1115(0x4A)
 };
 
+static bool s_adcPresent[] = {false, true, true};
+
 // Short term (1 second) storage
+#define FIELD_COUNT (12)
+
+#define ADC_READS_PER_SECOND (10)
+#define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
+
 static Averager<uint16_t> s_averagers[] = {
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000),
-    Averager<uint16_t>(1000)
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND),
+    Averager<uint16_t>(ADC_READS_PER_SECOND)
 };
 
 // Medium term (1 minute) in-RAM data storage
+#define STORE_TO_SD_INTERVAL_SECS (60)
+
 static NumericDataField<float> s_dataFields[] = {
-    NumericDataField<float>(VOLTAGE, 60),
-    NumericDataField<float>(VOLTAGE, 60),
-    NumericDataField<float>(VOLTAGE, 60),
-    NumericDataField<float>(VOLTAGE, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60),
-    NumericDataField<float>(CURRENT, 60)
+    NumericDataField<float>(VOLTAGE, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(VOLTAGE, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(VOLTAGE, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(VOLTAGE, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS),
+    NumericDataField<float>(CURRENT, STORE_TO_SD_INTERVAL_SECS)
+};
+
+static CONVERSION_FN s_conversionFunctions[] = 
+{
+    channel01Conversion,
+    channel02Conversion,
+    channel03Conversion,
+    channel04Conversion,
+    channel05Conversion,
+    channel06Conversion,
+    channel07Conversion,
+    channel08Conversion,
+    channel09Conversion,
+    channel10Conversion,
+    channel11Conversion,
+    channel12Conversion,
 };
 
 static LocalStorageInterface * s_sdCard;
 static  FILE_HANDLE s_fileHandle;
 
-static uint16_t s_storedDataCount = 0;
-static uint16_t s_adcReadCount = 0;
+static uint32_t s_entryID = 0;
 
-void averageAndStoreADCData(void)
+static TM s_time;
+static TM s_lastSDTimestamp;
+
+static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 1000, INFINITE_TICKS);
+static void averageAndStoreTaskFn(void)
 {
-    Serial.print("Averaging ADC data (");
-    Serial.print(millis());
-    Serial.println(")");
+    static unsigned long old = millis();
+    
+    /*Serial.print("Averaging ADC data (");
+    Serial.print( millis() - old );
+    Serial.println(")");*/
+    
+    old = millis();
 
-    s_storedDataCount++;
     uint8_t field = 0;
     uint8_t i;
-    for (i = 0; i < 12; i++)
+    Serial.print("1s averages: ");
+    for (i = 0; i < FIELD_COUNT; i++)
     {
         uint16_t average = s_averagers[i].getAverage();
-        s_dataFields[i].storeData( (float)average );
+        s_averagers[i].reset(NULL);
+
+        float toStore;
+        if (s_conversionFunctions[i])
+        {
+            toStore = s_conversionFunctions[i](average); 
+        }
+        else
+        {
+            toStore = (float)average;
+        }
+
+        Serial.print(toStore);
+        Serial.print("(");
+        Serial.print(average);
+        Serial.print(")");
+        if (!lastinloop(i, FIELD_COUNT))
+        {
+            Serial.print(", ");
+        }
+
+        s_dataFields[i].storeData( toStore );
     }
+    Serial.println();
 }
 
-void writeToSDCard(void)
+static TaskAction writeToSDCardTask(writeToSDCardTaskFn, STORE_TO_SD_INTERVAL_SECS*1000, INFINITE_TICKS);
+static void writeToSDCardTaskFn(void)
 {
     Serial.println("Writing averages to SD card");
     uint8_t field = 0;
     uint8_t i, j;
-    char buffer[10];
+    char buffer[50];
 
     openDataFileForToday();
 
@@ -124,14 +186,16 @@ void writeToSDCard(void)
     {
         for (i = 0; i < 60; ++i)
         {
-            for (j = 0; j < 12; ++j)
+            writeTimestampToOpenFile();
+            writeEntryIDToOpenFile();
+            for (j = 0; j < FIELD_COUNT; ++j)
             {
                 // Write from datafield to buffer then from buffer to SD file
                 s_dataFields[j].getDataAsString(buffer, "%.4f", i);
 
                 s_sdCard->write(s_fileHandle, buffer);
 
-                if (!lastinloop(j, 12))
+                if (!lastinloop(j, FIELD_COUNT))
                 {
                     s_sdCard->write(s_fileHandle, ", ");
                 }
@@ -149,24 +213,41 @@ void writeToSDCard(void)
     }
 }
 
+static void writeTimestampToOpenFile(void)
+{
+    char buffer[30];
+    time_increment_seconds(&s_lastSDTimestamp);
+    CSV_writeTimestampToBuffer(&s_lastSDTimestamp, buffer);
+    s_sdCard->write(s_fileHandle, buffer);
+    s_sdCard->write(s_fileHandle, ", ");
+}
+
+static void writeEntryIDToOpenFile(void)
+{
+    char buffer[30];
+    s_entryID++;
+    sprintf(buffer, "%d, ", s_entryID);
+    s_sdCard->write(s_fileHandle, buffer);
+}
+
 TaskAction readFromADCsTask(readFromADCsTaskFn, 100, INFINITE_TICKS);
 void readFromADCsTaskFn(void)
 {
-    s_adcReadCount++;
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
     for (adc = 0; adc < 3; adc++)
     {
-        for (ch = 0; ch < 4; ch++)
+        if (s_adcPresent[adc])
         {
-            field = (adc*4)+ch;
-            s_averagers[field].newData(s_ADCs[adc].readADC_SingleEnded(ch));
+            for (ch = 0; ch < 4; ch++)
+            {
+                field = (adc*4)+ch;
+                s_averagers[field].newData(s_ADCs[adc].readADC_SingleEnded(ch));
+            }
         }
     }
 }
-
-static TM s_time;
 
 static void openDataFileForToday(void)
 {
@@ -183,9 +264,14 @@ static void openDataFileForToday(void)
     else
     {
         s_fileHandle = s_sdCard->openFile(pFilename, true);
+        
+        // Write Timestamp and Entry ID headers
+        s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
+
         char csvHeaders[200];
-        DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, 12, 200);
+        DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, FIELD_COUNT, 200);
         s_sdCard->write(s_fileHandle, csvHeaders);
+        s_sdCard->write(s_fileHandle, "\n");
     }
 }
 
@@ -200,24 +286,16 @@ void setup()
     for (i = 0; i < 3; i++)
     {
         s_ADCs[i].begin();
+        s_ADCs[i].setGain(GAIN_ONE);
     }
 
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+    Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
 }
 
 void loop()
 {
     readFromADCsTask.tick();
-
-    if (s_adcReadCount == 10)
-    {
-        s_adcReadCount = 0;
-        averageAndStoreADCData();
-
-        if (s_storedDataCount == 60)
-        {
-            s_storedDataCount = 0;
-            writeToSDCard();
-        }
-    }
+    averageAndStoreTask.tick();
+    writeToSDCardTask.tick();
 }
