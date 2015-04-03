@@ -1,8 +1,10 @@
 /*
- * thingspeak.cpp
+ * DLService.thingspeak.cpp
  *
  * James Fowkes
  * 06 February 2015
+ *
+ * www.re-innovation.co.uk
  */
  
 #ifdef ARDUINO
@@ -197,15 +199,4 @@ void Thingspeak::putCSVUploadHeaders(FixedLengthAccumulator * accumulator)
         }
     }
     accumulator->writeString("\r\n");
-}
-
-void Thingspeak::writeTimestampToBuffer(TM * time, char * buffer)
-{
-    if (!buffer) { return; };
-    
-    // Format is YYYY-MM-DD HH:MM:SS +0000
-    sprintf(buffer, "%d-%02d-%02d %02d:%02d:%02d +0000",
-        C_TO_GREGORIAN_YEAR(time->tm_year), time->tm_mon, time->tm_mday,
-        time->tm_hour, time->tm_min, time->tm_sec);
-
 }

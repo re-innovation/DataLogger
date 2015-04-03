@@ -25,8 +25,6 @@ class Thingspeak : public ServiceInterface
 
         void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename);
 
-        static void writeTimestampToBuffer(TM * time, char * buffer);
-
     private:
 
         void putCSVUploadHeaders(FixedLengthAccumulator * accumulator);

@@ -105,24 +105,6 @@ void test_BulkUploadRequestLineIsCorrect()
 	TEST_ASSERT_EQUAL_STRING_MESSAGE(expectedResponseLines[s_testLine], requestStrings[s_testLine].c_str(), msg);
 }
 
-void test_TimestampsAreCreatedSuccessfully(void)
-{
-	TM testTime;
-
-	testTime.tm_year = 115; // 2015 as years since 1900
-	testTime.tm_mon = 4;
-	testTime.tm_mday = 3;
-	testTime.tm_hour = 13;
-	testTime.tm_min = 9;
-	testTime.tm_sec = 34;
-
-	char buffer[100];
-
-	Thingspeak::writeTimestampToBuffer(&testTime, buffer);
-
-	TEST_ASSERT_EQUAL_STRING("2015-04-03 13:09:34 +0000", buffer);
-}
-
 int main(void)
 {
     UnityBegin("DLService.Thingspeak.cpp");
@@ -137,6 +119,5 @@ int main(void)
  		RUN_TEST(test_BulkUploadRequestLineIsCorrect);
  	}
 
- 	RUN_TEST(test_TimestampsAreCreatedSuccessfully);
     return 0;
 }
