@@ -229,6 +229,16 @@ uint32_t DataField_writeHeadersToBuffer(
 	return headerAccumulator.length();
 }
 
+// Explictly instantiate templates for NumericDataField
+template class NumericDataField<uint8_t>;
+template class NumericDataField<int8_t>;
+template class NumericDataField<uint16_t>;
+template class NumericDataField<int16_t>;
+template class NumericDataField<uint32_t>;
+template class NumericDataField<int32_t>;
+template class NumericDataField<float>;
+
+/* In-progress functions
 template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
@@ -272,17 +282,9 @@ if (!buffer) { return 0; }
 	}
 
 	return headerAccumulator.length();	
-}
+}*/
 
-// Explictly instantiate templates for NumericDataField
-template class NumericDataField<uint8_t>;
-template class NumericDataField<int8_t>;
-template class NumericDataField<uint16_t>;
-template class NumericDataField<int16_t>;
-template class NumericDataField<uint32_t>;
-template class NumericDataField<int32_t>;
-template class NumericDataField<float>;
-
+/* In-progress functions 
 template uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField<float> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 template uint32_t DataField_writeNumericDataToBuffer(
@@ -297,3 +299,4 @@ template uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField<uint32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 template uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField<int32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+*/

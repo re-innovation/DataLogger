@@ -25,6 +25,7 @@
  */
 
 #include "DLUtility.Time.h"
+#include "DLTime.h"
 #include "DLGPS.h"
 
 /*
@@ -57,7 +58,7 @@ bool Time_GetTime(TM * tm, TIME_TYPE type)
         tm->tm_hour = dt.hour;
         tm->tm_mday = dt.day;
         tm->tm_mon = dt.mon;
-        tm->tm_year = dy.year;
+        tm->tm_year = dt.year;
         tm->tm_wday = -1; // Don't calculate day in week
         tm->tm_yday =  -1; // or day in year
         tm->tm_isdst = false; // Assume that datetime is never with DST
@@ -72,4 +73,16 @@ bool Time_GetTime(TM * tm, TIME_TYPE type)
     }
     
     return success;
+}
+
+void Time_SetPlatformTime(TM * tm)
+{
+    datetimeInfo dt;
+    dt.sec = tm->tm_sec;
+    dt.min = tm->tm_min;
+    dt.hour = tm->tm_hour;
+    dt.day = tm->tm_mday;
+    dt.mon = tm->tm_mon;
+    dt.year = tm->tm_year;
+    LDateTime.setTime(&dt);
 }
