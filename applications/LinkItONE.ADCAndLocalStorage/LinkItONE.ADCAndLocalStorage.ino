@@ -36,6 +36,8 @@
  * DataLogger Includes
  */
 
+#include "DLUtility.Time.h"
+#include "DLTime.h"
 #include "DLGPS.h"
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
@@ -44,7 +46,6 @@
 #include "DLSettings.h"
 #include "DLDataField.h"
 #include "DLSensor.ADS1x1x.h"
-#include "DLTime.h"
 
 #include "TaskAction.h"
 
@@ -96,6 +97,11 @@ static uint16_t s_adcReadCount = 0;
 
 void averageAndStoreADCData(void)
 {
+    Serial.print("Averaging ADC data (");
+    Serial.print(millis());
+    Serial.println(")");
+
+    s_storedDataCount++;
     uint8_t field = 0;
     uint8_t i;
     for (i = 0; i < 12; i++)
@@ -107,31 +113,46 @@ void averageAndStoreADCData(void)
 
 void writeToSDCard(void)
 {
+    Serial.println("Writing averages to SD card");
     uint8_t field = 0;
     uint8_t i, j;
     char buffer[10];
 
-    for (i = 0; i < 60; ++i)
+    openDataFileForToday();
+
+    if (s_fileHandle != INVALID_HANDLE)
     {
-        for (j = 0; j < 12; ++j)
+        for (i = 0; i < 60; ++i)
         {
-            // Write from datafield to buffer then from buffer to SD file
-            s_dataFields[j].getDataAsString(buffer, "%.4f", i);
-
-            s_sdCard->write(s_fileHandle, buffer);
-
-            if (!lastinloop(j, 12))
+            for (j = 0; j < 12; ++j)
             {
-                s_sdCard->write(s_fileHandle, ", ");
+                // Write from datafield to buffer then from buffer to SD file
+                s_dataFields[j].getDataAsString(buffer, "%.4f", i);
+
+                s_sdCard->write(s_fileHandle, buffer);
+
+                if (!lastinloop(j, 12))
+                {
+                    s_sdCard->write(s_fileHandle, ", ");
+                }
             }
+            s_sdCard->write(s_fileHandle, "\n");
         }
-        s_sdCard->write(s_fileHandle, "\n");
+
+        s_sdCard->closeFile(s_fileHandle);
+    }
+    else
+    {
+        Serial.print("Could not open '");
+        Serial.print(Filename_get());
+        Serial.println("' when trying to write data.");
     }
 }
 
-TaskAction readFromADCsTask(readFromADCsTaskFn, 1, INFINITE_TICKS);
+TaskAction readFromADCsTask(readFromADCsTaskFn, 100, INFINITE_TICKS);
 void readFromADCsTaskFn(void)
 {
+    s_adcReadCount++;
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
@@ -149,13 +170,23 @@ static TM s_time;
 
 static void openDataFileForToday(void)
 {
+
     Time_GetTime(&s_time, TIME_PLATFORM);
     Filename_setFromDate(s_time.tm_mday, s_time.tm_mon, s_time.tm_year);
-    s_fileHandle = s_sdCard->openFile(Filename_get(), false);
 
-    char csvHeaders[100];
-    DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, 12, 100);
-    s_sdCard->write(s_fileHandle, csvHeaders);
+    char const * const pFilename = Filename_get();
+
+    if (s_sdCard->fileExists(pFilename))
+    {
+        s_fileHandle = s_sdCard->openFile(pFilename, true);
+    }
+    else
+    {
+        s_fileHandle = s_sdCard->openFile(pFilename, true);
+        char csvHeaders[200];
+        DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, 12, 200);
+        s_sdCard->write(s_fileHandle, csvHeaders);
+    }
 }
 
 void setup()
@@ -172,14 +203,13 @@ void setup()
     }
 
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
-    openDataFileForToday();
 }
 
 void loop()
 {
     readFromADCsTask.tick();
 
-    if (s_adcReadCount == 1000)
+    if (s_adcReadCount == 10)
     {
         s_adcReadCount = 0;
         averageAndStoreADCData();

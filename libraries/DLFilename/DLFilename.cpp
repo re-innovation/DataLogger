@@ -20,7 +20,8 @@
  */
 
 #include "DLFilename.h"
-
+#include "DLUtility.h"
+ 
 static char s_buffer[20];
 
 /* Private Function Definitions */
@@ -47,6 +48,8 @@ void Filename_setFromDate(uint8_t day, uint8_t month, uint8_t year)
     if (checkDayIsValid(day) == false) { return; }
     if (checkMonthIsValid(month) == false) { return; }
 
+    year = TWO_DIGIT_YEAR(year); // Ensure year is from 0 to 99
+    
     s_buffer[0] = 'D';
     s_buffer[1] = (day / 10) + '0'; // Get tens and convert to ASCII
     s_buffer[2] = (day % 10) + '0'; // Get units and convert to ASCII
