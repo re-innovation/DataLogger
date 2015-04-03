@@ -3,6 +3,7 @@
 
 #include "DLUtility.AVR.h"
 #include "DLUtility.HelperMacros.h"
+#include "DLUtility.Averager.h"
 #include "DLUtility.Readline.h"
 #include "DLUtility.ArrayFunctions.h"
 #include "DLUtility.Time.h"
