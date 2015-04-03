@@ -8,6 +8,7 @@
 #define _MAX_FIELDS 8
 #endif
 
+// Forward declarations of classes/structs
 class FixedLengthAccumulator;
 
 class Thingspeak : public ServiceInterface
@@ -23,7 +24,9 @@ class Thingspeak : public ServiceInterface
         uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time);
 
         void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename);
-        
+
+        static void writeTimestampToBuffer(TM * time, char * buffer);
+
     private:
 
         void putCSVUploadHeaders(FixedLengthAccumulator * accumulator);
