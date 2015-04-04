@@ -65,7 +65,11 @@ bool Time_GetTime(TM * tm, TIME_TYPE type)
         break;
     case TIME_GPS:
         GPS_UpdateNow();
-        GPS_GetGPSTime(GPS_GetInfo(), tm);
+        success = GPS_InfoIsValid();
+        if (success)
+        {
+            GPS_GetGPSTime(GPS_GetInfo(), tm);
+        }
         break;
     case TIME_NETWORK:
         // TODO: Get time through network resources

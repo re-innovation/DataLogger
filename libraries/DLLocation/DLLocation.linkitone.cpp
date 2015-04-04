@@ -49,8 +49,7 @@ static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
 bool Location_Setup(uint32_t updatePeriod)
 {
     LGPS.powerOn();
-    return true; 
-    
+        
     updateTask.SetInterval(updatePeriod * 1000UL);
     
     // No useful information comes back from powerOn, so must assume that it worked!

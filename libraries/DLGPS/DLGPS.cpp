@@ -188,5 +188,5 @@ void GPS_GetGPSTime(GPS_DATA const * const pData, TM * pTime)
     pTime->tm_hour = pData->hour;
     pTime->tm_mday = pData->dd;
     pTime->tm_mon = pData->mm;
-    pTime->tm_year = pData->yy;
+    pTime->tm_year = GREGORIAN_TO_C_YEAR(pData->yy + 2000);
 }

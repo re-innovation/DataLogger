@@ -62,11 +62,11 @@ static void printDate(TM * tm, bool endwithCRLF = false)
 {
     if (tm->tm_mday < 10) { Serial.print("0"); }
     Serial.print(tm->tm_mday);
-    Serial.print(":");
+    Serial.print("-");
 
     if (tm->tm_mon < 10) { Serial.print("0"); }
     Serial.print(tm->tm_mon);
-    Serial.print(":");
+    Serial.print("-");
 
     uint8_t year = TWO_DIGIT_YEAR(tm->tm_year);
     if (year < 10) { Serial.print("0"); }
@@ -80,23 +80,30 @@ void setup()
     // setup Serial port
     Serial.begin(115200);
     delay(10000);
-
+    Location_Setup(0);
 }
 
 void loop()
 {
+    if (Time_GetTime(&s_gpsTime, TIME_GPS))
+    {
+        Serial.print("GPS time: ");
+        printTime(&s_gpsTime, false);
+        Serial.print(" ");
+        printDate(&s_gpsTime, true);
 
-    Time_GetTime(&s_gpsTime, TIME_GPS);
+        Serial.print("Setting RTC...");
+        Time_SetPlatformTime(&s_gpsTime);
 
-    Serial.print("GPS time: ");
-    printTime(&s_gpsTime, true);
-
-    Serial.print("Setting RTC...");
-    Time_SetPlatformTime(&s_time);
-
-    Time_GetTime(&s_time, TIME_PLATFORM);
-    Serial.print("RTC time: ");
-    printTime(&s_time, true);
-
+        Time_GetTime(&s_time, TIME_PLATFORM);
+        Serial.print("RTC time: ");
+        printTime(&s_time, false);
+        Serial.print(" ");
+        printDate(&s_time, true);
+    }
+    else
+    {
+        Serial.println("Waiting for valid GPS...");
+    }
     delay(5000);
 }
