@@ -38,7 +38,7 @@ enum month_enum
 #endif
 
 // Convert between C years and gregorian years
-#define GREGORIAN_TO_C_YEAR(year) (year % 100) 
+#define GREGORIAN_TO_C_YEAR(year) (year - FIRST_C_YEAR_GR) 
 #define C_TO_GREGORIAN_YEAR(year) (year + FIRST_C_YEAR_GR) 
 
 // Time and date epoch defines

@@ -42,19 +42,8 @@
 // Pointers to fuctionality objects
 static TM s_time;
 
-void setup()
+static void printTime(bool endwithCRLF = false)
 {
-    // setup Serial port
-    Serial.begin(115200);
-    delay(10000);
-}
-
-void loop()
-{
-    Time_GetTime(&s_time, TIME_PLATFORM);
-
-    Serial.print("Got time ");
-    
     if (s_time.tm_hour < 10) { Serial.print("0"); }
     Serial.print(s_time.tm_hour);
     Serial.print(":");
@@ -64,7 +53,48 @@ void loop()
     Serial.print(":");
 
     if (s_time.tm_sec < 10) { Serial.print("0"); }
-    Serial.println(s_time.tm_sec);
+    Serial.print(s_time.tm_sec);
+
+    if (endwithCRLF) { Serial.println(); }
+}
+
+static void printDate(bool endwithCRLF = false)
+{
+    if (s_time.tm_mday < 10) { Serial.print("0"); }
+    Serial.print(s_time.tm_mday);
+    Serial.print(":");
+
+    if (s_time.tm_mon < 10) { Serial.print("0"); }
+    Serial.print(s_time.tm_mon);
+    Serial.print(":");
+
+    uint8_t year = TWO_DIGIT_YEAR(s_time.tm_year);
+    if (year < 10) { Serial.print("0"); }
+    Serial.print(year);
+
+    if (endwithCRLF) { Serial.println(); }
+}
+
+void setup()
+{
+    // setup Serial port
+    Serial.begin(115200);
+    delay(10000);
+
+    Time_GetTime(&s_time, TIME_PLATFORM);
+
+    Serial.print("Example started at ");
+    printTime();
+    Serial.print(" on ");
+    printDate(true);
+}
+
+void loop()
+{
+    Time_GetTime(&s_time, TIME_PLATFORM);
+
+    Serial.print("Got time ");
+    printTime(true);    
 
     Serial.print("Adding ");
     uint16_t randomSeconds = random(0, 3600);
