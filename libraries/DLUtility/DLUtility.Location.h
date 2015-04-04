@@ -5,8 +5,10 @@
  * Defines and typedefs
  */
 
+#ifndef ARDUINO // Arduino defines PI itself
 #ifndef PI
 #define PI 3.14159265359f
+#endif
 #endif
 
 #define MEAN_EARTH_RADIUS_KM 6371U
