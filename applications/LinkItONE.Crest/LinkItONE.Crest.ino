@@ -38,6 +38,7 @@
 
 #include "DLUtility.Time.h"
 #include "DLTime.h"
+#include "DLCSV.h"
 #include "DLGPS.h"
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
@@ -50,6 +51,13 @@
 #include "DLSensor.Thermistor.h"
 
 #include "TaskAction.h"
+
+/*
+ * Application Includes
+ */
+
+#include "app.data_conversion.h"
+#include "app.upload_manager.h"
 
 // Pointers to fuctionality objects
 
@@ -119,35 +127,84 @@ static NumericDataField<float> s_dataFields[] = {
     NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_INTERVAL_SECS)
 };
 
+static CONVERSION_FN s_conversionFunctions[] = 
+{
+    channel01Conversion,
+    channel02Conversion,
+    channel03Conversion,
+    channel04Conversion,
+    channel05Conversion,
+    channel06Conversion,
+    channel07Conversion,
+    channel08Conversion,
+    channel09Conversion,
+    channel10Conversion,
+    channel11Conversion,
+    channel12Conversion,
+};
+
 static LocalStorageInterface * s_sdCard;
-static  FILE_HANDLE s_fileHandle;
+static FILE_HANDLE s_fileHandle;
+static uint32_t s_entryID = 0;
+
+static TM s_time;
+static TM s_lastSDTimestamp;
 
 static uint16_t s_storedDataCount = 0;
 static uint16_t s_adcReadCount = 0;
 
-void averageAndStoreADCData(void)
+static void writeTimestampToOpenFile(void)
 {
-    Serial.print("Averaging ADC data (");
-    Serial.print(millis());
-    Serial.println(")");
+    char buffer[30];
+    time_increment_seconds(&s_lastSDTimestamp);
+    CSV_writeTimestampToBuffer(&s_lastSDTimestamp, buffer);
+    s_sdCard->write(s_fileHandle, buffer);
+    s_sdCard->write(s_fileHandle, ", ");
+}
 
+static void writeEntryIDToOpenFile(void)
+{
+    char buffer[30];
+    s_entryID++;
+    sprintf(buffer, "%d, ", s_entryID);
+    s_sdCard->write(s_fileHandle, buffer);
+}
+
+static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 1000, INFINITE_TICKS);
+static void averageAndStoreTaskFn(void)
+{
     s_storedDataCount++;
     uint8_t field = 0;
     uint8_t i;
+
     for (i = 0; i < AVERAGER_COUNT; i++)
     {
         uint16_t average = s_averagers[i].getAverage();
-        s_dataFields[i].storeData( (float)average );
+        s_averagers[i].reset(NULL);
+
+        float toStore;
+        if (s_conversionFunctions[i])
+        {
+            toStore = s_conversionFunctions[i](average); 
+        }
+        else
+        {
+            toStore = (float)average;
+        }
+        s_dataFields[i].storeData( toStore );
+
     }
 
     // The ADC range is 0 to 5v, but thermistors are on 3.3v rail, so maximum is 1023 * 3.3/5 = 675
     for (i = 0; i < THERMISTOR_COUNT; i++)
     {
-        s_dataFields[i + AVERAGER_COUNT].storeData( s_thermistors[i].TemperatureFromADCReading(10000.0, s_adcs[0].read(), 675) );
+        float data = s_thermistors[i].TemperatureFromADCReading(10000.0, s_adcs[i].read(), 675);
+        s_dataFields[i + AVERAGER_COUNT].storeData(data);
     }
 }
 
-void writeToSDCard(void)
+static TaskAction writeToSDCardTask(writeToSDCardTaskFn, STORE_TO_SD_INTERVAL_SECS*1000, INFINITE_TICKS);
+static void writeToSDCardTaskFn(void)
 {
     Serial.println("Writing averages to SD card");
     uint8_t field = 0;
@@ -158,8 +215,11 @@ void writeToSDCard(void)
 
     if (s_fileHandle != INVALID_HANDLE)
     {
-        for (i = 0; i < 60; ++i)
+        for (i = 0; i < STORE_TO_SD_INTERVAL_SECS; ++i)
         {
+            writeTimestampToOpenFile();
+            writeEntryIDToOpenFile();
+            
             for (j = 0; j < FIELD_COUNT; ++j)
             {
                 // Write from datafield to buffer then from buffer to SD file
@@ -202,8 +262,6 @@ void readFromADCsTaskFn(void)
     }
 }
 
-static TM s_time;
-
 static void openDataFileForToday(void)
 {
 
@@ -222,9 +280,14 @@ static void openDataFileForToday(void)
     else
     {
         s_fileHandle = s_sdCard->openFile(pFilename, true);
+
+        // Write Timestamp and Entry ID headers
+        s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
+
         char csvHeaders[200];
         DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, FIELD_COUNT, 200);
         s_sdCard->write(s_fileHandle, csvHeaders);
+        s_entryID = 0;
     }
 }
 
@@ -239,24 +302,20 @@ void setup()
     for (i = 0; i < 3; i++)
     {
         s_ADCs[i].begin();
+        s_ADCs[i].setGain(GAIN_ONE);
+
     }
 
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+    s_sdCard->setEcho(true);
+
+    Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
+
 }
 
 void loop()
 {
     readFromADCsTask.tick();
-
-    if (s_adcReadCount == 10)
-    {
-        s_adcReadCount = 0;
-        averageAndStoreADCData();
-
-        if (s_storedDataCount == 60)
-        {
-            s_storedDataCount = 0;
-            writeToSDCard();
-        }
-    }
+    averageAndStoreTask.tick();
+    writeToSDCardTask.tick();
 }

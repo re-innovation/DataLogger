@@ -47,6 +47,12 @@ static bool s_fileIsOpenForWrite = false;
 LinkItOneSD::LinkItOneSD()
 {
     LSD.begin(); // Start the LinkIt ONE SD Interface
+    m_echo = false;
+}
+
+void LinkItOneSD::setEcho(bool set)
+{
+	m_echo = set;
 }
 
 bool LinkItOneSD::fileExists(char const * const filePath)
@@ -98,6 +104,14 @@ void LinkItOneSD::write(FILE_HANDLE file, char const * const toWrite)
 	if (fileAvailableForWrite)
 	{
 		s_file.print(toWrite);
+		if (m_echo)
+		{
+			Serial.print(toWrite);
+		}
+	}
+	else
+	{
+		Serial.println("File not open for write!");
 	}
 }
 

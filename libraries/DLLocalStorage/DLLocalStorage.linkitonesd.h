@@ -18,6 +18,10 @@ class LinkItOneSD : public LocalStorageInterface
         FILE_HANDLE openFile(char const * const filename, bool forWrite = false);
         bool endOfFile(FILE_HANDLE file);
         void closeFile(FILE_HANDLE file);
+        void setEcho(bool set);
+
+    private:
+        bool m_echo;
 };
 
 #endif

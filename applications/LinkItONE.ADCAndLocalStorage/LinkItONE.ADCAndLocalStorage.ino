@@ -132,17 +132,8 @@ static TM s_lastSDTimestamp;
 static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 1000, INFINITE_TICKS);
 static void averageAndStoreTaskFn(void)
 {
-    static unsigned long old = millis();
-    
-    /*Serial.print("Averaging ADC data (");
-    Serial.print( millis() - old );
-    Serial.println(")");*/
-    
-    old = millis();
-
     uint8_t field = 0;
     uint8_t i;
-    Serial.print("1s averages: ");
     for (i = 0; i < FIELD_COUNT; i++)
     {
         uint16_t average = s_averagers[i].getAverage();
@@ -157,19 +148,8 @@ static void averageAndStoreTaskFn(void)
         {
             toStore = (float)average;
         }
-
-        Serial.print(toStore);
-        Serial.print("(");
-        Serial.print(average);
-        Serial.print(")");
-        if (!lastinloop(i, FIELD_COUNT))
-        {
-            Serial.print(", ");
-        }
-
         s_dataFields[i].storeData( toStore );
     }
-    Serial.println();
 }
 
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, STORE_TO_SD_INTERVAL_SECS*1000, INFINITE_TICKS);
@@ -272,6 +252,7 @@ static void openDataFileForToday(void)
         DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, FIELD_COUNT, 200);
         s_sdCard->write(s_fileHandle, csvHeaders);
         s_sdCard->write(s_fileHandle, "\n");
+        s_entryID = 0;
     }
 }
 
