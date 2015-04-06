@@ -5,6 +5,7 @@ CFLAGS=-Wall -Wextra -Werror
 SYMBOLS=-DTEST
 
 SRC_FILES= DLService.thingspeak.example.cpp
+SRC_FILES += ../../../DLUtility/DLUtility.ArrayFunctions.cpp
 SRC_FILES += ../../../DLUtility/DLUtility.Strings.cpp
 SRC_FILES += ../../../DLService/DLService.cpp
 SRC_FILES += ../../../DLService/DLService.thingspeak.cpp

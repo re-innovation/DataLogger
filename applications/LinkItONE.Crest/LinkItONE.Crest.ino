@@ -393,7 +393,7 @@ static void writeToSDCardTaskFn(void)
                     s_sdCard->write(s_fileHandle, ", ");
                 }
             }
-            s_sdCard->write(s_fileHandle, "\n");
+            s_sdCard->write(s_fileHandle, "\r\n");
         }
 
         s_sdCard->closeFile(s_fileHandle);
@@ -444,9 +444,9 @@ void setup()
 
     Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
 
-    Settings_setString(GPRS_APN, "giffgaff.com");
-    Settings_setString(GPRS_USERNAME, "giffgaff");
-    Settings_setString(GPRS_PASSWORD, "");
+    Settings_setString(GPRS_APN, "everywhere");
+    Settings_setString(GPRS_USERNAME, "eesecure");
+    Settings_setString(GPRS_PASSWORD, "secure");
 
     // Thingspeak URL choices (for development)
     Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Thingspeak hosted services
