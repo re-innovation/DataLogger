@@ -38,6 +38,7 @@ public:
     unsigned int GetCurrentTick() { return m_CurrentTick; }
     unsigned long GetCurrentInterval() { return m_interval; }
     void ResetTicks() { m_CurrentTick = 0; }
+    void ResetTime();
 };
 
 #endif // _TASKACTION_h

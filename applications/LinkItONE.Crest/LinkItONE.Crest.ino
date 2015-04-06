@@ -61,8 +61,9 @@
  * Application Includes
  */
 
-#include "app.data_conversion.h"
 #include "app.upload_manager.h"
+#include "app.sd_storage.h"
+#include "app.data.h"
 
 // Pointers to fuctionality objects
 
@@ -88,12 +89,12 @@ static Thermistor s_thermistors[] = {
 };
 
 // There are 12 averages for voltage and current data
-#define AVERAGER_COUNT (12)
+#define V_AND_I_COUNT (12)
 
 // ...plus three more fields for temperature data
 #define THERMISTOR_COUNT (3)
 
-#define FIELD_COUNT (AVERAGER_COUNT + THERMISTOR_COUNT)
+#define FIELD_COUNT (V_AND_I_COUNT + THERMISTOR_COUNT)
 
 #define ADC_READS_PER_SECOND (10)
 #define AVERAGING_PERIOD_SECONDS (1)
@@ -102,120 +103,15 @@ static Thermistor s_thermistors[] = {
 
 #define BULK_UPLOAD_BUFFER_SIZE (16384)
 
-static Averager<uint16_t> s_averagers[] = {
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS)
-};
-
 // Medium term in-RAM data storage and remote storage
 #define STORE_TO_SD_EVERY_N_AVERAGES (10)
 #define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 #define UPLOAD_EVERY_N_AVERAGES (10)
 #define UPLOAD_INTERVAL_MS (UPLOAD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
-static NumericDataField<float> s_dataFields[] = {
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES)
-};
-
-static CONVERSION_FN s_conversionFunctions[] = 
-{
-    channel01Conversion,
-    channel02Conversion,
-    channel03Conversion,
-    channel04Conversion,
-    channel05Conversion,
-    channel06Conversion,
-    channel07Conversion,
-    channel08Conversion,
-    channel09Conversion,
-    channel10Conversion,
-    channel11Conversion,
-    channel12Conversion,
-};
-
-static LocalStorageInterface * s_sdCard;
-static FILE_HANDLE s_fileHandle;
-static uint32_t s_entryID = 0;
-
-static TM s_time;
-static TM s_lastSDTimestamp;
-
-static uint16_t s_fileCountToday = 0;
-
 static char csvData[BULK_UPLOAD_BUFFER_SIZE];
 static char request_buffer[BULK_UPLOAD_BUFFER_SIZE];
-    
-static void writeTimestampToOpenFile(void)
-{
-    char buffer[30];
-    time_increment_seconds(&s_lastSDTimestamp);
-    CSV_writeTimestampToBuffer(&s_lastSDTimestamp, buffer);
-    s_sdCard->write(s_fileHandle, buffer);
-    s_sdCard->write(s_fileHandle, ", ");
-}
 
-static void writeEntryIDToOpenFile(void)
-{
-    char buffer[30];
-    s_entryID++;
-    sprintf(buffer, "%d, ", s_entryID);
-    s_sdCard->write(s_fileHandle, buffer);
-}
-
-static void readAllDataFromCurrentFile(char * buffer)
-{
-    char const * const pFilename = Filename_get();
-    uint32_t c = 0;
-
-    if (s_sdCard->fileExists(pFilename))
-    {
-        s_fileHandle = s_sdCard->openFile(pFilename, false);
-
-        // Discard the first line
-        s_sdCard->readLine(s_fileHandle,  buffer, BULK_UPLOAD_BUFFER_SIZE, false);
-
-        while (!s_sdCard->endOfFile(s_fileHandle))
-        {
-            c += s_sdCard->readLine(s_fileHandle, &buffer[c], BULK_UPLOAD_BUFFER_SIZE-c, false);
-        }
-
-        s_sdCard->closeFile(s_fileHandle);
-        
-        Serial.println("Read from file:");
-        Serial.print(buffer);
-        Serial.println("");
-    }
-    else
-    {
-        Serial.print("Could not open ");
-        Serial.print(pFilename);
-        Serial.println(" for reading.");
-    }
-}
 
 static void tryConnection(void)
 {
@@ -228,95 +124,6 @@ static void tryConnection(void)
     Serial.println(Settings_getString(GPRS_PASSWORD));
     
     s_gprsConnection->tryConnection(10);
-}
-
-static void setNewFilename(void)
-{
-    Time_GetTime(&s_time, TIME_PLATFORM);
-
-    s_fileCountToday = 0;
-    Filename_setFromDate(s_time.tm_mday, s_time.tm_mon, s_time.tm_year, s_fileCountToday);
-
-    while (s_sdCard->fileExists(Filename_get()))
-    {
-        Filename_setFromDate(s_time.tm_mday, s_time.tm_mon, s_time.tm_year, ++s_fileCountToday);
-    }
-
-    Serial.print("Starting with file index ");
-    Serial.println(s_fileCountToday);
-}
-
-static TaskAction averageAndStoreTask(averageAndStoreTaskFn, AVERAGING_PERIOD_SECONDS * 1000, INFINITE_TICKS);
-static void averageAndStoreTaskFn(void)
-{
-    uint8_t field = 0;
-    uint8_t i;
-
-    for (i = 0; i < AVERAGER_COUNT; i++)
-    {
-        uint16_t average = s_averagers[i].getAverage();
-        s_averagers[i].reset(NULL);
-
-        float toStore;
-        if (s_conversionFunctions[i])
-        {
-            toStore = s_conversionFunctions[i](average); 
-        }
-        else
-        {
-            toStore = (float)average;
-        }
-        s_dataFields[i].storeData( toStore );
-    }
-
-    // The ADC range is 0 to 5v, but thermistors are on 3.3v rail, so maximum is 1023 * 3.3/5 = 675
-    for (i = 0; i < THERMISTOR_COUNT; i++)
-    {
-        float data = s_thermistors[i].TemperatureFromADCReading(10000.0, s_adcs[i].read(), 675);
-        s_dataFields[i + AVERAGER_COUNT].storeData(data);
-    }
-}
-
-static void createNewDataFile(void)
-{
-
-    setNewFilename();
-
-    char const * const pFilename = Filename_get();
-
-    Serial.print("Creating new file: ");
-    Serial.println(pFilename);
-
-    s_fileHandle = s_sdCard->openFile(pFilename, true);
-
-    // Write Timestamp and Entry ID headers
-    s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
-
-    char csvHeaders[200];
-    DataField_writeHeadersToBuffer(csvHeaders, s_dataFields, FIELD_COUNT, 200);
-    s_sdCard->write(s_fileHandle, csvHeaders);
-    s_entryID = 0;
-    s_sdCard->closeFile(s_fileHandle);
-}
-
-static void openDataFileForToday(void)
-{
-
-    char const * const pFilename = Filename_get();
-
-    if (s_sdCard->fileExists(pFilename))
-    {
-        Serial.print("Opening existing file: ");
-        Serial.println(pFilename);
-
-        s_fileHandle = s_sdCard->openFile(pFilename, true);
-    }
-    else
-    {
-        Serial.print("Expected file '");
-        Serial.print(pFilename);
-        Serial.print(" 'does not exist.");
-    }
 }
 
 /*
@@ -338,14 +145,14 @@ void remoteUploadTaskFn(void)
 
     char response_buffer[200] = "";
 
-    readAllDataFromCurrentFile(csvData);
+    APP_SD_ReadAllDataFromCurrentFile(csvData, BULK_UPLOAD_BUFFER_SIZE);
 
     s_thingSpeakService->createBulkUploadCall(
         request_buffer, BULK_UPLOAD_BUFFER_SIZE, csvData, Filename_get(), 15);
 
-    Serial.print("Request '");
+    /*Serial.print("Request '");
     Serial.print(request_buffer);
-    Serial.println("'");
+    Serial.println("'");*/
 
     if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
     {
@@ -361,64 +168,34 @@ void remoteUploadTaskFn(void)
     }
 
     // Start a new file after upload
-    createNewDataFile();
-}
-
-static TaskAction writeToSDCardTask(writeToSDCardTaskFn, STORE_TO_SD_INTERVAL_MS, INFINITE_TICKS);
-static void writeToSDCardTaskFn(void)
-{
-    Serial.println("Writing averages to SD card");
-    uint8_t field = 0;
-    uint8_t i, j;
-    char buffer[10];
-
-    openDataFileForToday();
-
-    if (s_fileHandle != INVALID_HANDLE)
-    {
-        for (i = 0; i < STORE_TO_SD_EVERY_N_AVERAGES; ++i)
-        {
-            writeTimestampToOpenFile();
-            writeEntryIDToOpenFile();
-            
-            for (j = 0; j < FIELD_COUNT; ++j)
-            {
-                // Write from datafield to buffer then from buffer to SD file
-                s_dataFields[j].getDataAsString(buffer, "%.4f", i);
-
-                s_sdCard->write(s_fileHandle, buffer);
-
-                if (!lastinloop(j, FIELD_COUNT))
-                {
-                    s_sdCard->write(s_fileHandle, ", ");
-                }
-            }
-            s_sdCard->write(s_fileHandle, "\r\n");
-        }
-
-        s_sdCard->closeFile(s_fileHandle);
-    }
-    else
-    {
-        Serial.print("Could not open '");
-        Serial.print(Filename_get());
-        Serial.println("' when trying to write data.");
-    }
+    APP_SD_CreateNewDataFile();
 }
 
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 void readFromADCsTaskFn(void)
 {
+    uint8_t i;
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
+
+    // Read the ADC1x1x ICs for fields 1 - 12
     for (adc = 0; adc < 3; adc++)
     {
         for (ch = 0; ch < 4; ch++)
         {
             field = (adc*4)+ch;
-            s_averagers[field].newData(s_ADCs[adc].readADC_SingleEnded(ch));
+            float data = s_ADCs[adc].readADC_SingleEnded(ch);
+            APP_DATA_NewData(data, field);
         }
+    }
+
+    // Then read the three thermistors
+    // The ADC range is 0 to 5v, but thermistors are on 3.3v rail, so maximum is 1023 * 3.3/5 = 675
+    for (i = 0; i < THERMISTOR_COUNT; i++)
+    {
+        float data = s_thermistors[i].TemperatureFromADCReading(10000.0, s_adcs[i].read(), 675);
+        APP_DATA_NewData(data, V_AND_I_COUNT + i);
     }
 }
 
@@ -434,15 +211,31 @@ void setup()
     {
         s_ADCs[i].begin();
         s_ADCs[i].setGain(GAIN_ONE);
-
     }
 
-    s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
-    s_sdCard->setEcho(true);
+    FIELD_TYPE fieldTypes[] = {
+        VOLTAGE,
+        VOLTAGE,
+        VOLTAGE,
+        VOLTAGE,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        CURRENT,
+        TEMPERATURE_C,
+        TEMPERATURE_C,
+        TEMPERATURE_C
+    };
 
-    createNewDataFile();
+    APP_DATA_Setup(AVERAGING_PERIOD_SECONDS * 1000,
+        FIELD_COUNT, ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS, STORE_TO_SD_EVERY_N_AVERAGES, fieldTypes);
 
-    Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
+    APP_SD_Setup(STORE_TO_SD_INTERVAL_MS, STORE_TO_SD_EVERY_N_AVERAGES);
+    APP_SD_CreateNewDataFile();
 
     Settings_setString(GPRS_APN, "everywhere");
     Settings_setString(GPRS_USERNAME, "eesecure");
@@ -478,22 +271,20 @@ void setup()
     buildTime.tm_year = GREGORIAN_TO_C_YEAR(2015);
     buildTime.tm_mon = 4;
     buildTime.tm_mday = 6;
-    buildTime.tm_hour = 17;
-    buildTime.tm_min = 47;
+    buildTime.tm_hour = 23;
+    buildTime.tm_min = 5;
     buildTime.tm_sec = 0;
     
     Time_SetPlatformTime(&buildTime);
     
     readFromADCsTask.ResetTicks();
-    averageAndStoreTask.ResetTicks();
-    writeToSDCardTask.ResetTicks();
     remoteUploadTask.ResetTicks();
 }
 
 void loop()
 {
     readFromADCsTask.tick();
-    averageAndStoreTask.tick();
-    writeToSDCardTask.tick();
+    APP_DATA_Tick();
+    APP_SD_Tick();
     remoteUploadTask.tick();
 }

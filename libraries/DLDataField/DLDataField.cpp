@@ -233,7 +233,7 @@ uint32_t DataField_writeHeadersToBuffer(
 
 template <typename T>
 uint32_t DataField_writeHeadersToBuffer(
-		char * buffer, NumericDataField<T> datafields[], uint8_t arrayLength, uint8_t bufferLength)
+		char * buffer, NumericDataField<T> ** datafields, uint8_t arrayLength, uint8_t bufferLength)
 {
 	if (!buffer) { return 0; }
 
@@ -243,7 +243,7 @@ uint32_t DataField_writeHeadersToBuffer(
 
 	for (i = 0; i < arrayLength; ++i)
 	{
-		headerAccumulator.writeString(datafields[i].getTypeString());
+		headerAccumulator.writeString(datafields[i]->getTypeString());
 		if (!lastinloop(i, arrayLength))
 		{
 			headerAccumulator.writeString(", ");
@@ -265,7 +265,7 @@ template class NumericDataField<int32_t>;
 template class NumericDataField<float>;
 
 template uint32_t DataField_writeHeadersToBuffer<float>(
-	char * buffer, NumericDataField<float> datafields[], uint8_t arrayLength, uint8_t bufferLength);
+	char * buffer, NumericDataField<float> **datafields, uint8_t arrayLength, uint8_t bufferLength);
 
 /* In-progress functions
 template <typename T>

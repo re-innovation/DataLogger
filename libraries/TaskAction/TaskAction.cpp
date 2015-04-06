@@ -10,6 +10,11 @@ TaskAction::TaskAction(void (*function)(), unsigned long interval, unsigned int 
     m_LastTime = 0;
 }
 
+void TaskAction::ResetTime()
+{
+    m_LastTime = millis();
+}
+
 bool TaskAction::tick(unsigned long millisec /* = NULL */)
 {
     // Check state and ticks count (if m_ticks == 0 then infinite ticks)
