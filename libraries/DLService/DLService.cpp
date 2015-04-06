@@ -23,6 +23,7 @@
  * Local Application Includes
  */
 
+#include "DLUtility.h"
 #include "DLSettings.h"
 #include "DLService.h"
 #include "DLService.thingspeak.h"

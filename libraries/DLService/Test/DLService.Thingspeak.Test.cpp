@@ -23,8 +23,9 @@
  */
 
 #include "DLSettings.h"
-#include "DLUtility.Strings.h"
+#include "DLUtility.h"
 #include "DLService.h"
+#include "DLService.Thingspeak.h"
 
 /*
  * Unity Test Framework

@@ -84,7 +84,11 @@ class StringDataField : public DataField
 };
 
 uint32_t DataField_writeHeadersToBuffer(
-    char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
+    char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
+
+template <typename T>
+uint32_t DataField_writeHeadersToBuffer(
+    char * buffer, NumericDataField<T> datafields[], uint8_t arrayLength, uint8_t bufferLength);
 
 /* These functions are in-progress and don't really do the job they say they do quite right.
 template <typename T>
