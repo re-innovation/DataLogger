@@ -36,35 +36,29 @@
 
 static const float T25CinKelvin = 298.15f;
 static const float T0CinKelvin = 273.15f;
-static const float _log2 = 0.69314718055994530941723212145818f;
 
 Thermistor::Thermistor(float B, float R25)
 {
 	m_B = B;
 	m_R25 = R25;
-
-	//Rinf = R25 * exp(-B/T0)
-	m_Rinf = -m_B / T25CinKelvin;
-	m_Rinf = exp(m_Rinf);	
-	m_Rinf *= R25;
+	m_Rinf = R25 * exp(-B / T25CinKelvin);
 }
 
 float Thermistor::TemperatureFromResistance(float R)
 {
 	float t;
 
-	t = R / m_Rinf;
-	t = m_B / log(t);
+	t = m_B / log(R / m_Rinf);
 	
 	return t - T0CinKelvin;
 }
 
-float Thermistor::TemperatureFromADCReading(float otherResistor, uint16_t reading)
+float Thermistor::TemperatureFromADCReading(float otherResistor, uint16_t reading, uint16_t maxReading)
 {
 	float result  = 0;
 	
 	float myResistance = otherResistor * (float)reading;
-	myResistance /= (1023.0 - (float)reading);
+	myResistance /= ((float)maxReading - (float)reading);
 
 	if (myResistance > 0)
 	{

@@ -43,9 +43,9 @@ static LinkItONEADC s_adcs[] = {
 };
 
 static Thermistor s_thermistors[] = {
-    Thermistor(3000, 10000),
-    Thermistor(3000, 10000),
-    Thermistor(3000, 10000)
+    Thermistor(3977, 10000),
+    Thermistor(3977, 10000),
+    Thermistor(3977, 10000)
 };
 
 void setup()
@@ -61,19 +61,19 @@ void loop()
 {
 
     Serial.print("Thermistor readings (raw ADC): ");
-    Serial.print(s_thermistors[0].TemperatureFromADCReading(10000.0, s_adcs[0].read()));
+    Serial.print(s_thermistors[0].TemperatureFromADCReading(10000.0, s_adcs[0].read(), 675));
     Serial.print("(");
     Serial.print(s_adcs[0].read());
     Serial.print(")");
     Serial.print(", ");
     
-    Serial.print(s_thermistors[1].TemperatureFromADCReading(10000.0, s_adcs[1].read()));
+    Serial.print(s_thermistors[1].TemperatureFromADCReading(10000.0, s_adcs[1].read(), 675));
     Serial.print("(");
     Serial.print(s_adcs[1].read());
     Serial.print(")");
     Serial.print(", ");
     
-    Serial.print(s_thermistors[2].TemperatureFromADCReading(10000.0, s_adcs[2].read()));
+    Serial.print(s_thermistors[2].TemperatureFromADCReading(10000.0, s_adcs[2].read(), 675));
     Serial.print("(");
     Serial.print(s_adcs[2].read());
     Serial.println(")");
