@@ -68,7 +68,7 @@ static char const * _getTypeString(FIELD_TYPE type)
  * DataField Class Functions 
  */
 
-DataField::DataField(FIELD_TYPE fieldType, uint8_t length)
+DataField::DataField(FIELD_TYPE fieldType, uint32_t length)
 {
  	m_fieldType = fieldType;
  	m_full = false;
@@ -109,7 +109,7 @@ char const * DataField::getTypeString(void)
 }
 
 template <typename T>
-NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint8_t N) : DataField(type, N)
+NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint32_t N) : DataField(type, N)
 {
 	m_data = new T[N];
 	
@@ -161,7 +161,7 @@ void NumericDataField<T>::printContents(void)
 }
 #endif
 
-StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N) : DataField(type, N)
+StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N) : DataField(type, N)
 {
 	m_data = new char*[N];
 	
