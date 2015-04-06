@@ -43,9 +43,10 @@ Thermistor::Thermistor(float B, float R25)
 	m_B = B;
 	m_R25 = R25;
 
-	//Rinf = R25 * exp(-B/T0) = R25 / exp(B/T0)
-	m_Rinf = m_B / T25CinKelvin;
+	//Rinf = R25 * exp(-B/T0)
+	m_Rinf = -m_B / T25CinKelvin;
 	m_Rinf = exp(m_Rinf);	
+	m_Rinf *= R25;
 }
 
 float Thermistor::TemperatureFromResistance(float R)
@@ -73,29 +74,16 @@ float Thermistor::TemperatureFromADCReading(float otherResistor, uint16_t readin
 	return result;
 }
 
-/*uint32_t THERMISTOR_GetResistanceFromTemperature(THERMISTOR * pTherm, FIXED_POINT_TYPE t)
+float Thermistor::ResistanceFromTemperature(float t)
 {
-	// Convert celcius to kelvin
-	t = fp_add(t, T0CinKelvin);
+	t = t + T0CinKelvin;
 	
-	FIXED_POINT_TYPE r = fp_div(pTherm->B, t);
-	uint32_t res;
-	
-	#if USE_FIX16
-	r = fp_div(r, fp_from_int(2)); // Division by 2 to keep value in 16.16 range during exponentiation
-	r = fp_exp(r);
-	
-	// Use Rinf x100 to get enough significant figures
-	uint32_t Rinf100 = (uint32_t)fp_to_int(fp_mul(pTherm->Rinf, fp_from_int(100)));
-	
-	res = (uint32_t)fp_to_int(r);
-	res = res * res; // Square to undo division by 2
-	res *= Rinf100;
-	res = (res + 50) / 100; // Undo multiplication by 100
-	
-	#else
-	res = fp_exp(r) * pTherm->Rinf;
-	#endif
+	float res = exp(m_B / t) * m_Rinf;
 	
 	return res;
-}*/
+}
+
+float Thermistor::Rinf(void)
+{
+	return m_Rinf;
+}
