@@ -25,23 +25,23 @@
  */
 
 static char s_lastFilename[100];
-static uint32_t s_lastDataIndex = 0;
+static uint32_t s_lastLine = 0;
 
-void logLastUpload(char * filename, uint32_t index)
+void UploadMgr_logLastUpload(char * filename, uint32_t index)
 {
 	if (filename)
 	{
 		strncpy_safe(s_lastFilename, filename, 100);
-		s_lastDataIndex = index;
+		s_lastLine = index;
 	}
 }
 
-void getFilename(char * buffer, uint8_t maxLength)
+void UploadMgr_getFilename(char * buffer, uint8_t maxLength)
 {
 	if (buffer) { strncpy_safe(buffer, s_lastFilename, maxLength); }
 }
 
-uint32_t getIndex(void)
+uint32_t UploadMgr_getLastLine(void)
 {
-	return s_lastDataIndex;
+	return s_lastLine;
 }

@@ -106,9 +106,9 @@ void setup()
 
     delay(10000);
 
-    Settings_setString(GPRS_APN, "everywhere");
-    Settings_setString(GPRS_USERNAME, "eesecure");
-    Settings_setString(GPRS_PASSWORD, "secure");
+    Settings_setString(GPRS_APN, "giffgaff.com");
+    Settings_setString(GPRS_USERNAME, "giffgaff");
+    Settings_setString(GPRS_PASSWORD, "");
 
     // Thingspeak URL choices (for development)
     Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Mouse's heroku instance

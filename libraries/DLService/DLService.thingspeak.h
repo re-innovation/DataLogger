@@ -23,11 +23,11 @@ class Thingspeak : public ServiceInterface
         uint16_t createPostAPICall(char * buffer, uint16_t maxSize);
         uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time);
 
-        void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename);
+        void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename, uint8_t nFields);
 
     private:
 
-        void putCSVUploadHeaders(FixedLengthAccumulator * accumulator);
+        void putCSVUploadHeaders(FixedLengthAccumulator * accumulator, uint8_t nFields);
         
         static const char THINGSPEAK_UPDATE_PATH[];
         static const char THINGSPEAK_BULK_UPDATE_PATH[];

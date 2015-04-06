@@ -75,7 +75,7 @@ void createRequest()
     
     ServiceInterface * thingspeak = Service_GetService(SERVICE_THINGSPEAK);
 
-    thingspeak->createBulkUploadCall(requestBuffer, 1024, csvData, "example.csv");
+    thingspeak->createBulkUploadCall(requestBuffer, 1024, csvData, "example.csv", 6);
 
     // Go through request buffer and split into strings    
 	size_t pos = 0;

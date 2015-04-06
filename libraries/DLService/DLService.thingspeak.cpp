@@ -136,7 +136,7 @@ uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize, char con
     filename - The name of the file fro, which the CSV data has been pulled
 */
 
-void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename)
+void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename, uint8_t nFields)
 {
     if (!buffer) { return; }
     if (!m_key) { return; }
@@ -169,7 +169,7 @@ void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const cha
 
     bodyAccumulator.writeLine("");
 
-    putCSVUploadHeaders(&bodyAccumulator);
+    putCSVUploadHeaders(&bodyAccumulator, nFields);
     bodyAccumulator.writeString(csvData);
     bodyAccumulator.writeLine("");
     bodyAccumulator.writeString("--");
@@ -181,7 +181,7 @@ void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const cha
     builder.writeToBuffer(buffer, maxSize, true);
 }
 
-void Thingspeak::putCSVUploadHeaders(FixedLengthAccumulator * accumulator)
+void Thingspeak::putCSVUploadHeaders(FixedLengthAccumulator * accumulator, uint8_t nFields)
 {
     if (!accumulator) { return; }
 
@@ -189,11 +189,17 @@ void Thingspeak::putCSVUploadHeaders(FixedLengthAccumulator * accumulator)
 
     uint8_t field = 0;
 
-    for (field = 0; field < _MAX_FIELDS; field++)
+    char fieldBuffer[5];
+
+    for (field = 1; field < nFields + 1; field++)
     {
         accumulator->writeString("field");
-        accumulator->writeChar('1' +  field);
-        if (!lastinloop(field, _MAX_FIELDS))
+    
+        sprintf(fieldBuffer, "%d", field);
+
+        accumulator->writeString(fieldBuffer);
+
+        if (!lastinloop(field, nFields + 1))
         {
             accumulator->writeChar(',');
         }

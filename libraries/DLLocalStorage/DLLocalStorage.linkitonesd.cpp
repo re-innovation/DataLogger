@@ -140,7 +140,7 @@ uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool
 
 	if (fileAvailableForRead && buffer)
 	{
-		readLineWithReadFunction(readOneByteFromFile, buffer, n, stripCRLF);
+		readCount = readLineWithReadFunction(readOneByteFromFile, buffer, n, stripCRLF);
 	}
 
 	return readCount;

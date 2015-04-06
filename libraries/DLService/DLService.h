@@ -26,7 +26,8 @@ class ServiceInterface
         virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize) = 0;
         virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time) = 0;
         
-        virtual void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename) = 0;
+        virtual void createBulkUploadCall(
+        	char * buffer, uint16_t maxSize, const char * csvData, const char * filename, uint8_t nFields) = 0;
 };
 
 ServiceInterface * Service_GetService(SERVICE service);
