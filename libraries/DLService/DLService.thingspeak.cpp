@@ -1,8 +1,10 @@
 /*
- * thingspeak.cpp
+ * DLService.thingspeak.cpp
  *
  * James Fowkes
  * 06 February 2015
+ *
+ * www.re-innovation.co.uk
  */
  
 #ifdef ARDUINO

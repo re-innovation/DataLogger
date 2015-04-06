@@ -1,4 +1,5 @@
 SRC_FILES += DLUtility/DLUtility.Strings.cpp
+SRC_FILES += DLUtility/DLUtility.ArrayFunctions.cpp
 SRC_FILES += DLService/DLService.cpp
 SRC_FILES += DLSettings/DLSettings.cpp
 SRC_FILES += DLDataField/DLDataField.cpp
