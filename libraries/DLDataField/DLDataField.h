@@ -25,7 +25,7 @@ typedef enum field_type FIELD_TYPE;
 class DataField
 {
     public:
-        DataField(FIELD_TYPE fieldType, uint8_t length);
+        DataField(FIELD_TYPE fieldType, uint32_t length);
         ~DataField();
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
@@ -46,7 +46,7 @@ template <typename T>
 class NumericDataField : public DataField
 {
     public:
-        NumericDataField(FIELD_TYPE type, uint8_t N); // N is length of storage buffer
+        NumericDataField(FIELD_TYPE type, uint32_t N); // N is length of storage buffer
         ~NumericDataField();
 
         void storeData(T data);
@@ -68,7 +68,7 @@ class StringDataField : public DataField
     public:
         // len is length of each string
         // N is number of strings to store
-        StringDataField(FIELD_TYPE type, uint8_t len, uint8_t N);
+        StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N);
         ~StringDataField();
 
         void storeData(char const * data);
