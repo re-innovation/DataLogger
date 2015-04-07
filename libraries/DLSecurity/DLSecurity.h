@@ -39,6 +39,7 @@ class LocationAlarm : Alarm
         
     private:
         LOCATION_2D m_home;
+        bool m_homeSet;
         uint32_t m_alarmDistance;
 };
 
