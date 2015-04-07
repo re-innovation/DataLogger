@@ -44,13 +44,13 @@ void test_ReadingFromUnrecognizedSettingReturnsFalse(void)
 
 void test_ReadingFromInvalidIntSettingReturnsFalse(void)
 {
-	TEST_ASSERT_FALSE(Settings_ReadFromString("CSV_RECORD_INTERVAL=NOTANINTEGER"));
+	TEST_ASSERT_FALSE(Settings_ReadFromString("THINGSPEAK_UPLOAD_INTERVAL=NOTANINTEGER"));
 }
 
 void test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting(void)
 {
-  TEST_ASSERT_TRUE(Settings_ReadFromString("CSV_RECORD_INTERVAL=30"));
-  TEST_ASSERT_EQUAL(30, Settings_getInt(CSV_RECORD_INTERVAL));
+  TEST_ASSERT_TRUE(Settings_ReadFromString("THINGSPEAK_UPLOAD_INTERVAL=30"));
+  TEST_ASSERT_EQUAL(30, Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL));
 }
 
 void test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting(void)

@@ -25,6 +25,8 @@
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
+#include "DLSettings.h"
+#include "DLSettings.Reader.h"
 
 /*
  * Application Includes
@@ -94,13 +96,16 @@ static void writeToSDCardTaskFn(void)
 }
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
 
-void APP_SD_Setup(unsigned long msInterval, uint16_t linesPerFile)
+void APP_SD_Init(void)
+{
+    s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+}
+
+void APP_SD_DataSetup(unsigned long msInterval, uint16_t linesPerFile)
 {
 	s_linesPerFile = linesPerFile;
 
 	Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
-	s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
-    s_sdCard->setEcho(true);
     writeToSDCardTask.SetInterval(msInterval);
     writeToSDCardTask.ResetTime();
 }
@@ -209,6 +214,55 @@ void APP_SD_ReadAllDataFromCurrentFile(char * buffer, uint32_t maxSize)
         Serial.print("Could not open ");
         Serial.print(pFilename);
         Serial.println(" for reading.");
+    }
+}
+
+void APP_SD_ReadSettings(char * filename)
+{
+    char lineBuffer[100];
+    if (s_sdCard->fileExists(filename))
+    {
+        Serial.print("Reading settings from '");
+        Serial.print(filename);
+        Serial.println("'.");
+    }
+    else
+    {
+        Serial.print("Settings file '");
+        Serial.print(filename);
+        Serial.println("' not found.");
+        return;
+    }
+
+    uint8_t hndl = s_sdCard->openFile(filename, false);
+    while (!s_sdCard->endOfFile(hndl))
+    {
+        // Read from file into lineBuffer and strip CRLF endings
+        s_sdCard->readLine(hndl, lineBuffer, 50, true);
+        Serial.print("Reading setting line '");
+        Serial.print(lineBuffer);
+        Serial.println("'");
+        Settings_ReadFromString(lineBuffer);
+    }
+    s_sdCard->closeFile(hndl);
+
+    // Echo out integer settings
+    Serial.println("Integer Settings:");
+    int i;
+    for (i = 0; i < INT_SETTINGS_COUNT; i++)
+    {
+        Serial.print(Settings_getIntName((INTSETTING)i));
+        Serial.print(": ");
+        Serial.println(Settings_getInt((INTSETTING)i));
+    }
+
+    // Echo out string settings
+    Serial.println("String Settings:");
+    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
+    {
+        Serial.print(Settings_getStringName((STRINGSETTING)i));
+        Serial.print(": ");
+        Serial.println(Settings_getString((STRINGSETTING)i));
     }
 }
 

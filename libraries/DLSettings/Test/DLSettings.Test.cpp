@@ -82,7 +82,7 @@ static void test_GetStringSettingName_ReturnsCorrectName(void)
 
 static void test_GetIntSettingName_ReturnsCorrectName(void)
 {
-	TEST_ASSERT_EQUAL_STRING("CSV_RECORD_INTERVAL", Settings_getIntName(CSV_RECORD_INTERVAL));
+	TEST_ASSERT_EQUAL_STRING("THINGSPEAK_UPLOAD_INTERVAL", Settings_getIntName(THINGSPEAK_UPLOAD_INTERVAL));
 }
 
 int main(void)

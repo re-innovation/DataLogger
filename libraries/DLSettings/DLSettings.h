@@ -20,7 +20,8 @@
 /* Define each int setting for the application */
 
 #define FOREACH_INTSET(INT) \
-    INT(CSV_RECORD_INTERVAL)
+    INT(THINGSPEAK_UPLOAD_INTERVAL) \
+    INT(DATA_AVERAGING_INTERVAL_SECS)
 
 #define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
 #define GENERATE_STRING(STRING) #STRING, // This turns each setting into a string in an array

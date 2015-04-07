@@ -39,38 +39,9 @@
  * Applications Data
  */
 
-static Averager<uint16_t> ** s_averagers;/* = {
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS),
-    Averager<uint16_t>(ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS)
-};*/
+static Averager<uint16_t> ** s_averagers;
 
-static NumericDataField<float> ** s_dataFields;/* = {
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(VOLTAGE, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(CURRENT, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES),
-    NumericDataField<float>(TEMPERATURE_C, STORE_TO_SD_EVERY_N_AVERAGES)
-};*/
+static NumericDataField<float> ** s_dataFields;
 
 static CONVERSION_FN s_conversionFunctions[] = 
 {
@@ -111,7 +82,6 @@ static void averageAndStoreTaskFn(void)
         }
         s_dataFields[i]->storeData( toStore );
     }
-    Serial.println("");
 }
 static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
 

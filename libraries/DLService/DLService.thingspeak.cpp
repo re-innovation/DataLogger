@@ -41,7 +41,8 @@ const char Thingspeak::THINGSPEAK_BULK_UPDATE_PATH[] = "/update_csv";
 
 const char Thingspeak::THINGSPEAK_MULTIPART_BOUNDARY[] = __THINGSPEAK_MULTIPART_BOUNDARY_STR__;
 
-RequestBuilder builder;
+static RequestBuilder builder;
+static char * s_body = NULL;
 
 /*
  * Public Class Functions
@@ -92,7 +93,7 @@ uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize, char con
     if (!m_key) { return 0; }
     
     char m_body[maxSize];
-
+    
     builder.reset();
     builder.setMethodAndURL("POST", THINGSPEAK_UPDATE_PATH);
 
@@ -142,8 +143,15 @@ void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const cha
     if (!m_key) { return; }
 
     /* Creates the HTTP headers for the bulk upload */
-    char m_body[maxSize];
-    FixedLengthAccumulator bodyAccumulator(m_body, maxSize);
+    if (!s_body)
+    {
+        Serial.print("Allocating ");
+        Serial.print(maxSize);
+        Serial.println("B for HTTP body");
+        s_body = new char[maxSize];
+    }
+
+    FixedLengthAccumulator bodyAccumulator(s_body, maxSize);
     
     builder.reset();
     builder.setMethodAndURL("POST", THINGSPEAK_BULK_UPDATE_PATH);
@@ -176,7 +184,7 @@ void Thingspeak::createBulkUploadCall(char * buffer, uint16_t maxSize, const cha
     bodyAccumulator.writeString(THINGSPEAK_MULTIPART_BOUNDARY);
     bodyAccumulator.writeString("--");
 
-    builder.putBody(m_body);
+    builder.putBody(s_body);
 
     builder.writeToBuffer(buffer, maxSize, true);
 }

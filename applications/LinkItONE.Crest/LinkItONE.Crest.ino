@@ -46,6 +46,7 @@
 #include "DLUtility.h"
 #include "DLLocation.h"
 #include "DLSettings.h"
+#include "DLSettings.Reader.h"
 #include "DLDataField.h"
 #include "DLSensor.ADS1x1x.h"
 #include "DLSensor.LinkItONE.h"
@@ -97,21 +98,14 @@ static Thermistor s_thermistors[] = {
 #define FIELD_COUNT (V_AND_I_COUNT + THERMISTOR_COUNT)
 
 #define ADC_READS_PER_SECOND (10)
-#define AVERAGING_PERIOD_SECONDS (1)
 
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
 
-#define BULK_UPLOAD_BUFFER_SIZE (16384)
+static uint32_t s_uploadBufferSize;
+static char * s_csvData;
+static char * s_requestBuffer;
 
-// Medium term in-RAM data storage and remote storage
-#define STORE_TO_SD_EVERY_N_AVERAGES (10)
-#define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
-#define UPLOAD_EVERY_N_AVERAGES (10)
-#define UPLOAD_INTERVAL_MS (UPLOAD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
-
-static char csvData[BULK_UPLOAD_BUFFER_SIZE];
-static char request_buffer[BULK_UPLOAD_BUFFER_SIZE];
-
+static char s_settingsFilename[] = "Datalogger.Settings";
 
 static void tryConnection(void)
 {
@@ -126,10 +120,12 @@ static void tryConnection(void)
     s_gprsConnection->tryConnection(10);
 }
 
+static uint32_t s_storeToSDIntervalms;
+
 /*
  * Tasks
  */
-TaskAction remoteUploadTask(remoteUploadTaskFn, UPLOAD_INTERVAL_MS, INFINITE_TICKS);
+TaskAction remoteUploadTask(remoteUploadTaskFn, 0, INFINITE_TICKS);
 void remoteUploadTaskFn(void)
 {
 
@@ -145,16 +141,16 @@ void remoteUploadTaskFn(void)
 
     char response_buffer[200] = "";
 
-    APP_SD_ReadAllDataFromCurrentFile(csvData, BULK_UPLOAD_BUFFER_SIZE);
+    APP_SD_ReadAllDataFromCurrentFile(s_csvData, s_uploadBufferSize);
 
     s_thingSpeakService->createBulkUploadCall(
-        request_buffer, BULK_UPLOAD_BUFFER_SIZE, csvData, Filename_get(), 15);
+        s_requestBuffer, s_uploadBufferSize, s_csvData, Filename_get(), 15);
 
     /*Serial.print("Request '");
-    Serial.print(request_buffer);
+    Serial.print(s_requestBuffer);
     Serial.println("'");*/
 
-    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), s_requestBuffer, response_buffer))
     {
         Serial.print("Got response (");   
         Serial.print(strlen(response_buffer));
@@ -231,54 +227,62 @@ void setup()
         TEMPERATURE_C
     };
 
-    APP_DATA_Setup(AVERAGING_PERIOD_SECONDS * 1000,
-        FIELD_COUNT, ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS, STORE_TO_SD_EVERY_N_AVERAGES, fieldTypes);
+    APP_SD_Init();
 
-    APP_SD_Setup(STORE_TO_SD_INTERVAL_MS, STORE_TO_SD_EVERY_N_AVERAGES);
+    APP_SD_ReadSettings(s_settingsFilename);
+    
+    int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
+    int uploadInterval = Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL);
+    int averagesToStore = uploadInterval/averaging_interval;
+
+    APP_SD_DataSetup(uploadInterval * 1000, averagesToStore);
+
+    APP_DATA_Setup(averaging_interval * 1000,
+        FIELD_COUNT, ADC_READS_PER_SECOND * averaging_interval, averagesToStore, fieldTypes);
+
     APP_SD_CreateNewDataFile();
-
-    Settings_setString(GPRS_APN, "everywhere");
-    Settings_setString(GPRS_USERNAME, "eesecure");
-    Settings_setString(GPRS_PASSWORD, "secure");
-
-    // Thingspeak URL choices (for development)
-    Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Thingspeak hosted services
-
-    // Thingspeak API keys
-    Settings_setString(THINGSPEAK_API_KEY, "IZ2O45C3BM257VCH"); // Mouse's API key
     
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
+
+    // Allocate space for CSV data and HTTP request building.
+    // Allow 10 chars per field, plus 20 for timestamp.
+    // Then allocate twice as much as that estimate.
+
+    s_uploadBufferSize = ((10 * FIELD_COUNT) + 20) * averagesToStore * 2;
+    s_csvData = new char [s_uploadBufferSize];
+    s_requestBuffer = new char [s_uploadBufferSize];
 
     Serial.print("ADC reads every ");
     Serial.print(MS_PER_ADC_READ);
     Serial.println("ms");
 
     Serial.print("Averaging every ");
-    Serial.print(AVERAGING_PERIOD_SECONDS);
+    Serial.print(averaging_interval);
     Serial.println("s");
 
-    Serial.print("Storing to SD every ");
-    Serial.print(STORE_TO_SD_INTERVAL_MS/1000);
+    Serial.print("Storing to SD and uploading every ");
+    Serial.print(uploadInterval);
     Serial.println("s");
 
-    Serial.print("Uploading reads every ");
-    Serial.print(UPLOAD_INTERVAL_MS/1000);
-    Serial.println("s");
+    Serial.print("Created buffers of size ");
+    Serial.print(s_uploadBufferSize);
+    Serial.println("B");
 
     Serial.print("Setting RTC...");
     TM buildTime;
     buildTime.tm_year = GREGORIAN_TO_C_YEAR(2015);
     buildTime.tm_mon = 4;
-    buildTime.tm_mday = 6;
-    buildTime.tm_hour = 23;
-    buildTime.tm_min = 5;
+    buildTime.tm_mday = 7;
+    buildTime.tm_hour = 1;
+    buildTime.tm_min = 20;
     buildTime.tm_sec = 0;
     
     Time_SetPlatformTime(&buildTime);
     
-    readFromADCsTask.ResetTicks();
-    remoteUploadTask.ResetTicks();
+    readFromADCsTask.ResetTime();
+    remoteUploadTask.SetInterval(uploadInterval * 1000);
+    remoteUploadTask.ResetTime();
 }
 
 void loop()
