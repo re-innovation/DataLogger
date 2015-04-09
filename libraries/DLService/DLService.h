@@ -20,11 +20,12 @@ class DataField;
 class ServiceInterface
 {
     public:
-        virtual void setField(uint8_t fieldIndex, float data) = 0;
         virtual char *  getURL(void) = 0;
         
-        virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize) = 0;
-        virtual uint16_t createPostAPICall(char * buffer, uint16_t maxSize, char const * const time) = 0;
+        virtual uint16_t createPostAPICall(
+        	char * buffer, float * data, uint8_t nFields, uint16_t maxSize) = 0;
+        virtual uint16_t createPostAPICall(
+        	char * buffer, float * data, uint8_t nFields, uint16_t maxSize, char const * const time) = 0;
         
         virtual void createBulkUploadCall(
         	char * buffer, uint16_t maxSize, const char * csvData, const char * filename, uint8_t nFields) = 0;

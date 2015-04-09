@@ -14,7 +14,8 @@ class Averager
 		uint16_t size(void);
 		T getAverage(void);
 		void newData(T NewData);
-		
+		uint16_t N(void);
+
 		#ifdef TEST
 		void fillFromArray(T * array, uint16_t size);
 		#endif

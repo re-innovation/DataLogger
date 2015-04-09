@@ -16,4 +16,8 @@ float channel10Conversion(uint16_t in);
 float channel11Conversion(uint16_t in);
 float channel12Conversion(uint16_t in);
 
+float temp1Conversion(uint16_t in);
+float temp2Conversion(uint16_t in);
+float temp3Conversion(uint16_t in);
+
 #endif

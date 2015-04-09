@@ -137,7 +137,6 @@ static void averageAndStoreTaskFn(void)
     for (i = 0; i < FIELD_COUNT; i++)
     {
         uint16_t average = s_averagers[i].getAverage();
-        s_averagers[i].reset(NULL);
 
         float toStore;
         if (s_conversionFunctions[i])
