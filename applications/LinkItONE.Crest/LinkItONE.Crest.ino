@@ -76,17 +76,14 @@ static ADS1115 s_ADCs[] = {
     ADS1115(0x4A)
 };
 
-static LinkItONEADC s_adcs[] = {
+static LinkItONEADC s_internalADCs[] = {
     LinkItONEADC(A0),
     LinkItONEADC(A1),
     LinkItONEADC(A2)
 };
 
-static Thermistor s_thermistors[] = {
-    Thermistor(3977, 10000),
-    Thermistor(3977, 10000),
-    Thermistor(3977, 10000)
-};
+#define LED1_PIN (4)
+#define LED2_PIN (5)
 
 // There are 12 averages for voltage and current data
 #define V_AND_I_COUNT (12)
@@ -97,21 +94,20 @@ static Thermistor s_thermistors[] = {
 #define FIELD_COUNT (V_AND_I_COUNT + THERMISTOR_COUNT)
 
 #define ADC_READS_PER_SECOND (10)
-#define AVERAGING_PERIOD_SECONDS (1)
+#define AVERAGING_PERIOD_SECONDS (30)
 
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
 
-#define BULK_UPLOAD_BUFFER_SIZE (16384)
+#define BULK_UPLOAD_BUFFER_SIZE (32768)
 
 // Medium term in-RAM data storage and remote storage
-#define STORE_TO_SD_EVERY_N_AVERAGES (10)
+#define STORE_TO_SD_EVERY_N_AVERAGES (1)
 #define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
-#define UPLOAD_EVERY_N_AVERAGES (10)
+#define UPLOAD_EVERY_N_AVERAGES (1)
 #define UPLOAD_INTERVAL_MS (UPLOAD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
-static char csvData[BULK_UPLOAD_BUFFER_SIZE];
-static char request_buffer[BULK_UPLOAD_BUFFER_SIZE];
-
+static char * csvData;
+static char * requestBuffer;
 
 static void tryConnection(void)
 {
@@ -129,10 +125,21 @@ static void tryConnection(void)
 /*
  * Tasks
  */
+
+TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
+void heartbeatTaskFn(void)
+{
+    static bool ledState = false;
+    digitalWrite(LED2_PIN, ledState ? HIGH : LOW);
+    ledState = !ledState;
+}
+
 TaskAction remoteUploadTask(remoteUploadTaskFn, UPLOAD_INTERVAL_MS, INFINITE_TICKS);
 void remoteUploadTaskFn(void)
 {
 
+    digitalWrite(LED1_PIN, HIGH);
+    
     if (!s_gprsConnection->isConnected())
     {
         Serial.println("GPRS not connected. Attempting new connection.");
@@ -140,35 +147,47 @@ void remoteUploadTaskFn(void)
     }
 
     // Try to upload to ThingSpeak
-    Serial.print("Attempting bulk upload to ");
-    Serial.println(s_thingSpeakService->getURL());
-
+    Serial.print("Attempting upload to ");
+    Serial.print(s_thingSpeakService->getURL());
+    Serial.print("...");
     char response_buffer[200] = "";
 
-    APP_SD_ReadAllDataFromCurrentFile(csvData, BULK_UPLOAD_BUFFER_SIZE);
-
-    s_thingSpeakService->createBulkUploadCall(
-        request_buffer, BULK_UPLOAD_BUFFER_SIZE, csvData, Filename_get(), 15);
-
-    /*Serial.print("Request '");
-    Serial.print(request_buffer);
-    Serial.println("'");*/
-
-    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
+    float data[FIELD_COUNT];
+    NumericDataField<float> ** dataFields = APP_DATA_GetDataFieldsPtr();
+    uint8_t i;
+    for(i = 0; i < FIELD_COUNT; ++i)
     {
-        Serial.print("Got response (");   
+        data[i] = dataFields[i]->getData(0);
+    }
+
+    char created_at[30];
+    TM createTime;
+    Time_GetTime(&createTime, TIME_PLATFORM);
+    CSV_writeTimestampToBuffer(&createTime, created_at);
+    s_thingSpeakService->createPostAPICall(requestBuffer, data, FIELD_COUNT, BULK_UPLOAD_BUFFER_SIZE, NULL);
+
+    /*Serial.println("Upload request created:");
+    Serial.println(requestBuffer);
+    Serial.print("(");
+    Serial.print(strlen(requestBuffer));
+    Serial.println(") bytes.");*/
+
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), requestBuffer, response_buffer))
+    {
+        /*Serial.print("Got response (");   
         Serial.print(strlen(response_buffer));
         Serial.print(" bytes):");   
-        Serial.println(response_buffer);
+        Serial.println(response_buffer);*/
+        Serial.println(" upload complete!");
     }
     else
     {
-        Serial.print("Could not connect to ");
-        Serial.println(s_thingSpeakService->getURL());
+        Serial.print(" could not connect to ");
+        Serial.print(s_thingSpeakService->getURL());
+        Serial.println("!");
     }
 
-    // Start a new file after upload
-    APP_SD_CreateNewDataFile();
+    digitalWrite(LED1_PIN, LOW);
 }
 
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
@@ -185,7 +204,7 @@ void readFromADCsTaskFn(void)
         for (ch = 0; ch < 4; ch++)
         {
             field = (adc*4)+ch;
-            float data = s_ADCs[adc].readADC_SingleEnded(ch);
+            uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
             APP_DATA_NewData(data, field);
         }
     }
@@ -194,8 +213,27 @@ void readFromADCsTaskFn(void)
     // The ADC range is 0 to 5v, but thermistors are on 3.3v rail, so maximum is 1023 * 3.3/5 = 675
     for (i = 0; i < THERMISTOR_COUNT; i++)
     {
-        float data = s_thermistors[i].TemperatureFromADCReading(10000.0, s_adcs[i].read(), 675);
+        uint16_t data = s_internalADCs[i].read();
         APP_DATA_NewData(data, V_AND_I_COUNT + i);
+    }
+}
+
+TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS);
+void gpsTaskFn(void)
+{
+    Location_UpdateNow();
+    bool success = GPS_InfoIsValid();
+
+    if (success)
+    {
+        Serial.println("Updating RTC time from GPS.");
+        TM gpsTime;
+        Time_GetTime(&gpsTime, TIME_GPS);
+        Time_SetPlatformTime(&gpsTime);
+    }
+    else
+    {
+        Serial.println("No valid GPS info.");
     }
 }
 
@@ -205,6 +243,11 @@ void setup()
     Serial.begin(115200);
 
     delay(10000);
+
+    Location_Setup(0);
+
+    csvData = new char[BULK_UPLOAD_BUFFER_SIZE];
+    requestBuffer = new char[BULK_UPLOAD_BUFFER_SIZE];
 
     uint8_t i = 0;
     for (i = 0; i < 3; i++)
@@ -234,12 +277,9 @@ void setup()
     APP_DATA_Setup(AVERAGING_PERIOD_SECONDS * 1000,
         FIELD_COUNT, ADC_READS_PER_SECOND * AVERAGING_PERIOD_SECONDS, STORE_TO_SD_EVERY_N_AVERAGES, fieldTypes);
 
-    APP_SD_Setup(STORE_TO_SD_INTERVAL_MS, STORE_TO_SD_EVERY_N_AVERAGES);
-    APP_SD_CreateNewDataFile();
-
-    Settings_setString(GPRS_APN, "everywhere");
-    Settings_setString(GPRS_USERNAME, "eesecure");
-    Settings_setString(GPRS_PASSWORD, "secure");
+    APP_SD_Init();
+    APP_SD_Setup(30 * 1000);
+    APP_SD_ReadSettings();
 
     // Thingspeak URL choices (for development)
     Settings_setString(THINGSPEAK_URL, "agile-headland-8076.herokuapp.com"); // Thingspeak hosted services
@@ -258,27 +298,16 @@ void setup()
     Serial.print(AVERAGING_PERIOD_SECONDS);
     Serial.println("s");
 
-    Serial.print("Storing to SD every ");
-    Serial.print(STORE_TO_SD_INTERVAL_MS/1000);
-    Serial.println("s");
-
     Serial.print("Uploading reads every ");
     Serial.print(UPLOAD_INTERVAL_MS/1000);
     Serial.println("s");
 
-    Serial.print("Setting RTC...");
-    TM buildTime;
-    buildTime.tm_year = GREGORIAN_TO_C_YEAR(2015);
-    buildTime.tm_mon = 4;
-    buildTime.tm_mday = 6;
-    buildTime.tm_hour = 23;
-    buildTime.tm_min = 5;
-    buildTime.tm_sec = 0;
-    
-    Time_SetPlatformTime(&buildTime);
-    
-    readFromADCsTask.ResetTicks();
-    remoteUploadTask.ResetTicks();
+    pinMode(LED1_PIN, OUTPUT);
+    pinMode(LED2_PIN, OUTPUT);
+
+    readFromADCsTask.ResetTime();
+    remoteUploadTask.ResetTime();
+    gpsTask.ResetTime();
 }
 
 void loop()
@@ -287,4 +316,6 @@ void loop()
     APP_DATA_Tick();
     APP_SD_Tick();
     remoteUploadTask.tick();
+    heartbeatTask.tick();
+    gpsTask.tick();
 }

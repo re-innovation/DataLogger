@@ -59,12 +59,6 @@ Thingspeak::Thingspeak(char const * const url, char const * const key)
     }
 
     memcpy(m_key, key, strlen(key)); 
-
-    uint8_t i;
-    for (i = 0; i < 6; i++)
-    {
-        m_data[i] = 0.0;
-    }
 }
 
 Thingspeak::~Thingspeak() {}
@@ -74,19 +68,14 @@ char * Thingspeak::getURL(void)
     return m_url;
 }
 
-void Thingspeak::setField(uint8_t fieldIndex, float data)
+uint16_t Thingspeak::createPostAPICall(
+    char * buffer, float * data, uint8_t nFields, uint16_t maxSize)
 {
-    if (fieldIndex > 5) { return; }
-    
-    m_data[fieldIndex] = data;
+    return createPostAPICall(buffer, data, nFields, maxSize, NULL);
 }
 
-uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize)
-{
-    return createPostAPICall(buffer, maxSize, NULL);
-}
-
-uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize, char const * const time)
+uint16_t Thingspeak::createPostAPICall(
+    char * buffer, float * data, uint8_t nFields, uint16_t maxSize, char const * const pTime)
 {
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
@@ -103,21 +92,20 @@ uint16_t Thingspeak::createPostAPICall(char * buffer, uint16_t maxSize, char con
 
     uint8_t field = 0;
     uint8_t index = 0;
-    for (field = 0; field < _MAX_FIELDS; field++)
+    for (field = 0; field < nFields; field++)
     {
         // Make the data string
-        index += sprintf(&m_body[index], "%d=%.5f", field+1, m_data[field]);
-        if (!lastinloop(field, _MAX_FIELDS))
+        index += sprintf(&m_body[index], "%d=%.5f", field+1, data[field]);
+        if (!lastinloop(field, nFields))
         {
             m_body[index++] = '&';
         }
     }
 
     // Copy the time into the buffer (if provided)
-    if (time)
+    if (pTime)
     {
-        index += sprintf(&m_body[index], "created_at=%s", time);
-        sprintf(&m_body[index], time);
+        index += sprintf(&m_body[index], "created_at=%s", pTime);
     }
 
     builder.putBody(m_body);

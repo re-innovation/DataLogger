@@ -47,6 +47,8 @@ static bool checkMonthIsValid(uint8_t month)
 
 void Filename_setFromDate(uint8_t day, uint8_t month, uint8_t year, uint16_t index)
 {
+    (void)index;
+
     /* The filename format is Dddmmyy.csv */
     
     if (checkDayIsValid(day) == false) { return; }
@@ -69,15 +71,15 @@ void Filename_setFromDate(uint8_t day, uint8_t month, uint8_t year, uint16_t ind
     s_buffer[c++] = (day / 10) + '0'; // Get tens and convert to ASCII
     s_buffer[c++] = (day % 10) + '0'; // Get units and convert to ASCII
 
-    s_buffer[c++] = '-';
+    //s_buffer[c++] = '-';
 
-    s_buffer[c++] = (index / 1000) + '0';    
-    index -= (index / 1000) * 1000;
-    s_buffer[c++] = (index / 100) + '0';
-    index -= (index / 100) * 100;
-    s_buffer[c++] = (index / 10) + '0';
-    index -= (index / 10) * 10;
-    s_buffer[c++] = (index) + '0';
+    //s_buffer[c++] = (index / 1000) + '0';    
+    //index -= (index / 1000) * 1000;
+    //s_buffer[c++] = (index / 100) + '0';
+    //index -= (index / 100) * 100;
+    //s_buffer[c++] = (index / 10) + '0';
+    //index -= (index / 10) * 10;
+    //s_buffer[c++] = (index) + '0';
 
     s_buffer[c++] = '.';
     s_buffer[c++] = 'c';

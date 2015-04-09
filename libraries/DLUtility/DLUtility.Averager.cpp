@@ -67,6 +67,12 @@ void Averager<T>::reset(T * value)
 }
 
 template <typename T>
+uint16_t Averager<T>::N(void)
+{
+	return m_full ? m_maxIndex : m_write - 1;
+}
+
+template <typename T>
 T Averager<T>::getAverage(void)
 {
 	int64_t sum = 0;
