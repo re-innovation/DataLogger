@@ -19,12 +19,6 @@
 #include <stdint.h>
 
 /*
- * Arduino Library Includes
- */
-
-#include <Wire.h>
-
-/*
  * LinkIt One Includes
  */
 
@@ -37,11 +31,27 @@
 #include "DLUtility.h"
 #include "DLLocalStorage.h"
 
+
+#define NUMBER_OF_FILES (10)
+
 // Pointers to fuctionality objects
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
 
 static char s_directoryName[] = "XXXXXXXX";
+static char s_filePaths[NUMBER_OF_FILES][] = 
+{
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX",
+    "XXXXXXXX/XXXXXXXX"
+}
 
 static void createRandomDirectory(void)
 {
@@ -53,6 +63,30 @@ static void createRandomDirectory(void)
 
     Serial.print("Creating directory ");
     Serial.println(s_directoryName);
+
+    s_sdCard.mkDir(s_directoryName);
+}
+
+static void createAndDeleteRandomFiles(void)
+{
+    uint8_t i = 0;
+    uint8_t j = 0;
+
+    for (i = 0; i < NUMBER_OF_FILES; ++i)
+    {
+        for (j = 0; j < 8; ++j)
+        {
+            s_filePaths[i][j] = (char)random('A', 'Z'+1);
+        }
+        strncpy(s_filePaths, s_directoryName, 8);
+        s_fileHandle = s_sdCard->openFile(s_filePaths[i], true);
+        Serial.print("Creating file ");
+        Serial.println(s_filePaths[i]);
+    }
+
+    Serial.println(s_directoryName);
+
+    s_sdCard.mkDir(s_directoryName);
 }
 
 void setup()
@@ -69,6 +103,6 @@ void setup()
 void loop()
 {
     createRandomDirectory();
-
+    createAndDeleteRandomFiles();
     delay(1000);
 }

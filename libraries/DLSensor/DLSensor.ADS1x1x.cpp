@@ -26,8 +26,8 @@
 #include "DLSensor.ADS1x1x.h"
 
 #ifdef TEST
-#include "DL.Test.Mock.i2c.h"
-#include "DL.Test.Mock.delay.h"
+#include "DLTest.Mock.i2c.h"
+#include "DLTest.Mock.delay.h"
 #endif
 
 /*
