@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#include "DL.Test.Mock.i2c.h"
+#include "DLTest.Mock.i2c.h"
 
 void I2CMock::begin(void) {}
 void I2CMock::beginTransmission(uint8_t addr) { m_addr = addr; }

@@ -10,9 +10,16 @@
 
 #include <stdint.h>
 
+#include "DLSensor.Thermistor.h"
 #include "app.data_conversion.h"
 
-static float adcTomV(uint16_t in, float mvPerBit)
+static Thermistor s_thermistors[] = {
+    Thermistor(3977, 10000),
+    Thermistor(3977, 10000),
+    Thermistor(3977, 10000)
+};
+
+float adcTomV(uint16_t in, float mvPerBit)
 {
     return (float)in * mvPerBit;
 }
@@ -35,72 +42,86 @@ float mvToAmps(float mV, float mVperAmp, float mvAtZero)
 float channel01Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return potentialDividerConversion(mv, 200000.0, 10000.0);
+	return mv;//potentialDividerConversion(mv, 200000.0, 10000.0);
 }
 
 float channel02Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return potentialDividerConversion(mv, 200000.0, 10000.0);
+	return mv;//potentialDividerConversion(mv, 200000.0, 10000.0);
 }
 
 float channel03Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return potentialDividerConversion(mv, 200000.0, 10000.0);
+	return mv;//potentialDividerConversion(mv, 200000.0, 10000.0);
 }
 
 float channel04Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return potentialDividerConversion(mv, 200000.0, 10000.0);
+	return mv;//potentialDividerConversion(mv, 200000.0, 10000.0);
 }
 
 float channel05Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 594);
 }
 
 float channel06Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel07Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 591);
 }
 
 float channel08Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 60, 596);
 }
 
 float channel09Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel10Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel11Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return potentialDividerConversion(mv, 200000.0, 10000.0);
 }
 
 float channel12Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return potentialDividerConversion(mv, 200000.0, 1000.0);
 }
 
+float temp1Conversion(uint16_t in)
+{
+	return s_thermistors[0].TemperatureFromADCReading(10000.0, in, 675);
+}
+
+float temp2Conversion(uint16_t in)
+{
+	return s_thermistors[1].TemperatureFromADCReading(10000.0, in, 675);
+}
+
+float temp3Conversion(uint16_t in)
+{
+	return s_thermistors[2].TemperatureFromADCReading(10000.0, in, 675);
+}

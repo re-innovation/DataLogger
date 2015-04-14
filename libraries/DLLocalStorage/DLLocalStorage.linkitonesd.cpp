@@ -1,6 +1,6 @@
 /*
  * linkitonegprs.cpp
- * 
+ *
  * Connect and communicate over GPRS
  *
  * Author: James Fowkes
@@ -41,7 +41,7 @@ static bool s_fileIsOpenForRead = false;
 static bool s_fileIsOpenForWrite = false;
 
 /*
- * Public Functions 
+ * Public Functions
  */
 
 LinkItOneSD::LinkItOneSD()
@@ -87,11 +87,14 @@ FILE_HANDLE LinkItOneSD::openFile(char const * const filename, bool forWrite)
     }
     else
     {
+    	Serial.print("Could not open '");
+    	Serial.print(filename);
+    	Serial.println(forWrite ? "' for write" : "' for read");
     	s_fileIsOpenForWrite = false;
     	s_fileIsOpenForRead = false;
     }
 
-    return 0; // The LinkIt ONE can only support one open file at a time, so no need to track file handles
+    return s_file ? 0 : INVALID_HANDLE; // The LinkIt ONE can only support one open file at a time, so no need to track file handles
 }
 
 void LinkItOneSD::write(FILE_HANDLE file, char const * const toWrite)
@@ -111,7 +114,15 @@ void LinkItOneSD::write(FILE_HANDLE file, char const * const toWrite)
 	}
 	else
 	{
-		Serial.println("File not open for write!");
+		/*Serial.print("File not open when writing because ");
+		if (s_file.isDirectory())
+		{
+			Serial.println(" file is directory.");
+		}
+		else if (!s_fileIsOpenForWrite)
+		{
+			Serial.println(" file was not opened in write mode.");
+		}*/
 	}
 }
 
@@ -149,7 +160,7 @@ uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool
 bool LinkItOneSD::endOfFile(FILE_HANDLE file)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
-	return !s_file.available();	
+	return !s_file.available();
 }
 
 void LinkItOneSD::closeFile(FILE_HANDLE file)
@@ -158,4 +169,9 @@ void LinkItOneSD::closeFile(FILE_HANDLE file)
     s_file.close();
     s_fileIsOpenForWrite = false;
     s_fileIsOpenForRead = false;
+}
+
+void LinkItOneSD::remove(char const * const dirPath)
+{
+    LSD.remove(dirPath);
 }

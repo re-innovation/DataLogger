@@ -28,6 +28,7 @@ class LocalStorageInterface
         virtual void closeFile(FILE_HANDLE file) = 0;
         virtual bool endOfFile(FILE_HANDLE file) = 0;
         virtual void setEcho(bool set) = 0;
+        virtual void removeFile(char const * const dirPath) = 0;
 
     private:
         bool m_echo;

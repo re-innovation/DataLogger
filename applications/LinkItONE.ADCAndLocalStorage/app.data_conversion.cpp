@@ -10,11 +10,15 @@
 
 #include <stdint.h>
 
+#ifndef ARDUINO
+#include <stdio.h>
+#endif
+
 #include "app.data_conversion.h"
 
-static float adcTomV(uint16_t in, float mvPerBit)
+float adcTomV(uint16_t in, float mvPerBit)
 {
-    return (float)in * mvPerBit;
+	return ((float)in * mvPerBit);
 }
 
 /* Assuming that the voltage in is from a potential divider
@@ -59,37 +63,38 @@ float channel04Conversion(uint16_t in)
 float channel05Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	printf("mv = %.6f\n", mv);
+	return mvToAmps(mv, 59, 594);
 }
 
 float channel06Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel07Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 591);
 }
 
 float channel08Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 60, 596);
 }
 
 float channel09Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel10Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	return mvToAmps(mv, 60, 600);
+	return mvToAmps(mv, 59, 592);
 }
 
 float channel11Conversion(uint16_t in)

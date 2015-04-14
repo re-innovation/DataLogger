@@ -226,7 +226,7 @@ uint32_t DataField_writeHeadersToBuffer(
 		}
 	}
 
-	headerAccumulator.writeString("\n");
+	headerAccumulator.writeString("\r\n");
 
 	return headerAccumulator.length();
 }

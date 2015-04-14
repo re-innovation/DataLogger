@@ -24,7 +24,7 @@
  */
 
 #include "../DLSensor.ADS1x1x.h"
-#include "../../DLTest/DL.Test.Mock.i2c.h"
+#include "../../DLTest/DLTest.Mock.i2c.h"
 
 /*
  * Private Test Objects/Variables
