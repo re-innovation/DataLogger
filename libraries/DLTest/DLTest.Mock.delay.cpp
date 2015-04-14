@@ -6,4 +6,4 @@
 
 #include "DLTest.Mock.delay.h"
 
-void delay(uint8_t delay) { (void)delay; }
+void delay(long delay) { (void)delay; }

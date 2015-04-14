@@ -15,6 +15,7 @@ class TestStorageInterface : public LocalStorageInterface
         void closeFile(FILE_HANDLE file);
         bool endOfFile(FILE_HANDLE file);
         void setEcho(bool set);
+        void removeFile(char const * const dirPath);
 
     private:
         bool m_echo;

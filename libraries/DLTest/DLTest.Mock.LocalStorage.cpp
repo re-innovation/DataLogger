@@ -29,7 +29,7 @@ bool TestStorageInterface::fileExists(char const * const filePath)
     struct stat info;
 
     if (!filePath) { return false; }
-    
+
     return stat(filePath, &info) == 0;
 }
 
@@ -54,14 +54,14 @@ bool TestStorageInterface::directoryExists(char const * const dirPath)
 bool TestStorageInterface::mkDir(char const * const dirPath)
 {
     if(!dirPath) { return false; }
-    return mkdir(dirPath, S_IRUSR | S_IWUSR) == 0;
+    return mkdir(dirPath, S_IRWXU | S_IRWXG) == 0;
 }
 
 FILE_HANDLE TestStorageInterface::openFile(char const * const filename, bool forWrite)
 {
 
     if (!filename) { return INVALID_HANDLE; }
-    
+
     s_file.open(filename, forWrite ? std::ios::out : std::ios::in);
 
     return 0;
@@ -122,5 +122,10 @@ bool TestStorageInterface::endOfFile(FILE_HANDLE file)
 void TestStorageInterface::setEcho(bool set)
 {
     (void)set;
+}
+
+void TestStorageInterface::removeFile(char const * const dirPath)
+{
+    remove(dirPath);
 }
 
