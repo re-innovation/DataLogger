@@ -34,7 +34,9 @@ class StringSetting
         char * get();
         bool isSet(void);
         void set(char const * const);
-        
+        #ifdef TEST
+        void reset();
+        #endif
     private:
         char * m_pSetting;
 };
@@ -49,7 +51,9 @@ class IntSetting
         int get();
         bool isSet(void);
         void set(int);
-    
+        #ifdef TEST
+        void reset();
+        #endif
     private:
         int m_setting;
         bool m_set;
@@ -78,6 +82,11 @@ char * StringSetting::get(void) { return m_pSetting; }
 bool IntSetting::isSet() {return m_set;}
 void IntSetting::set(int setting) { if (!m_set) { m_setting = setting; m_set = true;} }
 int IntSetting::get(void) { return m_setting; }
+
+#ifdef TEST
+void StringSetting::reset(void) { m_pSetting = NULL; }
+void IntSetting::reset(void) { m_set = false; }
+#endif
 
 /////////////////////////////////////////////////////////
 
@@ -185,3 +194,32 @@ void Settings_setInt(INTSETTING setting, int set)
         s_ints[setting].set(set);
     }  
 }
+
+#ifdef TEST
+void Settings_reset(void)
+{
+    uint8_t i;
+    for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+    {
+        Settings_resetInt((INTSETTING)i);
+    }
+
+
+    // Searching for ints didn't work, try to find string setting
+    for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+    {
+        Settings_resetString((STRINGSETTING)i);
+    }
+}
+
+void Settings_resetInt(INTSETTING setting)
+{
+    s_ints[setting].reset();
+}
+
+void Settings_resetString(STRINGSETTING setting)
+{
+    s_strings[setting].reset();
+}
+
+#endif

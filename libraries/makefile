@@ -23,7 +23,7 @@ else
 $(error TEST_MODULE is not set)
 endif
 
--include TEST_MAKEFILE
+-include $(TEST_MAKEFILE)
 
 all:
 	make -s -f $(TEST_MAKEFILE) local_setup

@@ -27,6 +27,11 @@
 
 #include "unity.h"
 
+void setUp(void)
+{
+  Settings_Reset();
+}
+
 void test_ReadingFromNULLStringReturnsFalse(void)
 {
 	TEST_ASSERT_FALSE(Settings_ReadFromString(NULL));
@@ -55,6 +60,8 @@ void test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting(void)
 
 void test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting(void)
 {
+  TEST_ASSERT_TRUE(Settings_ReadFromString("GPRS_APN=www.exampleapn.com"));
+  TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
   TEST_ASSERT_TRUE(Settings_ReadFromString("GPRS_APN=www.exampleapn.com"));
   TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
 }

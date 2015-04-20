@@ -21,7 +21,7 @@
 
 #define FOREACH_INTSET(INT) \
     INT(THINGSPEAK_UPLOAD_INTERVAL) \
-    INT(DATA_AVERAGING_INTERVAL_SECS)
+    INT(DATA_AVERAGING_INTERVAL_SECS) \
     INT(CSV_RECORD_INTERVAL) \
     INT(SERIAL_DATA_INTERVAL) \
 
@@ -57,5 +57,11 @@ char const * Settings_getStringName(STRINGSETTING setting);
 char * Settings_getString(STRINGSETTING setting);
 void Settings_setString(STRINGSETTING setting, char const * const pSet);
 
+
+#ifdef TEST
+void Settings_reset(void);
+void Settings_resetInt(INTSETTING setting);
+void Settings_resetString(STRINGSETTING setting);
+#endif
 
 #endif
