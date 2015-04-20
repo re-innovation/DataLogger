@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
  		// Read each line and pass to settings module
     	while ( getline (settingsFile,line) )
     	{
-      		Settings_ReadFromString(line.c_str());
+      		Settings_readFromString(line.c_str());
     	}
     	settingsFile.close();
 

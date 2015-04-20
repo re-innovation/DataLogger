@@ -232,7 +232,7 @@ void APP_SD_ReadSettings(void)
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
-        Settings_ReadFromString(lineBuffer);
+        Settings_readFromString(lineBuffer);
     }
     s_sdCard->closeFile(hndl);
 
@@ -282,7 +282,7 @@ void APP_SD_ReadSettings(char * filename)
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
-        Settings_ReadFromString(lineBuffer);
+        Settings_readFromString(lineBuffer);
     }
     s_sdCard->closeFile(hndl);
 

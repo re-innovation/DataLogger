@@ -74,7 +74,7 @@ void setup()
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
-        Settings_ReadFromString(lineBuffer);
+        Settings_readFromString(lineBuffer);
     }
     s_sdCard->closeFile(hndl);
 

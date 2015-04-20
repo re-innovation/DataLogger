@@ -15,8 +15,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 
-#include <iostream>
 
 /*
  * Local Includes
@@ -24,12 +25,28 @@
 
 #include "DLSettings.h"
 #include "DLSettings.Reader.h"
+#include "DLUtility.h"
+
+/*
+ * Private Variables
+ */
+
+static char const * const s_errorStrings[] = {
+	"", 
+	ERROR_STR_NO_STRING,
+	ERROR_STR_NO_EQUALS,
+	ERROR_STR_NO_NAME,
+	ERROR_STR_INVALID_INT,
+};
+
+static char s_errorBuffer[100];
+static SETTINGS_READER_RESULT s_lastResult = ERR_NONE;
 
 /*
  * Private Functions
  */
 
-bool addIntSettingFromString(INTSETTING i, char const * const pValue)
+static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 {
 	// strtol will set endOfConversion to > pValue if conversion succeeded
 	// or == pValue if it failed
@@ -47,22 +64,73 @@ bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 	return true;
 }
 
+static SETTINGS_READER_RESULT noStringError(void)
+{
+	s_lastResult = ERR_NO_STRING;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_STRING]);
+	return s_lastResult;
+}
+
+static SETTINGS_READER_RESULT noEqualsError(void)
+{
+	s_lastResult = ERR_NO_EQUALS;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_EQUALS]);
+	return s_lastResult;
+}
+
+static SETTINGS_READER_RESULT noNameError(char * pName)
+{
+	s_lastResult = ERR_NO_NAME;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_NAME], pName);
+	return s_lastResult;
+}
+
+static SETTINGS_READER_RESULT invalidIntError(char * pName, char * pSetting)
+{
+	s_lastResult = ERR_INVALID_INT;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_INVALID_INT], pSetting, pName);
+	return s_lastResult;
+}
+
+static SETTINGS_READER_RESULT noError(void)
+{
+	s_lastResult = ERR_NONE;
+	s_errorBuffer[0] = '\0';
+	return s_lastResult;
+}
+
 /*
  * Public Functions
  */
 
-bool Settings_ReadFromString(char const * const string)
+SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 {
-	if (!string) { return false; }
+	char settingNameCopy[30];
+	char settingValueCopy[30];
+
+	if (!string) { return noStringError(); }
+
+	// If line is a comment, skip immediately
+	if (*string == '#') { return noError(); }
 
 	// Find the equals sign (separates name from value)
-	char const * const pEquals = strchr((char*)string, '=');
+	char const * pEquals = strchr((char*)string, '=');   
+	char const * pEndOfName = pEquals - 1;
+	char const * pStartOfSetting = pEquals+1;
 
 	// If there is no equals sign, fail early
-    if (!pEquals) {return false; }
+    if (!pEquals) { return noEqualsError(); }
+
+    // Backtrack over any whitespace to find real end of name
+    while (isspace(*pEndOfName)) {pEndOfName--;}
+
+	// Skip over any whitespace to find real start of setting
+    while (isspace(*pStartOfSetting)) {pStartOfSetting++;}
 
 	// The length of the setting name is the difference between the two pointers
-	int settingNameLength = pEquals - string;
+	int settingNameLength = pEndOfName - string + 1;
+	strncpy_safe(settingNameCopy, string, settingNameLength+1);
+	strncpy_safe(settingValueCopy, pStartOfSetting, 30);
 
 	// Try to find int setting
 	char const * pSettingName;
@@ -70,10 +138,15 @@ bool Settings_ReadFromString(char const * const string)
 	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
 	{
 		pSettingName = Settings_getIntName((INTSETTING)i);
-		if (0 == strncmp(pSettingName, string, settingNameLength))
+		if (0 == strcmp(pSettingName, settingNameCopy))
 		{
-			// As soo as the setting name has been found, try parsing the int and return
-			return addIntSettingFromString((INTSETTING)i, pEquals+1);
+			// As soon as the setting name has been found, try parsing the int and return.
+			bool result = addIntSettingFromString((INTSETTING)i, settingValueCopy);
+			if (!result)
+			{
+				return invalidIntError(settingNameCopy, settingValueCopy);
+			}
+			return noError();
 		}
 	}
 
@@ -82,14 +155,34 @@ bool Settings_ReadFromString(char const * const string)
 	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
 	{
 		pSettingName = Settings_getStringName((STRINGSETTING)i);
-		if (0 == strncmp(pSettingName, string, settingNameLength))
+		if (0 == strcmp(pSettingName, settingNameCopy))
 		{
 			// As soon as the setting name has been found, set the setting and return
-			Settings_setString((STRINGSETTING)i, pEquals+1);
-			return true;
+			Settings_setString((STRINGSETTING)i, settingValueCopy);
+			return noError();
 		}
 	}
 
 	// If execution got this far, the setting name wasn't found.
-	return false;
+	return noNameError(settingNameCopy);
 }
+
+SETTINGS_READER_RESULT Settings_getLastReaderResult(void)
+{
+	return s_lastResult;
+}
+
+char const * Settings_getLastReaderResultText(void)
+{
+	return s_errorBuffer;
+}
+
+#ifdef TEST
+
+void Settings_resetReader(void)
+{
+	s_lastResult = ERR_NONE;
+	s_errorBuffer[0] = '\0';
+}
+
+#endif

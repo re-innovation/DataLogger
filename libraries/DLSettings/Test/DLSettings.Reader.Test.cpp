@@ -29,53 +29,79 @@
 
 void setUp(void)
 {
-  Settings_Reset();
+  Settings_reset();
+  Settings_resetReader();
 }
 
-void test_ReadingFromNULLStringReturnsFalse(void)
+void test_ReadingFromNULLStringReturnsCorrectError(void)
 {
-	TEST_ASSERT_FALSE(Settings_ReadFromString(NULL));
+	TEST_ASSERT_EQUAL(ERR_NO_STRING, Settings_readFromString(NULL));
+  TEST_ASSERT_EQUAL(ERR_NO_STRING, Settings_getLastReaderResult());
+  TEST_ASSERT_EQUAL_STRING(ERROR_STR_NO_STRING, Settings_getLastReaderResultText());
 }
 
-void test_ReadingFromInvalidStringReturnsFalse(void)
+void test_ReadingFromInvalidStringReturnsCorrectError(void)
 {
-	TEST_ASSERT_FALSE(Settings_ReadFromString("SOME INVALID STRING"));
+	TEST_ASSERT_EQUAL(ERR_NO_EQUALS, Settings_readFromString("SOME INVALID STRING"));
+  TEST_ASSERT_EQUAL(ERR_NO_EQUALS, Settings_getLastReaderResult());
+  TEST_ASSERT_EQUAL_STRING(ERROR_STR_NO_EQUALS, Settings_getLastReaderResultText());
 }
 
-void test_ReadingFromUnrecognizedSettingReturnsFalse(void)
+void test_ReadingFromUnrecognizedSettingReturnsCorrectError(void)
 {
-  TEST_ASSERT_FALSE(Settings_ReadFromString("NOT_AN_SETTING_NAME=NOTANINTEGER"));
+  TEST_ASSERT_EQUAL(ERR_NO_NAME, Settings_readFromString("NOT_AN_SETTING_NAME=NOTANINTEGER"));
+  TEST_ASSERT_EQUAL(ERR_NO_NAME, Settings_getLastReaderResult());
+
+  char expected[100];
+  sprintf(expected, ERROR_STR_NO_NAME, "NOT_AN_SETTING_NAME");
+  TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
-void test_ReadingFromInvalidIntSettingReturnsFalse(void)
+void test_ReadingFromInvalidIntSettingReturnsCorrectError(void)
 {
-	TEST_ASSERT_FALSE(Settings_ReadFromString("THINGSPEAK_UPLOAD_INTERVAL=NOTANINTEGER"));
+	TEST_ASSERT_EQUAL(ERR_INVALID_INT, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=NOTANINTEGER"));
+  TEST_ASSERT_EQUAL(ERR_INVALID_INT, Settings_getLastReaderResult());
+
+  char expected[100];
+  sprintf(expected, ERROR_STR_INVALID_INT, "NOTANINTEGER", "THINGSPEAK_UPLOAD_INTERVAL");
+  TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
-void test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting(void)
+void test_ReadingFromValidIntSettingReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_TRUE(Settings_ReadFromString("THINGSPEAK_UPLOAD_INTERVAL=30"));
+  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=30"));
   TEST_ASSERT_EQUAL(30, Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL));
 }
 
-void test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting(void)
+void test_ReadingFromValidStringSettingReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_TRUE(Settings_ReadFromString("GPRS_APN=www.exampleapn.com"));
+  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("GPRS_APN=www.exampleapn.com"));
   TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
-  TEST_ASSERT_TRUE(Settings_ReadFromString("GPRS_APN=www.exampleapn.com"));
+}
+
+void test_ReadingFromValidStringSettingWithSpacesReturnsNoErrorAndSetsThatSetting(void)
+{
+  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("GPRS_APN = www.exampleapn.com"));
   TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
+}
+
+void test_CommentLinesAreIgnoredButValid(void)
+{
+  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("# This is a comment"));
 }
 
 int main(void)
 {
     UnityBegin("DLSettings.Reader.cpp");
 
-  	RUN_TEST(test_ReadingFromNULLStringReturnsFalse);
-  	RUN_TEST(test_ReadingFromInvalidStringReturnsFalse);
-    RUN_TEST(test_ReadingFromUnrecognizedSettingReturnsFalse);
-  	RUN_TEST(test_ReadingFromInvalidIntSettingReturnsFalse);
-    RUN_TEST(test_ReadingFromValidIntSettingReturnsTrueAndSetsThatSetting);
-    RUN_TEST(test_ReadingFromValidStringSettingReturnsTrueAndSetsThatSetting);
+  	RUN_TEST(test_ReadingFromNULLStringReturnsCorrectError);
+  	RUN_TEST(test_ReadingFromInvalidStringReturnsCorrectError);
+    RUN_TEST(test_ReadingFromUnrecognizedSettingReturnsCorrectError);
+  	RUN_TEST(test_ReadingFromInvalidIntSettingReturnsCorrectError);
+    RUN_TEST(test_ReadingFromValidIntSettingReturnsNoErrorAndSetsThatSetting);
+    RUN_TEST(test_ReadingFromValidStringSettingReturnsNoErrorAndSetsThatSetting);
+    RUN_TEST(test_ReadingFromValidStringSettingWithSpacesReturnsNoErrorAndSetsThatSetting);
+    RUN_TEST(test_CommentLinesAreIgnoredButValid);
 
   	UnityEnd();
   	return 0;
