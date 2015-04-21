@@ -13,7 +13,8 @@
  */
 
 #include <string.h>
-
+#include <stdint.h>
+ 
 /*
  * Local Application Includes
  */

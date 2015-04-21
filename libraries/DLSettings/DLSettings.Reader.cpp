@@ -24,7 +24,6 @@
  */
 
 #include "DLSettings.h"
-#include "DLSettings.Reader.h"
 #include "DLUtility.h"
 
 /*
@@ -40,7 +39,7 @@ static char const * const s_errorStrings[] = {
 };
 
 static char s_errorBuffer[100];
-static SETTINGS_READER_RESULT s_lastResult = ERR_NONE;
+static SETTINGS_READER_RESULT s_lastResult = ERR_READER_NONE;
 
 /*
  * Private Functions
@@ -66,35 +65,35 @@ static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 
 static SETTINGS_READER_RESULT noStringError(void)
 {
-	s_lastResult = ERR_NO_STRING;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_STRING]);
+	s_lastResult = ERR_READER_NO_STRING;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_STRING]);
 	return s_lastResult;
 }
 
 static SETTINGS_READER_RESULT noEqualsError(void)
 {
-	s_lastResult = ERR_NO_EQUALS;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_EQUALS]);
+	s_lastResult = ERR_READER_NO_EQUALS;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_EQUALS]);
 	return s_lastResult;
 }
 
 static SETTINGS_READER_RESULT noNameError(char * pName)
 {
-	s_lastResult = ERR_NO_NAME;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_NO_NAME], pName);
+	s_lastResult = ERR_READER_NO_NAME;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_NAME], pName);
 	return s_lastResult;
 }
 
 static SETTINGS_READER_RESULT invalidIntError(char * pName, char * pSetting)
 {
-	s_lastResult = ERR_INVALID_INT;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_INVALID_INT], pSetting, pName);
+	s_lastResult = ERR_READER_INVALID_INT;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_INVALID_INT], pSetting, pName);
 	return s_lastResult;
 }
 
 static SETTINGS_READER_RESULT noError(void)
 {
-	s_lastResult = ERR_NONE;
+	s_lastResult = ERR_READER_NONE;
 	s_errorBuffer[0] = '\0';
 	return s_lastResult;
 }
@@ -114,18 +113,13 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 	if (*string == '#') { return noError(); }
 
 	// Find the equals sign (separates name from value)
-	char const * pEquals = strchr((char*)string, '=');   
-	char const * pEndOfName = pEquals - 1;
-	char const * pStartOfSetting = pEquals+1;
+	char * pEndOfName;
+	char * pStartOfSetting;
 
-	// If there is no equals sign, fail early
-    if (!pEquals) { return noEqualsError(); }
-
-    // Backtrack over any whitespace to find real end of name
-    while (isspace(*pEndOfName)) {pEndOfName--;}
-
-	// Skip over any whitespace to find real start of setting
-    while (isspace(*pStartOfSetting)) {pStartOfSetting++;}
+	if (!splitAndStripWhiteSpace((char*)string, '=', NULL, &pEndOfName, &pStartOfSetting, NULL))
+	{
+		return noEqualsError();
+	}
 
 	// The length of the setting name is the difference between the two pointers
 	int settingNameLength = pEndOfName - string + 1;
@@ -177,12 +171,8 @@ char const * Settings_getLastReaderResultText(void)
 	return s_errorBuffer;
 }
 
-#ifdef TEST
-
-void Settings_resetReader(void)
+void Settings_InitReader(void)
 {
-	s_lastResult = ERR_NONE;
+	s_lastResult = ERR_READER_NONE;
 	s_errorBuffer[0] = '\0';
 }
-
-#endif

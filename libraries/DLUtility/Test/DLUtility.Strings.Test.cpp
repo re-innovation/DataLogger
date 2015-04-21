@@ -155,6 +155,61 @@ void test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength(void)
     TEST_ASSERT_EQUAL(99, accumulator->length());
 }
 
+void test_SplitAndStripWhitespaceErrorsWithInvalidStrings(void)
+{
+    char * pLStart;
+    char * pLEnd;
+    char * pRStart;
+    char * pREnd;
+
+    TEST_ASSERT_FALSE(splitAndStripWhiteSpace(NULL, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+    TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"NoEqualsSign", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+    TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"NoRightHandSide=", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+    TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"=NoLeftHandSide", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+}
+
+void test_SplitAndStripWhitespaceWorksWithStringWithoutWhitespace(void)
+{
+    char test[] = "Stringon left of equals=string On right of equals";
+
+    char * pLStart;
+    char * pLEnd;
+    char * pRStart;
+    char * pREnd;
+
+    TEST_ASSERT_TRUE(splitAndStripWhiteSpace(test, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+
+    char expected1[] = "Stringon left of equals";
+    char expected2[] = "";
+    char expected3[] = "string On right of equals";
+    char expected4[] = "";
+    TEST_ASSERT_EQUAL(0, strncmp(expected1, pLStart, strlen(expected1)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected2, pLEnd+1, strlen(expected2)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected3, pRStart, strlen(expected3)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected4, pREnd+1, strlen(expected4))); 
+}
+
+void test_SplitAndStripWhitespaceWorksWithStringWithWhitespace(void)
+{
+    char test[] = "\t  Stringon left of equals\t=   string On right of equals  \t";
+
+    char * pLStart;
+    char * pLEnd;
+    char * pRStart;
+    char * pREnd;
+
+    TEST_ASSERT_TRUE(splitAndStripWhiteSpace(test, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+
+    char expected1[] = "Stringon left of equals";
+    char expected2[] = "\t";
+    char expected3[] = "string On right of equals";
+    char expected4[] = "  \t";
+    TEST_ASSERT_EQUAL(0, strncmp(expected1, pLStart, strlen(expected1)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected2, pLEnd+1, strlen(expected2)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected3, pRStart, strlen(expected3)));
+    TEST_ASSERT_EQUAL(0, strncmp(expected4, pREnd+1, strlen(expected4)));
+}
+
 //=======MAIN=====
 int main(void)
 {
@@ -176,5 +231,10 @@ int main(void)
   RUN_TEST(test_FixedLengthAccumulator_CopiesPartialStringUpToMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_WritesCRLFUsingWriteLine);
   RUN_TEST(test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength);
+
+  RUN_TEST(test_SplitAndStripWhitespaceErrorsWithInvalidStrings);
+  RUN_TEST(test_SplitAndStripWhitespaceWorksWithStringWithoutWhitespace);
+  RUN_TEST(test_SplitAndStripWhitespaceWorksWithStringWithWhitespace);
+
   return (UnityEnd());
 }

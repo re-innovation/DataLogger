@@ -7,11 +7,11 @@
 
 enum settings_reader_result
 {
-    ERR_NONE,
-    ERR_NO_STRING,
-    ERR_NO_EQUALS,
-    ERR_NO_NAME,
-    ERR_INVALID_INT
+    ERR_READER_NONE,
+    ERR_READER_NO_STRING,
+    ERR_READER_NO_EQUALS,
+    ERR_READER_NO_NAME,
+    ERR_READER_INVALID_INT
 };
 typedef enum settings_reader_result SETTINGS_READER_RESULT;
 
@@ -25,12 +25,9 @@ typedef enum settings_reader_result SETTINGS_READER_RESULT;
  * Public Functions
  */
 
+void Settings_InitReader(void);
 SETTINGS_READER_RESULT Settings_getLastReaderResult(void);
 SETTINGS_READER_RESULT Settings_readFromString(char const * const string);
 char const * Settings_getLastReaderResultText(void);
-
-#ifdef TEST
-void Settings_resetReader(void);
-#endif
 
 #endif

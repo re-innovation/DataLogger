@@ -13,13 +13,13 @@
  */
 
 #include <string.h>
+#include <stdint.h>
 
 /*
  * Local Application Includes
  */
 
 #include "../DLSettings.h"
-#include "../DLSettings.Reader.h"
 
 /*
  * Unity Test Framework
@@ -29,28 +29,27 @@
 
 void setUp(void)
 {
-  Settings_reset();
-  Settings_resetReader();
+  Settings_Init();
 }
 
 void test_ReadingFromNULLStringReturnsCorrectError(void)
 {
-	TEST_ASSERT_EQUAL(ERR_NO_STRING, Settings_readFromString(NULL));
-  TEST_ASSERT_EQUAL(ERR_NO_STRING, Settings_getLastReaderResult());
+	TEST_ASSERT_EQUAL(ERR_READER_NO_STRING, Settings_readFromString(NULL));
+  TEST_ASSERT_EQUAL(ERR_READER_NO_STRING, Settings_getLastReaderResult());
   TEST_ASSERT_EQUAL_STRING(ERROR_STR_NO_STRING, Settings_getLastReaderResultText());
 }
 
 void test_ReadingFromInvalidStringReturnsCorrectError(void)
 {
-	TEST_ASSERT_EQUAL(ERR_NO_EQUALS, Settings_readFromString("SOME INVALID STRING"));
-  TEST_ASSERT_EQUAL(ERR_NO_EQUALS, Settings_getLastReaderResult());
+	TEST_ASSERT_EQUAL(ERR_READER_NO_EQUALS, Settings_readFromString("SOME INVALID STRING"));
+  TEST_ASSERT_EQUAL(ERR_READER_NO_EQUALS, Settings_getLastReaderResult());
   TEST_ASSERT_EQUAL_STRING(ERROR_STR_NO_EQUALS, Settings_getLastReaderResultText());
 }
 
 void test_ReadingFromUnrecognizedSettingReturnsCorrectError(void)
 {
-  TEST_ASSERT_EQUAL(ERR_NO_NAME, Settings_readFromString("NOT_AN_SETTING_NAME=NOTANINTEGER"));
-  TEST_ASSERT_EQUAL(ERR_NO_NAME, Settings_getLastReaderResult());
+  TEST_ASSERT_EQUAL(ERR_READER_NO_NAME, Settings_readFromString("NOT_AN_SETTING_NAME=NOTANINTEGER"));
+  TEST_ASSERT_EQUAL(ERR_READER_NO_NAME, Settings_getLastReaderResult());
 
   char expected[100];
   sprintf(expected, ERROR_STR_NO_NAME, "NOT_AN_SETTING_NAME");
@@ -59,8 +58,8 @@ void test_ReadingFromUnrecognizedSettingReturnsCorrectError(void)
 
 void test_ReadingFromInvalidIntSettingReturnsCorrectError(void)
 {
-	TEST_ASSERT_EQUAL(ERR_INVALID_INT, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=NOTANINTEGER"));
-  TEST_ASSERT_EQUAL(ERR_INVALID_INT, Settings_getLastReaderResult());
+	TEST_ASSERT_EQUAL(ERR_READER_INVALID_INT, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=NOTANINTEGER"));
+  TEST_ASSERT_EQUAL(ERR_READER_INVALID_INT, Settings_getLastReaderResult());
 
   char expected[100];
   sprintf(expected, ERROR_STR_INVALID_INT, "NOTANINTEGER", "THINGSPEAK_UPLOAD_INTERVAL");
@@ -69,25 +68,25 @@ void test_ReadingFromInvalidIntSettingReturnsCorrectError(void)
 
 void test_ReadingFromValidIntSettingReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=30"));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL=30"));
   TEST_ASSERT_EQUAL(30, Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL));
 }
 
 void test_ReadingFromValidStringSettingReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("GPRS_APN=www.exampleapn.com"));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("GPRS_APN=www.exampleapn.com"));
   TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
 }
 
 void test_ReadingFromValidStringSettingWithSpacesReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("GPRS_APN = www.exampleapn.com"));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("GPRS_APN = www.exampleapn.com"));
   TEST_ASSERT_EQUAL_STRING("www.exampleapn.com", Settings_getString(GPRS_APN));
 }
 
 void test_CommentLinesAreIgnoredButValid(void)
 {
-  TEST_ASSERT_EQUAL(ERR_NONE, Settings_readFromString("# This is a comment"));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("# This is a comment"));
 }
 
 int main(void)
