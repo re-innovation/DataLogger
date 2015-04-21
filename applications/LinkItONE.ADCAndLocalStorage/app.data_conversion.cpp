@@ -63,7 +63,6 @@ float channel04Conversion(uint16_t in)
 float channel05Conversion(uint16_t in)
 {
 	float mv = adcTomV(in, 0.125);
-	printf("mv = %.6f\n", mv);
 	return mvToAmps(mv, 59, 594);
 }
 

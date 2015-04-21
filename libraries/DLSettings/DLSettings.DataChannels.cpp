@@ -22,6 +22,7 @@
  * Local Includes
  */
 
+#include "DLDataField.Types.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"
 #include "DLUtility.h"
@@ -86,7 +87,7 @@ static DATACHANNELERROR channelNotSetError(void)
     return s_lastResult;  
 }
 
-static void setupChannel(uint8_t ch, CHANNELTYPE type)
+static void setupChannel(uint8_t ch, FIELD_TYPE type)
 {
     s_channels[ch].type = type;
     switch(type)    
@@ -101,6 +102,7 @@ static void setupChannel(uint8_t ch, CHANNELTYPE type)
         ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[0] = false;
         ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[1] = false;
         break;
+    default:
     case INVALID_TYPE:
         break;
     }
@@ -221,7 +223,7 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     if (0 == strncmp(pChannelSettingString, "type", 4))
     {
         // Try to interpret setting as a channel type
-        CHANNELTYPE type = Setting_parseSettingAsType(pValueString);
+        FIELD_TYPE type = Setting_parseSettingAsType(pValueString);
         if (type == INVALID_TYPE) { return unknownTypeError(); }
 
         setupChannel(ch, type);
@@ -242,7 +244,7 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     }
 }
 
-CHANNELTYPE Settings_GetChannelType(uint8_t channel)
+FIELD_TYPE Settings_GetChannelType(uint8_t channel)
 {
     return (channel < MAX_CHANNELS) ? s_channels[channel].type : INVALID_TYPE;
 }

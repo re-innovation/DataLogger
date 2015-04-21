@@ -100,7 +100,7 @@ bool Setting_getChannelSettingStr(char * buffer, char const * const setting)
     return true;
 }
 
-CHANNELTYPE Setting_parseSettingAsType(char const * const setting)
+FIELD_TYPE Setting_parseSettingAsType(char const * const setting)
 {
     uint8_t i;
     char lcaseSetting[31];
@@ -111,7 +111,7 @@ CHANNELTYPE Setting_parseSettingAsType(char const * const setting)
     {
         if (0 == strncmp(lcaseSetting, s_channelTypes[i], strlen(s_channelTypes[i])))
         {
-            return (CHANNELTYPE)i;
+            return (FIELD_TYPE)i;
         }
     }
 

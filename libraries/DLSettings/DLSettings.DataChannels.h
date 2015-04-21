@@ -3,23 +3,11 @@
 
 #define MAX_CHANNELS (32)
 
-/*
- * Each data channel has a type
- */
-
-enum channeltype
-{
-    VOLTAGE,
-    CURRENT,
-    INVALID_TYPE
-};
-typedef enum channeltype CHANNELTYPE;
-
 /* Each channel has a data structure associated with it */
 
 struct channel
 {
-    CHANNELTYPE type;
+    FIELD_TYPE type;
     void * data; // Pointer to a VOLTAGECHANNEL or CURRENTCHANNEL, etc...
 };
 typedef struct channel CHANNEL;
@@ -64,7 +52,7 @@ typedef enum datachannelerror DATACHANNELERROR;
 void Settings_InitDataChannels(void);
 DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting);
 
-CHANNELTYPE Settings_GetChannelType(uint8_t channel);
+FIELD_TYPE Settings_GetChannelType(uint8_t channel);
 bool Settings_ChannelSettingIsValid(uint8_t channel);
 
 VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel);

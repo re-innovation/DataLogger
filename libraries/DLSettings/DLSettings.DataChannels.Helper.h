@@ -7,7 +7,7 @@
 
 int8_t Settings_getChannelFromSetting(char const * const setting);
 bool Setting_getChannelSettingStr(char * buffer, char const * const setting);
-CHANNELTYPE Setting_parseSettingAsType(char const * const setting);
+FIELD_TYPE Setting_parseSettingAsType(char const * const setting);
 bool Setting_parseSettingAsInt(int32_t * pResult, char const * const setting);
 bool Setting_parseSettingAsFloat(float * pResult, char const * const setting);
 
