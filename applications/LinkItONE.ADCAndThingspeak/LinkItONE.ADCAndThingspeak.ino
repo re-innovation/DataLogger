@@ -55,19 +55,19 @@ static ADS1115 s_ADCs[] = {
 };
 
 // In-RAM data storage
-static NumericDataField<float> s_dataFields[FIELD_COUNT] = {
-    NumericDataField<float>(VOLTAGE, 1),
-    NumericDataField<float>(VOLTAGE, 1),
-    NumericDataField<float>(VOLTAGE, 1),
-    NumericDataField<float>(VOLTAGE, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1),
-    NumericDataField<float>(CURRENT, 1)
+static NumericDataField s_dataFields[FIELD_COUNT] = {
+    NumericDataField(VOLTAGE, 1),
+    NumericDataField(VOLTAGE, 1),
+    NumericDataField(VOLTAGE, 1),
+    NumericDataField(VOLTAGE, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1),
+    NumericDataField(CURRENT, 1)
 };
 
 static float s_uploadData[FIELD_COUNT];

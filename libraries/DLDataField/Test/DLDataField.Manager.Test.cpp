@@ -53,7 +53,7 @@ void test_StringDataFieldCanBeAdded(void)
 
 void test_NumericDataFieldCanBeAdded(void)
 {
-    NumericDataField<float> * field = new NumericDataField<float>(VOLTAGE, 10);
+    NumericDataField * field = new NumericDataField(VOLTAGE, 10);
     TEST_ASSERT_TRUE(s_manager->addField(field));
     TEST_ASSERT_EQUAL(1, s_manager->count());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
@@ -66,7 +66,7 @@ void test_GetFieldsReturnsPointerToArrayOfFields(void)
     uint8_t i;
     for (i = 0; i < 6; ++i)
     {
-        expected[i] = new NumericDataField<float>(VOLTAGE, 10);
+        expected[i] = new NumericDataField(VOLTAGE, 10);
         s_manager->addField(expected[i]);
     }
 

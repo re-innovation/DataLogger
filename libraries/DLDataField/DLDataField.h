@@ -23,22 +23,23 @@ class DataField
 
 };
 
-template <typename T>
 class NumericDataField : public DataField
 {
     public:
         NumericDataField(FIELD_TYPE type, uint32_t N); // N is length of storage buffer
         ~NumericDataField();
 
+        template <typename T>
         void storeData(T data);
-        T getData(uint32_t index);
+
+        float getData(uint32_t index);
         void getDataAsString(char * buf, char const * const fmt, uint8_t index);
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
         
     private:
-        T * m_data;
+        float * m_data;
         #ifdef TEST
         void printContents(void);
         #endif
@@ -71,9 +72,8 @@ uint32_t DataField_writeHeadersToBuffer(
     char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 
 /* These functions are in-progress and don't really do the job they say they do quite right.
-template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
-    char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+    char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 
 uint32_t DataField_writeStringDataToBuffer(
     char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);

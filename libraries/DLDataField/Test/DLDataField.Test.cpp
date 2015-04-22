@@ -32,7 +32,7 @@
 static int16_t intDataArray[] = {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4};
 static char strDataArray[][5] = {"N","NE", "E", "SE", "S"};
 
-static void fillWithTestIntData(NumericDataField<int16_t> * pDataField)
+static void fillWithTestIntData(NumericDataField * pDataField)
 {
 	uint8_t i;
 	for (i = 0; i < 10; ++i)
@@ -52,14 +52,14 @@ static void fillWithTestStringData(StringDataField * pDataField)
 
 static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
 {
-	static NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, 1);
 	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
 	TEST_ASSERT_EQUAL(0, dataField.getData(0));
 }
 
 static void test_DatafieldStoreFloats_CorrectlyFormattedAsStrings(void)
 {
-	static NumericDataField<float> dataField = NumericDataField<float>(VOLTAGE, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, 1);
 	static char buffer[20];
 	dataField.storeData(100.12345f);
 	
@@ -102,7 +102,7 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyStoresInts(void)
 {
-	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
 	fillWithTestIntData(&dataField);
 
 	int16_t i;
@@ -114,7 +114,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyStoresInts(void)
 
 static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 {
-	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
 	fillWithTestIntData(&dataField);
 
 	dataField.storeData(5);
@@ -179,7 +179,7 @@ static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength(void)
 {
-	NumericDataField<int16_t> dataField = NumericDataField<int16_t>(VOLTAGE, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
 	fillWithTestIntData(&dataField);
 
 	TEST_ASSERT_EQUAL(-3, dataField.getData(98357952));
@@ -196,8 +196,8 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThan
 static void test_writeDataFieldHeadersToBufferWithArray_WritesCorrectFields(void)
 {
 	DataField fieldArray[] = {
-		NumericDataField<float>(VOLTAGE, 1),
-		NumericDataField<float>(CURRENT, 1),
+		NumericDataField(VOLTAGE, 1),
+		NumericDataField(CURRENT, 1),
 		StringDataField(CARDINAL_DIRECTION, 3, 1)
 	};
 
@@ -210,8 +210,8 @@ static void test_writeDataFieldHeadersToBufferWithArray_WritesCorrectFields(void
 static void test_writeDataFieldHeadersToBufferWithPointerArray_WritesCorrectFields(void)
 {
 	DataField * fieldArray[] = {
-		new NumericDataField<float>(VOLTAGE, 1),
-		new NumericDataField<float>(CURRENT, 1),
+		new NumericDataField(VOLTAGE, 1),
+		new NumericDataField(CURRENT, 1),
 		new StringDataField(CARDINAL_DIRECTION, 3, 1)
 	};
 
@@ -223,10 +223,10 @@ static void test_writeDataFieldHeadersToBufferWithPointerArray_WritesCorrectFiel
 
 /*static void test_writeNumericDataFieldsToBuffer_WritesCorrectValues(void)
 {
-	NumericDataField<float> fieldArray[] = {
-		NumericDataField<float>(VOLTAGE, 1),
-		NumericDataField<float>(CURRENT, 1),
-		NumericDataField<float>(TEMPERATURE_C, 1),
+	NumericDataField fieldArray[] = {
+		NumericDataField(VOLTAGE, 1),
+		NumericDataField(CURRENT, 1),
+		NumericDataField(TEMPERATURE_C, 1),
 	};
 
 	fieldArray[0].storeData(-13.4533);

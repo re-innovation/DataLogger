@@ -131,7 +131,7 @@ static void tryConnection(void)
 
 static void updateUploadData(void)
 {
-    NumericDataField<float> ** dataFields = APP_DATA_GetDataFieldsPtr();
+    NumericDataField ** dataFields = APP_DATA_GetDataFieldsPtr();
     uint8_t i;
     for(i = 0; i < FIELD_COUNT; ++i)
     {

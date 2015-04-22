@@ -42,7 +42,7 @@
 static Averager<uint16_t> ** s_averagers;
 static Averager<uint16_t> ** s_debugAveragers;
 
-static NumericDataField<float> ** s_dataFields;
+static NumericDataField ** s_dataFields;
 
 static CONVERSION_FN s_conversionFunctions[] = 
 {
@@ -135,7 +135,7 @@ void APP_DATA_Setup(unsigned long msInterval,
     
     s_debugAveragers = new Averager<uint16_t>*[fieldCount];
     s_averagers = new Averager<uint16_t>*[fieldCount];
-    s_dataFields = new NumericDataField<float>*[fieldCount];
+    s_dataFields = new NumericDataField*[fieldCount];
 
     for (i = 0; i < fieldCount; ++i)
     {
@@ -148,7 +148,7 @@ void APP_DATA_Setup(unsigned long msInterval,
             Serial.println(averagerSize);
         }
 
-        s_dataFields[i] = new NumericDataField<float>(fieldTypes[i], dataFieldBufferSize);
+        s_dataFields[i] = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
         if (!s_dataFields[i])
         {
             Serial.print("Failed to create datafield of size ");
@@ -173,7 +173,7 @@ void APP_DATA_NewData(uint16_t data, uint16_t field)
     s_debugAveragers[field]->newData(data);
 }
 
-NumericDataField<float> ** APP_DATA_GetDataFieldsPtr(void)
+NumericDataField ** APP_DATA_GetDataFieldsPtr(void)
 {
     return s_dataFields;
 }

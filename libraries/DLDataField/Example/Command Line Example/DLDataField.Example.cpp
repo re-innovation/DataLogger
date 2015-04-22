@@ -16,12 +16,12 @@ int main(int argc, char * argv[])
 
     for (i = 0; i < 4; ++i)
     {
-        field = new NumericDataField<float>(VOLTAGE, 60);
+        field = new NumericDataField(VOLTAGE, 60);
         s_dataManager->addField(field);
     }
     for (i = 0; i < 8; ++i)
     {
-        field = new NumericDataField<float>(CURRENT, 60);
+        field = new NumericDataField(CURRENT, 60);
         s_dataManager->addField(field);
     }
 

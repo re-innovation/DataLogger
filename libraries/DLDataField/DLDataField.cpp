@@ -131,49 +131,52 @@ char const * DataField::getTypeString(void)
 	return _getTypeString(m_fieldType);
 }
 
-template <typename T>
-NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint32_t N) : DataField(type, N)
+NumericDataField::NumericDataField(FIELD_TYPE type, uint32_t N) : DataField(type, N)
 {
-	m_data = new T[N];
+	m_data = new float[N];
 	
 	if (m_data)
 	{
-		fillArray(m_data, (T)0, N);
+		fillArray(m_data, 0.0f, N);
 	}
 
 	m_index[R] = 0;
 	m_index[W] = 0;
 }
 
-template <typename T>
-NumericDataField<T>::~NumericDataField()
+NumericDataField::~NumericDataField()
 {
 	delete[] m_data;
 }
 
-template <typename T>
-T NumericDataField<T>::getData(uint32_t index)
+float NumericDataField::getData(uint32_t index)
 {
 	index = getRealReadIndex(index);
 	return m_data[index];
 }
 
 template <typename T>
-void NumericDataField<T>::storeData(T data)
+void NumericDataField::storeData(T data)
 {
 	m_data[m_index[W]] = (float)data;
 	incrementIndexes();
 }
 
-template <typename T>
-void NumericDataField<T>::getDataAsString(char * buf, char const * const fmt, uint8_t index)
+void NumericDataField::getDataAsString(char * buf, char const * const fmt, uint8_t index)
 {
 	sprintf(buf, fmt, m_data[index]); // Write data point to buffer
 }
 
+template void NumericDataField::storeData(uint8_t);
+template void NumericDataField::storeData(uint16_t);
+template void NumericDataField::storeData(uint32_t);
+template void NumericDataField::storeData(int8_t);
+template void NumericDataField::storeData(int16_t);
+template void NumericDataField::storeData(int32_t);
+template void NumericDataField::storeData(float);
+
 #ifdef TEST
-template <typename T>
-void NumericDataField<T>::printContents(void)
+void NumericDataField::printContents(void)
 {
 	uint8_t i;
 	for (i = 0; i <= m_maxIndex; ++i)
@@ -253,19 +256,9 @@ uint32_t DataField_writeHeadersToBuffer(
 	return writeHeadersToBuffer(buffer, pDataFields, arrayLength, bufferLength);
 }
 
-// Explictly instantiate templates for NumericDataField
-template class NumericDataField<uint8_t>;
-template class NumericDataField<int8_t>;
-template class NumericDataField<uint16_t>;
-template class NumericDataField<int16_t>;
-template class NumericDataField<uint32_t>;
-template class NumericDataField<int32_t>;
-template class NumericDataField<float>;
-
 /* In-progress functions
-template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
+	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
 {
 	if (!buffer) { return 0; }
 
@@ -310,17 +303,5 @@ if (!buffer) { return 0; }
 
 /* In-progress functions 
 template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<float> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 */
