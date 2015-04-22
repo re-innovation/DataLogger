@@ -7,7 +7,7 @@ class DataFieldManager
 {
     public:
         DataFieldManager();
-        count();
+        uint8_t count();
         bool addField(DataField * field);
         DataField * getField(uint8_t index);
         DataField ** getFields(void);

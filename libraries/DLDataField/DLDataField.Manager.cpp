@@ -43,7 +43,7 @@ DataFieldManager::DataFieldManager()
     }
 }
 
-DataFieldManager::count()
+uint8_t DataFieldManager::count()
 {
     return m_count;
 }

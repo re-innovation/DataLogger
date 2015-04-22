@@ -66,12 +66,6 @@ class StringDataField : public DataField
         uint8_t m_maxLength;
 };
 
-uint32_t DataField_writeHeadersToBuffer(
-    char * buffer, DataField * datafields[], uint8_t arrayLength, uint8_t bufferLength);
-
-uint32_t DataField_writeHeadersToBuffer(
-    char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
-
 /* These functions are in-progress and don't really do the job they say they do quite right.
 uint32_t DataField_writeNumericDataToBuffer(
     char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);

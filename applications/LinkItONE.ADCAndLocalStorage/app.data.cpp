@@ -22,6 +22,7 @@
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
 #include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
@@ -42,7 +43,7 @@
 static Averager<uint16_t> ** s_averagers;
 static Averager<uint16_t> ** s_debugAveragers;
 
-static NumericDataField ** s_dataFields;
+static DataFieldManager * s_dataManager;
 
 static CONVERSION_FN s_conversionFunctions[] = 
 {
@@ -117,7 +118,7 @@ static void averageAndStoreTaskFn(void)
             toStore = (float)average;
         }
 
-        s_dataFields[i]->storeData( toStore );
+        ((NumericDataField*)s_dataManager->getField(i))->storeData( toStore );
     }
 }
 static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
@@ -135,10 +136,25 @@ void APP_DATA_Setup(unsigned long msInterval,
     
     s_debugAveragers = new Averager<uint16_t>*[fieldCount];
     s_averagers = new Averager<uint16_t>*[fieldCount];
-    s_dataFields = new NumericDataField*[fieldCount];
+
+    s_dataManager = new DataFieldManager();
 
     for (i = 0; i < fieldCount; ++i)
     {
+        // Create a new numeric field and add to the manager
+        DataField * field = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
+
+        if (!field)
+        {
+            Serial.print("Failed to create datafield of size ");
+            Serial.print(dataFieldBufferSize);
+            Serial.print(" and type ");
+            Serial.println(fieldTypes[i]);
+            break;
+        }
+
+        s_dataManager->addField(field);
+
         s_averagers[i] = new Averager<uint16_t>(averagerSize);
         s_debugAveragers[i] = new Averager<uint16_t>(10);
 
@@ -146,15 +162,6 @@ void APP_DATA_Setup(unsigned long msInterval,
         {
             Serial.print("Failed to create averager of size ");
             Serial.println(averagerSize);
-        }
-
-        s_dataFields[i] = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
-        if (!s_dataFields[i])
-        {
-            Serial.print("Failed to create datafield of size ");
-            Serial.print(dataFieldBufferSize);
-            Serial.print(" and type ");
-            Serial.println(s_dataFields[i]->getTypeString());
         }
     }
 
@@ -173,14 +180,19 @@ void APP_DATA_NewData(uint16_t data, uint16_t field)
     s_debugAveragers[field]->newData(data);
 }
 
-NumericDataField ** APP_DATA_GetDataFieldsPtr(void)
-{
-    return s_dataFields;
-}
-
 uint16_t APP_DATA_GetNumberOfFields(void)
 {
     return s_fieldCount;
+}
+
+void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
+{
+    (void)s_dataManager->writeHeadersToBuffer(buffer, bufferLength);
+}
+
+NumericDataField * APP_Data_GetField(uint8_t i)
+{
+    return (NumericDataField *)s_dataManager->getField(i);
 }
 
 void APP_DATA_Tick(void)

@@ -51,11 +51,10 @@ static char s_settingsFilename[] = "Datalogger.Settings";
 
 static void writeToSDCardTaskFn(void)
 {
-    uint8_t field = 0;
     uint8_t i, j;
     char buffer[10];
 
-    NumericDataField ** dataFields = APP_DATA_GetDataFieldsPtr();
+    NumericDataField * pField;
     uint16_t nFields = APP_DATA_GetNumberOfFields();
 
     Serial.print("Writing averages to SD card (");
@@ -71,8 +70,9 @@ static void writeToSDCardTaskFn(void)
             
         for (j = 0; j < nFields; ++j)
         {
+            pField = APP_Data_GetField(i);
             // Write from datafield to buffer then from buffer to SD file
-            dataFields[j]->getDataAsString(buffer, "%.4f", i);
+            pField->getDataAsString(buffer, "%.4f", i);
 
             s_sdCard->write(s_fileHandle, buffer);
 
@@ -126,9 +126,8 @@ void createNewFileForToday(void)
     s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
 
     char csvHeaders[200];
-    NumericDataField ** dataFields = APP_DATA_GetDataFieldsPtr();
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
-    DataField_writeHeadersToBuffer(csvHeaders, dataFields, nFields, 200);
+    APP_DATA_WriteHeadersToBuffer(csvHeaders, 200);
+
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
     s_sdCard->closeFile(s_fileHandle);

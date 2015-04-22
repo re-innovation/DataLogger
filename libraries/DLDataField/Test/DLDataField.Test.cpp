@@ -32,21 +32,21 @@
 static int16_t intDataArray[] = {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4};
 static char strDataArray[][5] = {"N","NE", "E", "SE", "S"};
 
-static void fillWithTestIntData(NumericDataField * pDataField)
+static void fillWithTestIntData(DataField * pDataField)
 {
 	uint8_t i;
 	for (i = 0; i < 10; ++i)
 	{
-		pDataField->storeData(intDataArray[i]);
+		((NumericDataField*)pDataField)->storeData(intDataArray[i]);
 	}
 }
 
-static void fillWithTestStringData(StringDataField * pDataField)
+static void fillWithTestStringData(DataField * pDataField)
 {
 	uint8_t i;
 	for (i = 0; i < 5; ++i)
 	{
-		pDataField->storeData(strDataArray[i]);
+		((StringDataField*)pDataField)->storeData(strDataArray[i]);
 	}
 }
 
