@@ -67,3 +67,25 @@ DataField ** DataFieldManager::getFields(void)
 {
     return m_fields;
 }
+
+uint32_t DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLength)
+{
+    if (!buffer) { return 0; }
+
+    uint8_t i;
+    
+    FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
+
+    for (i = 0; i < m_count; ++i)
+    {
+        headerAccumulator.writeString(m_fields[i]->getTypeString());
+        if (!lastinloop(i, m_count))
+        {
+            headerAccumulator.writeString(", ");
+        }
+    }
+
+    headerAccumulator.writeString("\r\n");
+
+    return headerAccumulator.length();
+}

@@ -37,13 +37,13 @@ void setUp(void)
     s_manager = new DataFieldManager();
 }
 
-void test_DataFieldCountStartsAtZero(void)
+void test_dataFieldCountStartsAtZero(void)
 {
     TEST_ASSERT_EQUAL(0, s_manager->count());
     TEST_ASSERT_EQUAL_PTR(NULL, s_manager->getField(0));
 }
 
-void test_StringDataFieldCanBeAdded(void)
+void test_stringDataFieldCanBeAdded(void)
 {
     StringDataField * field = new StringDataField(CARDINAL_DIRECTION, 10, 10);
     TEST_ASSERT_TRUE(s_manager->addField(field));
@@ -51,7 +51,7 @@ void test_StringDataFieldCanBeAdded(void)
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
-void test_NumericDataFieldCanBeAdded(void)
+void test_numericDataFieldCanBeAdded(void)
 {
     NumericDataField * field = new NumericDataField(VOLTAGE, 10);
     TEST_ASSERT_TRUE(s_manager->addField(field));
@@ -59,7 +59,7 @@ void test_NumericDataFieldCanBeAdded(void)
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
-void test_GetFieldsReturnsPointerToArrayOfFields(void)
+void test_getFieldsReturnsPointerToArrayOfFields(void)
 {
     DataField * expected[6];
 
@@ -80,14 +80,26 @@ void test_GetFieldsReturnsPointerToArrayOfFields(void)
     }
 }
 
+static void test_writeHeadersToBufferWritesCorrectFields(void)
+{
+    s_manager->addField( new NumericDataField(VOLTAGE, 1) );
+    s_manager->addField( new NumericDataField(CURRENT, 1) );
+    s_manager->addField( new StringDataField(CARDINAL_DIRECTION, 3, 1) );
+
+    char buffer[100];
+    s_manager->writeHeadersToBuffer(buffer, 100);
+
+    TEST_ASSERT_EQUAL_STRING("Voltage (V), Current (A), Wind Direction\r\n", buffer);
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.Manager.Test.cpp");
 
-    RUN_TEST(test_DataFieldCountStartsAtZero);
-    RUN_TEST(test_StringDataFieldCanBeAdded);
-    RUN_TEST(test_NumericDataFieldCanBeAdded);
-    RUN_TEST(test_GetFieldsReturnsPointerToArrayOfFields);
+    RUN_TEST(test_dataFieldCountStartsAtZero);
+    RUN_TEST(test_stringDataFieldCanBeAdded);
+    RUN_TEST(test_numericDataFieldCanBeAdded);
+    RUN_TEST(test_writeHeadersToBufferWritesCorrectFields);
 
     UnityEnd();
     return 0;
