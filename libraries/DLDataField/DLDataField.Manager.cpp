@@ -67,3 +67,8 @@ DataField ** DataFieldManager::getFields(void)
 {
     return m_fields;
 }
+
+void DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLength)
+{
+    DataField_writeHeadersToBuffer(buffer, m_fields, m_count, bufferLength);
+}

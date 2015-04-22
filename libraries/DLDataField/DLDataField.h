@@ -15,7 +15,8 @@ class DataField
 
         void incrementIndexes(void);
         uint32_t getRealReadIndex(uint32_t requestedIndex);
-
+        uint32_t getWriteIndex(void);
+        
         FIELD_TYPE m_fieldType;
         bool m_full; // Set to true when buffer is first filled
         uint32_t m_index[2];
