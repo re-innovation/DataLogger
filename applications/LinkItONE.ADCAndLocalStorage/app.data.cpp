@@ -144,17 +144,18 @@ void APP_DATA_Setup(unsigned long msInterval,
         // Create a new numeric field and add to the manager
         DataField * field = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
 
-        if (!field)
+        if (field)
+        {
+            s_dataManager->addField(field);
+        }
+        else
         {
             Serial.print("Failed to create datafield of size ");
             Serial.print(dataFieldBufferSize);
             Serial.print(" and type ");
             Serial.println(fieldTypes[i]);
-            break;
         }
-
-        s_dataManager->addField(field);
-
+        
         s_averagers[i] = new Averager<uint16_t>(averagerSize);
         s_debugAveragers[i] = new Averager<uint16_t>(10);
 

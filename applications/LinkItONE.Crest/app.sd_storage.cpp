@@ -55,7 +55,6 @@ static void writeToSDCardTaskFn(void)
     uint8_t i, j;
     char buffer[10];
 
-    NumericDataField ** dataFields = APP_DATA_GetDataFieldsPtr();
     uint16_t nFields = APP_DATA_GetNumberOfFields();
 
     Serial.print("Writing averages to SD card (");
@@ -72,7 +71,7 @@ static void writeToSDCardTaskFn(void)
         for (j = 0; j < nFields; ++j)
         {
             // Write from datafield to buffer then from buffer to SD file
-            dataFields[j]->getDataAsString(buffer, "%.4f", i);
+            APP_Data_GetField(j)->getDataAsString(buffer, "%.4f", i);
 
             s_sdCard->write(s_fileHandle, buffer);
 
@@ -126,9 +125,8 @@ void createNewFileForToday(void)
     s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
 
     char csvHeaders[200];
-    NumericDataField ** dataFields = APP_DATA_GetDataFieldsPtr();
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
-    DataField_writeHeadersToBuffer(csvHeaders, dataFields, nFields, 200);
+    APP_DATA_WriteHeadersToBuffer(csvHeaders, 200);
+
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
     s_sdCard->closeFile(s_fileHandle);
