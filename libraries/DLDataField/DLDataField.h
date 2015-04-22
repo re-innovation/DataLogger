@@ -65,6 +65,9 @@ class StringDataField : public DataField
 };
 
 uint32_t DataField_writeHeadersToBuffer(
+    char * buffer, DataField * datafields[], uint8_t arrayLength, uint8_t bufferLength);
+
+uint32_t DataField_writeHeadersToBuffer(
     char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 
 /* These functions are in-progress and don't really do the job they say they do quite right.

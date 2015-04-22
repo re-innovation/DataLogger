@@ -193,12 +193,26 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThan
 	TEST_ASSERT_EQUAL_STRING("E", dataField.getData(98357957));
 }
 
-static void test_writeDataFieldHeadersToBuffer_WritesCorrectFields(void)
+static void test_writeDataFieldHeadersToBufferWithArray_WritesCorrectFields(void)
 {
 	DataField fieldArray[] = {
 		NumericDataField<float>(VOLTAGE, 1),
 		NumericDataField<float>(CURRENT, 1),
 		StringDataField(CARDINAL_DIRECTION, 3, 1)
+	};
+
+	char buffer[100];
+	DataField_writeHeadersToBuffer(buffer, fieldArray, 3, 100);
+
+	TEST_ASSERT_EQUAL_STRING("Voltage (V), Current (A), Wind Direction\r\n", buffer);
+}
+
+static void test_writeDataFieldHeadersToBufferWithPointerArray_WritesCorrectFields(void)
+{
+	DataField * fieldArray[] = {
+		new NumericDataField<float>(VOLTAGE, 1),
+		new NumericDataField<float>(CURRENT, 1),
+		new StringDataField(CARDINAL_DIRECTION, 3, 1)
 	};
 
 	char buffer[100];
@@ -263,7 +277,8 @@ int main(void)
     
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
 
-    RUN_TEST(test_writeDataFieldHeadersToBuffer_WritesCorrectFields);
+    RUN_TEST(test_writeDataFieldHeadersToBufferWithArray_WritesCorrectFields);
+    RUN_TEST(test_writeDataFieldHeadersToBufferWithPointerArray_WritesCorrectFields);
     //RUN_TEST(test_writeNumericDataFieldsToBuffer_WritesCorrectValues);
     //RUN_TEST(test_writeStringDataFieldsToBuffer_WritesCorrectValues);
 

@@ -64,6 +64,29 @@ static char const * _getTypeString(FIELD_TYPE type)
 	
 }
 
+static uint32_t writeHeadersToBuffer(
+	char * buffer, DataField * datafields[], uint8_t arrayLength, uint8_t bufferLength)
+{
+	if (!buffer) { return 0; }
+
+	uint8_t i;
+	
+	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
+
+	for (i = 0; i < arrayLength; ++i)
+	{
+		headerAccumulator.writeString(datafields[i]->getTypeString());
+		if (!lastinloop(i, arrayLength))
+		{
+			headerAccumulator.writeString(", ");
+		}
+	}
+
+	headerAccumulator.writeString("\r\n");
+
+	return headerAccumulator.length();
+}
+
 /*
  * DataField Class Functions 
  */
@@ -209,26 +232,25 @@ void StringDataField::copy(char * buf, uint32_t index)
 }
 
 uint32_t DataField_writeHeadersToBuffer(
+	char * buffer, DataField * datafields[], uint8_t arrayLength, uint8_t bufferLength)
+{
+	// Just pass straight to private function
+	return writeHeadersToBuffer(buffer, datafields, arrayLength, bufferLength);
+}
+
+uint32_t DataField_writeHeadersToBuffer(
 	char * buffer, DataField datafields[], uint8_t arrayLength, uint8_t bufferLength)
 {
-	if (!buffer) { return 0; }
+	// Build array of pointers and pass to private function 
+	DataField * pDataFields[arrayLength];
 
 	uint8_t i;
-	
-	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
-
-	for (i = 0; i < arrayLength; ++i)
+	for (i = 0; i < arrayLength; i++)
 	{
-		headerAccumulator.writeString(datafields[i].getTypeString());
-		if (!lastinloop(i, arrayLength))
-		{
-			headerAccumulator.writeString(", ");
-		}
+		pDataFields[i] = &datafields[i];
 	}
 
-	headerAccumulator.writeString("\r\n");
-
-	return headerAccumulator.length();
+	return writeHeadersToBuffer(buffer, pDataFields, arrayLength, bufferLength);
 }
 
 // Explictly instantiate templates for NumericDataField
