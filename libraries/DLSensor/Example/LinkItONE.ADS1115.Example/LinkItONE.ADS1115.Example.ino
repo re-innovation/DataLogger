@@ -33,6 +33,7 @@
 #include "DLUtility.h"
 #include "DLSettings.h"
 #include "DLSensor.ADS1x1x.h"
+#include "DLDataField.h"
 
 static ADS1115 s_adcs[] = {
     ADS1115(0x48),

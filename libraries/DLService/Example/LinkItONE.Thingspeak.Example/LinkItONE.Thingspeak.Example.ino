@@ -66,7 +66,7 @@ void doBulkUpload(void)
 
     char request_buffer[1024];
     char response_buffer[200] = "";
-    s_thingSpeakService->createBulkUploadCall(request_buffer, 1024, csvData, "linkitone.example.csv");
+    s_thingSpeakService->createBulkUploadCall(request_buffer, 1024, csvData, "linkitone.example.csv", 6);
 
     Serial.print("Request '");
     Serial.print(request_buffer);

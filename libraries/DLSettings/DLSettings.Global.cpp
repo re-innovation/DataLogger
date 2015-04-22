@@ -34,9 +34,7 @@ class StringSetting
         char * get();
         bool isSet(void);
         void set(char const * const);
-        #ifdef TEST
         void reset();
-        #endif
     private:
         char * m_pSetting;
 };
@@ -51,9 +49,7 @@ class IntSetting
         int get();
         bool isSet(void);
         void set(int);
-        #ifdef TEST
         void reset();
-        #endif
     private:
         int m_setting;
         bool m_set;
@@ -86,6 +82,10 @@ int IntSetting::get(void) { return m_setting; }
 #ifdef TEST
 void StringSetting::reset(void) { m_pSetting = NULL; }
 void IntSetting::reset(void) { m_set = false; }
+#else
+// Reset functions do nothing outside of testing context
+void StringSetting::reset(void) { }
+void IntSetting::reset(void) { }
 #endif
 
 /////////////////////////////////////////////////////////

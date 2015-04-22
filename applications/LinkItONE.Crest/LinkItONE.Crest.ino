@@ -66,22 +66,9 @@
 #include "app.sd_storage.h"
 #include "app.data.h"
 
-// Pointers to fuctionality objects
-
-static ServiceInterface * s_thingSpeakService;
-static NetworkInterface * s_gprsConnection;
-
-static ADS1115 s_ADCs[] = {
-    ADS1115(0x48),
-    ADS1115(0x49),
-    ADS1115(0x4A)
-};
-
-static LinkItONEADC s_internalADCs[] = {
-    LinkItONEADC(A0),
-    LinkItONEADC(A1),
-    LinkItONEADC(A2)
-};
+/* 
+ * Defines and Typedefs
+ */
 
 #define LED1_PIN (4)
 #define LED2_PIN (5)
@@ -107,8 +94,27 @@ static LinkItONEADC s_internalADCs[] = {
 #define UPLOAD_EVERY_N_AVERAGES (1)
 #define UPLOAD_INTERVAL_MS (UPLOAD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
-static char * csvData;
-static char * requestBuffer;
+// Pointers to fuctionality objects
+
+static ServiceInterface * s_thingSpeakService;
+static NetworkInterface * s_gprsConnection;
+
+static ADS1115 s_ADCs[] = {
+    ADS1115(0x48),
+    ADS1115(0x49),
+    ADS1115(0x4A)
+};
+
+static LinkItONEADC s_internalADCs[] = {
+    LinkItONEADC(A0),
+    LinkItONEADC(A1),
+    LinkItONEADC(A2)
+};
+
+static char * s_csvData;
+static char * s_requestBuffer;
+static uint32_t s_uploadBufferSize;
+static float s_uploadData[FIELD_COUNT];
 
 static void tryConnection(void)
 {
@@ -121,6 +127,16 @@ static void tryConnection(void)
     Serial.println(Settings_getString(GPRS_PASSWORD));
     
     s_gprsConnection->tryConnection(10);
+}
+
+static void updateUploadData(void)
+{
+    NumericDataField<float> ** dataFields = APP_DATA_GetDataFieldsPtr();
+    uint8_t i;
+    for(i = 0; i < FIELD_COUNT; ++i)
+    {
+        s_uploadData[i] = dataFields[i]->getData(0);
+    }
 }
 
 static uint32_t s_storeToSDIntervalms;
@@ -155,27 +171,21 @@ void remoteUploadTaskFn(void)
     Serial.print("...");
     char response_buffer[200] = "";
 
-    float data[FIELD_COUNT];
-    NumericDataField<float> ** dataFields = APP_DATA_GetDataFieldsPtr();
-    uint8_t i;
-    for(i = 0; i < FIELD_COUNT; ++i)
-    {
-        data[i] = dataFields[i]->getData(0);
-    }
-
+    updateUploadData();
+    
     char created_at[30];
     TM createTime;
     Time_GetTime(&createTime, TIME_PLATFORM);
     CSV_writeTimestampToBuffer(&createTime, created_at);
-    s_thingSpeakService->createPostAPICall(requestBuffer, data, FIELD_COUNT, BULK_UPLOAD_BUFFER_SIZE, NULL);
+    s_thingSpeakService->createPostAPICall(s_requestBuffer, s_uploadData, FIELD_COUNT, BULK_UPLOAD_BUFFER_SIZE, NULL);
 
     /*Serial.println("Upload request created:");
-    Serial.println(requestBuffer);
+    Serial.println(s_requestBuffer);
     Serial.print("(");
-    Serial.print(strlen(requestBuffer));
+    Serial.print(strlen(s_requestBuffer));
     Serial.println(") bytes.");*/
 
-    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), requestBuffer, response_buffer))
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), s_requestBuffer, response_buffer))
     {
         /*Serial.print("Got response (");   
         Serial.print(strlen(response_buffer));
@@ -249,8 +259,8 @@ void setup()
 
     Location_Setup(0);
 
-    csvData = new char[BULK_UPLOAD_BUFFER_SIZE];
-    requestBuffer = new char[BULK_UPLOAD_BUFFER_SIZE];
+    s_csvData = new char[BULK_UPLOAD_BUFFER_SIZE];
+    s_requestBuffer = new char[BULK_UPLOAD_BUFFER_SIZE];
 
     uint8_t i = 0;
     for (i = 0; i < 3; i++)
@@ -289,7 +299,7 @@ void setup()
     APP_DATA_Setup(averaging_interval * 1000,
         FIELD_COUNT, ADC_READS_PER_SECOND * averaging_interval, averagesToStore, fieldTypes);
 
-    APP_SD_CreateNewDataFile();
+    //APP_SD_CreateNewDataFile();
     
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);

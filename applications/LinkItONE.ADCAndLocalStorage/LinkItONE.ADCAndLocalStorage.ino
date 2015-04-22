@@ -167,9 +167,6 @@ void setup()
     APP_DATA_Setup(averaging_interval * 1000,
         FIELD_COUNT, ADC_READS_PER_SECOND * averaging_interval, averagesToStore, fieldTypes);
 
-    APP_SD_CreateNewDataFile();
-    
-
     Serial.print("ADC reads every ");
     Serial.print(MS_PER_ADC_READ);
     Serial.println("ms");

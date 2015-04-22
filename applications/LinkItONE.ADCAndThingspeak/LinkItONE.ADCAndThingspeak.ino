@@ -42,6 +42,8 @@
 #include "DLSensor.ADS1x1x.h"
 #include "TaskAction.h"
 
+#define FIELD_COUNT (12)
+
 // Pointers to fuctionality objects
 static ServiceInterface * s_thingSpeakService;
 static NetworkInterface * s_gprsConnection;
@@ -53,7 +55,7 @@ static ADS1115 s_ADCs[] = {
 };
 
 // In-RAM data storage
-static NumericDataField<float> s_dataFields[] = {
+static NumericDataField<float> s_dataFields[FIELD_COUNT] = {
     NumericDataField<float>(VOLTAGE, 1),
     NumericDataField<float>(VOLTAGE, 1),
     NumericDataField<float>(VOLTAGE, 1),
@@ -67,6 +69,17 @@ static NumericDataField<float> s_dataFields[] = {
     NumericDataField<float>(CURRENT, 1),
     NumericDataField<float>(CURRENT, 1)
 };
+
+static float s_uploadData[FIELD_COUNT];
+
+static void updateUploadData(void)
+{
+    uint8_t i;
+    for(i = 0; i < FIELD_COUNT; ++i)
+    {
+        s_uploadData[i] = s_dataFields[i].getData(0);
+    }
+}
 
 // Tasks
 TaskAction remoteUploadTask(remoteUploadTaskFn, 1000 * 10, INFINITE_TICKS);
@@ -85,20 +98,22 @@ void remoteUploadTaskFn(void)
     Serial.print("Attempting upload to ");
     Serial.println(s_thingSpeakService->getURL());
 
-    char request_buffer[300];
-    char response_buffer[200] = "";
-    s_thingSpeakService->createPostAPICall(request_buffer, 300);
+    updateUploadData();
+
+    char requestBuffer[1024];
+    char responseBuffer[200] = "";
+    s_thingSpeakService->createPostAPICall(requestBuffer, s_uploadData, FIELD_COUNT, 1024, NULL);
 
     Serial.print("Request '");
-    Serial.print(request_buffer);
+    Serial.print(requestBuffer);
     Serial.println("'");
 
-    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), request_buffer, response_buffer))
+    if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), requestBuffer, responseBuffer))
     {
         Serial.print("Got response (");   
-        Serial.print(strlen(response_buffer));
+        Serial.print(strlen(responseBuffer));
         Serial.print(" bytes):");   
-        Serial.println(response_buffer);
+        Serial.println(responseBuffer);
     }
     else
     {
@@ -118,7 +133,6 @@ void readFromADCs(void)
         {
             field = (adc*4)+ch;
             s_dataFields[field].storeData(s_ADCs[adc].readADC_SingleEnded(ch));
-            s_thingSpeakService->setField(field, s_dataFields[field].getData(0));
         }
     }
 }
