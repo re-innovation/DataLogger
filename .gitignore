@@ -2,4 +2,6 @@
 *.sublime-workspace
 *.Test
 *.exe
+*.mocked
+*.modified
 *.stackdump

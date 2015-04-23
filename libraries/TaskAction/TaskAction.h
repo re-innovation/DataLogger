@@ -9,10 +9,12 @@
 #ifndef _TASKACTION_h
 #define _TASKACTION_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
+#if defined(ARDUINO)
+    #if ARDUINO >= 100
+    #include "Arduino.h"
+    #else
+    #include "WProgram.h"
+    #endif
 #endif
 
 #define INFINITE_TICKS 0

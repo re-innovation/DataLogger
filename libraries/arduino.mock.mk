@@ -2,12 +2,24 @@ CC = g++
 
 CFLAGS=-Wall -Wextra -Werror
 
-INC_DIRS = -IDLLocalStorage -IDLTest -IDLUtility
+INC_DIRS = -IDLCSV -IDLDataField -IDLFilename -IDLGPS -IDLHTTP -IDLLocalStorage -IDLLocation
+INC_DIRS += -IDLNetwork -IDLSecurity -IDLSensor -IDLService -IDLSettings -IDLSMS 
+INC_DIRS += -IDLTest  -IDLTime -IDLUtility -ITaskAction
 
-SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DLTest/DLTest.Mock.delay.cpp DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp
-
+DIR = $(dir $(INO_FILE))
+MODIFIED_INO = $(INO_FILE).modified
 TARGET = $(INO_FILE).mocked
 
+APP_FILES := $(wildcard $(DIR)*.cpp)
+SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DLTest/DLTest.Mock.delay.cpp
+SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest/DLTest.Mock.Sensor.ADS1x1x.cpp
+SRC_FILES += DLTest/DLTest.Mock.Location.cpp TaskAction/TaskAction.cpp
+
+-include $(DIR)/mock.mk
+
 all:
-	$(CC) $(CFLAGS) $(INC_DIRS) $(SYMBOLS) $(SRC_FILES) -x c++ $(INO_FILE) -o $(TARGET)
+	echo "#include <DLTest.Mock.arduino.h>" > $(MODIFIED_INO)
+	cat $(INO_FILE) >> $(MODIFIED_INO)
+	$(CC) -g $(CFLAGS) $(INC_DIRS) $(SYMBOLS) $(SRC_FILES) $(APP_FILES) -x c++ $(MODIFIED_INO) -o $(TARGET)
 	$(TARGET)
+	rm $(MODIFIED_INO)

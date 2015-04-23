@@ -86,24 +86,20 @@ static ADS1115 s_ADCs[] = {
 #define STORE_TO_SD_EVERY_N_AVERAGES (1)
 #define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
-static uint32_t s_storeToSDIntervalms;
-
 /*
  * Tasks
  */
 
-TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
 void heartbeatTaskFn(void)
 {
     static bool ledState = false;
     digitalWrite(LED2_PIN, ledState ? HIGH : LOW);
     ledState = !ledState;
 }
+TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
 
-TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 void readFromADCsTaskFn(void)
 {
-    uint8_t i;
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
@@ -119,7 +115,7 @@ void readFromADCsTaskFn(void)
         }
     }
 }
-
+TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 
 void setup()
 {
@@ -160,6 +156,7 @@ void setup()
 
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
+    
     APP_SD_ReadSettings();
 
     APP_DATA_Setup(
@@ -189,4 +186,20 @@ void loop()
     APP_DATA_Tick();
     APP_SD_Tick();
     heartbeatTask.tick();
+}
+
+/*
+ * APP_FatalError
+ */
+void APP_FatalError(char * err)
+{
+    Serial.println(err);
+
+    while (1)
+    {
+        digitalWrite(LED2_PIN, HIGH);
+        delay(200);
+        digitalWrite(LED2_PIN, LOW);
+        delay(200);
+    }
 }

@@ -1,0 +1,4 @@
+#ifndef _DL_TEST_MOCK_DATETIME_H_
+#define _DL_TEST_MOCK_DATETIME_H_
+
+#endif

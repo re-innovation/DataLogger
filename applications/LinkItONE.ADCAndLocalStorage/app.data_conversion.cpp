@@ -8,6 +8,17 @@
  * Performs conversion from raw ADC readings to actual voltages and currents
  */
 
+
+/*
+ * Arduino Library Includes
+ */
+
+#include <arduino.h>
+
+/*
+ * Standard Library Includes
+ */
+
 #include <stdint.h>
 
 #ifndef ARDUINO

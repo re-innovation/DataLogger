@@ -9,6 +9,12 @@
  */
 
 /*
+ * Arduino Library Includes
+ */
+
+#include <arduino.h>
+ 
+/*
  * Standard Library Includes
  */
 
@@ -37,6 +43,8 @@
 
 #include "TaskAction.h"
 
+extern void APP_FatalError(char * err);
+
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
 static uint32_t s_entryID = 0;
@@ -51,7 +59,7 @@ static char s_settingsFilename[] = "Datalogger.Settings";
 
 static void writeToSDCardTaskFn(void)
 {
-    uint8_t i, j;
+    uint8_t i;
     char buffer[10];
 
     NumericDataField * pField;
@@ -68,7 +76,7 @@ static void writeToSDCardTaskFn(void)
         APP_SD_WriteTimestampToOpenFile();
         APP_SD_WriteEntryIDToOpenFile();
             
-        for (j = 0; j < nFields; ++j)
+        for (i = 0; i < nFields; ++i)
         {
             pField = APP_Data_GetField(i);
             // Write from datafield to buffer then from buffer to SD file
@@ -76,7 +84,7 @@ static void writeToSDCardTaskFn(void)
 
             s_sdCard->write(s_fileHandle, buffer);
 
-            if (!lastinloop(j, nFields))
+            if (!lastinloop(i, nFields))
             {
                 s_sdCard->write(s_fileHandle, ", ");
             }
@@ -267,10 +275,9 @@ void APP_SD_ReadSettings(char * filename)
     }
     else
     {
-        Serial.print("Settings file '");
-        Serial.print(filename);
-        Serial.println("' not found.");
-        return;
+        char errString[128];
+        sprintf(errString, "Settings file '%s' not found.", filename);
+        APP_FatalError(errString);
     }
 
     uint8_t hndl = s_sdCard->openFile(filename, false);

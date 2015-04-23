@@ -9,6 +9,12 @@
  */
 
 /*
+ * Arduino Library Includes
+ */
+
+#include <arduino.h>
+
+/*
  * Standard Library Includes
  */
 
@@ -85,7 +91,6 @@ static uint16_t calculateNumberOfAveragesToStore(uint16_t storageInterval, uint1
 
 static void debugTaskFn(void)
 {
-    uint8_t field = 0;
     uint8_t i;
     uint8_t fieldCount = s_dataManager->count();
 
@@ -120,7 +125,6 @@ static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
 
 static void averageAndStoreTaskFn(void)
 {
-    uint8_t field = 0;
     uint8_t i;
 
     for (i = 0; i < s_dataManager->count(); i++)
@@ -173,7 +177,7 @@ void APP_DATA_Setup(unsigned long averagingInterval,
             Serial.print("Failed to create datafield of size ");
             Serial.print(numberOfAveragesToStore);
             Serial.print(" and type ");
-            Serial.println(fieldTypes[i]);
+            Serial.println((int)fieldTypes[i]);
         }
         
         s_averagers[i] = new Averager<uint16_t>(averagerSize);
