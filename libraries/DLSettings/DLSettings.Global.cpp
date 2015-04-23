@@ -63,7 +63,7 @@ IntSetting::IntSetting() { m_set = false; m_setting = 0;}
 IntSetting::~IntSetting() {}
 
 
-bool StringSetting::isSet() {return m_pSetting == NULL;}
+bool StringSetting::isSet() {return m_pSetting != NULL;}
 void StringSetting::set(char const * const pSetting)
 {
     if (!m_pSetting)

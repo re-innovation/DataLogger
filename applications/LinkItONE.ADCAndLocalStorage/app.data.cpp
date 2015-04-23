@@ -5,7 +5,7 @@
  *
  * 06 April 2015
  *
- * Handles SD card storage for the Crest PV application
+ * Handles SD card storage for the ADCAndLocalStorage example
  */
 
 /*
@@ -61,16 +61,35 @@ static CONVERSION_FN s_conversionFunctions[] =
     channel12Conversion,
 };
 
-static uint16_t s_fieldCount;
-
 static bool s_debugOut = true;
+
+/*
+ * calculateNumberOfAveragesToStore
+ *
+ * The storage interval will not always be an integer multiple of the averaging interval.
+ * For example, the averaging interval may be 2 seconds and the storage interval may be 15 seconds.
+ * In this case, the number of averages that needs to be stored will be 7 or 8. This function returns
+ * the correct (highest possible) number of averages that need to be stored)
+ */
+static uint16_t calculateNumberOfAveragesToStore(uint16_t storageInterval, uint16_t averagingInterval)
+{
+    if (storageInterval % averagingInterval == 0)
+    {
+        return storageInterval / averagingInterval;
+    }
+    else
+    {
+        return (storageInterval / averagingInterval) + 1;
+    }
+}
 
 static void debugTaskFn(void)
 {
     uint8_t field = 0;
     uint8_t i;
+    uint8_t fieldCount = s_dataManager->count();
 
-    for (i = 0; i < s_fieldCount; i++)
+    for (i = 0; i < fieldCount; i++)
     {
         uint16_t average = s_debugAveragers[i]->getAverage();
     
@@ -89,7 +108,7 @@ static void debugTaskFn(void)
         Serial.print(average);
         Serial.print(")");
 
-        if (!lastinloop(i, s_fieldCount))
+        if (!lastinloop(i, fieldCount))
         {
             Serial.print(", ");                
         }
@@ -104,7 +123,7 @@ static void averageAndStoreTaskFn(void)
     uint8_t field = 0;
     uint8_t i;
 
-    for (i = 0; i < s_fieldCount; i++)
+    for (i = 0; i < s_dataManager->count(); i++)
     {
         uint16_t average = s_averagers[i]->getAverage();
 
@@ -127,13 +146,14 @@ static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
  * Public Functions
  */
 
-void APP_DATA_Setup(unsigned long msInterval,
-    uint16_t fieldCount, uint16_t averagerSize, uint16_t dataFieldBufferSize, FIELD_TYPE fieldTypes[])
+void APP_DATA_Setup(unsigned long averagingInterval,
+    uint16_t fieldCount, uint16_t valuesPerSecond, uint16_t storageInterval, FIELD_TYPE fieldTypes[])
 {
-    s_fieldCount = fieldCount;
-
     uint8_t i;
     
+    uint32_t averagerSize = valuesPerSecond * averagingInterval;
+    uint32_t numberOfAveragesToStore = calculateNumberOfAveragesToStore(storageInterval, averagingInterval);
+
     s_debugAveragers = new Averager<uint16_t>*[fieldCount];
     s_averagers = new Averager<uint16_t>*[fieldCount];
 
@@ -142,7 +162,7 @@ void APP_DATA_Setup(unsigned long msInterval,
     for (i = 0; i < fieldCount; ++i)
     {
         // Create a new numeric field and add to the manager
-        DataField * field = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
+        DataField * field = new NumericDataField(fieldTypes[i], numberOfAveragesToStore);
 
         if (field)
         {
@@ -151,13 +171,13 @@ void APP_DATA_Setup(unsigned long msInterval,
         else
         {
             Serial.print("Failed to create datafield of size ");
-            Serial.print(dataFieldBufferSize);
+            Serial.print(numberOfAveragesToStore);
             Serial.print(" and type ");
             Serial.println(fieldTypes[i]);
         }
         
         s_averagers[i] = new Averager<uint16_t>(averagerSize);
-        s_debugAveragers[i] = new Averager<uint16_t>(10);
+        s_debugAveragers[i] = new Averager<uint16_t>(valuesPerSecond);
 
         if (!s_averagers[i])
         {
@@ -166,7 +186,7 @@ void APP_DATA_Setup(unsigned long msInterval,
         }
     }
 
-    averageAndStoreTask.SetInterval(msInterval);
+    averageAndStoreTask.SetInterval(averagingInterval * 1000);
     averageAndStoreTask.ResetTime();
 
     if (s_debugOut)
@@ -183,7 +203,7 @@ void APP_DATA_NewData(uint16_t data, uint16_t field)
 
 uint16_t APP_DATA_GetNumberOfFields(void)
 {
-    return s_fieldCount;
+    return s_dataManager->count();
 }
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)

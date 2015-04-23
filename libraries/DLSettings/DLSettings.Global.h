@@ -20,10 +20,10 @@
 /* Define each int setting for the application */
 
 #define FOREACH_INTSET(INT) \
-    INT(THINGSPEAK_UPLOAD_INTERVAL) \
+    INT(THINGSPEAK_UPLOAD_INTERVAL_SECS) \
     INT(DATA_AVERAGING_INTERVAL_SECS) \
-    INT(CSV_RECORD_INTERVAL) \
-    INT(SERIAL_DATA_INTERVAL) \
+    INT(CSV_RECORD_INTERVAL_SECS) \
+    INT(SERIAL_DATA_INTERVAL_SECS) \
 
 #define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
 #define GENERATE_STRING(STRING) #STRING, // This turns each setting into a string in an array
@@ -52,11 +52,13 @@ typedef enum intsetting INTSETTING;
 char const * Settings_getIntName(INTSETTING setting);
 int Settings_getInt(INTSETTING setting);
 void Settings_setInt(INTSETTING setting, int set);
+bool Settings_intIsSet(INTSETTING setting);
 void Settings_resetInt(INTSETTING setting);
 
 char const * Settings_getStringName(STRINGSETTING setting);
 char * Settings_getString(STRINGSETTING setting);
 void Settings_setString(STRINGSETTING setting, char const * const pSet);
+bool Settings_stringIsSet(STRINGSETTING setting);
 void Settings_resetString(STRINGSETTING setting);
 
 #endif

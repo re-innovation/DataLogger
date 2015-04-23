@@ -1,5 +1,5 @@
 /*
- * LinkITtONE.Settings.Reader.Example.ino
+ * LinkItONE.Settings.Reader.Example.ino
  *
  * Settings file reader example
  *
@@ -47,12 +47,12 @@ void setup()
     Serial.begin(115200);
 
     delay(10000);
-    
+
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
 
     Serial.println("*** Settings reader example ***");
+
     if (s_sdCard->fileExists(s_settingsFilename))
-    //if (LSD.exists(s_settingsFilename))
     {
         Serial.print("Reading settings from '");
         Serial.print(s_settingsFilename);
@@ -83,18 +83,24 @@ void setup()
     int i;
     for (i = 0; i < INT_SETTINGS_COUNT; i++)
     {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
+        if (Settings_intIsSet((INTSETTING)i))
+        {
+            Serial.print(Settings_getIntName((INTSETTING)i));
+            Serial.print(": ");
+            Serial.println(Settings_getInt((INTSETTING)i));
+        }
     }
 
     // Echo out string settings
     Serial.println("String Settings:");
     for (i = 0; i < STRING_SETTINGS_COUNT; i++)
     {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
+        if (Settings_stringIsSet((STRINGSETTING)i))
+        {
+            Serial.print(Settings_getStringName((STRINGSETTING)i));
+            Serial.print(": ");
+            Serial.println(Settings_getString((STRINGSETTING)i));
+        }
     }
 }
 

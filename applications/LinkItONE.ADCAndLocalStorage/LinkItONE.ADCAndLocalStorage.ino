@@ -156,16 +156,18 @@ void setup()
     };
   
     int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
-    int uploadInterval = Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL);
-    int averagesToStore = uploadInterval/averaging_interval;
+    int storage_interval = Settings_getInt(CSV_RECORD_INTERVAL_SECS);
 
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
     APP_SD_ReadSettings();
 
-
-    APP_DATA_Setup(averaging_interval * 1000,
-        FIELD_COUNT, ADC_READS_PER_SECOND * averaging_interval, averagesToStore, fieldTypes);
+    APP_DATA_Setup(
+        averaging_interval, // seconds to average readings over
+        FIELD_COUNT, // Number of fields to create
+        ADC_READS_PER_SECOND, // Number of reads per second per field
+        storage_interval, // Number of seconds between SD card writes
+        fieldTypes);
 
     Serial.print("ADC reads every ");
     Serial.print(MS_PER_ADC_READ);

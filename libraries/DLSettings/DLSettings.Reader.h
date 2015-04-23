@@ -26,6 +26,12 @@ typedef enum settings_reader_result SETTINGS_READER_RESULT;
  */
 
 void Settings_InitReader(void);
+
+void Settings_requireInt(INTSETTING setting);
+void Settings_requireString(STRINGSETTING setting);
+
+bool Settings_allRequiredSettingsRead(void);
+
 SETTINGS_READER_RESULT Settings_getLastReaderResult(void);
 SETTINGS_READER_RESULT Settings_readFromString(char const * const string);
 char const * Settings_getLastReaderResultText(void);

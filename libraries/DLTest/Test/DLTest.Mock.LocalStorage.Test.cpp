@@ -30,6 +30,10 @@
 
 #include "unity.h"
 
+#define xstr(s) str(s)
+#define str(s) #s
+#define QUOTED_DL_PATH xstr(DL_PATH)
+
 static LocalStorageInterface * s_testInterface;
 static FILE_HANDLE s_handle;
 
@@ -47,43 +51,43 @@ void tearDown(void)
 void test_FileExists_ReturnsTrueForExistingFileFalseForNonExisting(void)
 {
     // DL_PATH should be defined by a test makefile and point to the root of the DataLogger folder structure
-    TEST_ASSERT_TRUE(s_testInterface->fileExists(DL_PATH "/DLTest/Test/DLTest.Mock.LocalStorage.Test.cpp"));
+    TEST_ASSERT_TRUE(s_testInterface->fileExists(QUOTED_DL_PATH "/DLTest/Test/DLTest.Mock.LocalStorage.Test.cpp"));
     TEST_ASSERT_FALSE(s_testInterface->fileExists("This.File.Does.Not.Exist"));
 }
 
 void test_FileExists_ReturnsTrueForDirectory(void)
 {
-    TEST_ASSERT_TRUE(s_testInterface->fileExists(DL_PATH "/DLTest/Test"));
+    TEST_ASSERT_TRUE(s_testInterface->fileExists(QUOTED_DL_PATH "/DLTest/Test"));
 }
 
 void test_DirectoryExists_ReturnsTrueForExistingDirectoryFalseForNonExisting(void)
 {
-    TEST_ASSERT_TRUE(s_testInterface->directoryExists(DL_PATH "/DLTest/Test"));
-    TEST_ASSERT_FALSE(s_testInterface->directoryExists(DL_PATH "/DLNotADirectory/"));
+    TEST_ASSERT_TRUE(s_testInterface->directoryExists(QUOTED_DL_PATH "/DLTest/Test"));
+    TEST_ASSERT_FALSE(s_testInterface->directoryExists(QUOTED_DL_PATH "/DLNotADirectory/"));
 }
 
 void test_DirectoryExists_ReturnsFalseForFile(void)
 {
-    TEST_ASSERT_FALSE(s_testInterface->directoryExists(DL_PATH "/DLTest/Test/DLTest.Mock.LocalStorage.Test.cpp"));
+    TEST_ASSERT_FALSE(s_testInterface->directoryExists(QUOTED_DL_PATH "/DLTest/Test/DLTest.Mock.LocalStorage.Test.cpp"));
 }
 
 void test_mkdir_CreatesDirectory(void)
 {
-    TEST_ASSERT_FALSE(s_testInterface->directoryExists(DL_PATH "/DLTest/Test/NewDir"));
-    s_testInterface->mkDir(DL_PATH "/DLTest/Test/NewDir");
-    TEST_ASSERT_TRUE(s_testInterface->directoryExists(DL_PATH "/DLTest/Test/NewDir"));
+    TEST_ASSERT_FALSE(s_testInterface->directoryExists(QUOTED_DL_PATH "/DLTest/Test/NewDir"));
+    s_testInterface->mkDir(QUOTED_DL_PATH "/DLTest/Test/NewDir");
+    TEST_ASSERT_TRUE(s_testInterface->directoryExists(QUOTED_DL_PATH "/DLTest/Test/NewDir"));
 }
 
 void test_openFile_CanOpenNewFileForRead(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/TempForRead", false);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
     TEST_ASSERT_FALSE(s_testInterface->endOfFile(s_handle));
 }
 
 void test_readBytes_CanReadBytesFromOpenFile(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/TempForRead", false);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char actual[4];
@@ -96,7 +100,7 @@ void test_readBytes_CanReadBytesFromOpenFile(void)
 
 void test_readLine_CanReadLineFromOpenFileWithCRLF(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/TempForRead", false);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char actual[30];
@@ -109,7 +113,7 @@ void test_readLine_CanReadLineFromOpenFileWithCRLF(void)
 
 void test_readLine_CanReadLineFromOpenFileWithoutCRLF(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/TempForRead", false);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char actual[30];
@@ -121,7 +125,7 @@ void test_readLine_CanReadLineFromOpenFileWithoutCRLF(void)
 
 void test_eof_IsTrueAtEndOfFile(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/TempForRead", false);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char buffer[30];
@@ -133,20 +137,20 @@ void test_eof_IsTrueAtEndOfFile(void)
 
 void test_openFile_CanOpenNewFileForWrite(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/NewFile", true);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/NewFile", true);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 }
 
 void test_write_CanWriteBytesToOpenFile(void)
 {
-    int s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/NewFile", true);
+    int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/NewFile", true);
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char expected[] = "TEST WRITE STRING";
     s_testInterface->write(s_handle, expected);
     s_testInterface->closeFile(s_handle);
 
-    s_handle = s_testInterface->openFile(DL_PATH "/DLTest/Test/NewFile", false);
+    s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/NewFile", false);
     char actual[30];
     s_testInterface->readLine(s_handle, actual, 30, true);
     TEST_ASSERT_EQUAL_STRING(expected, actual);

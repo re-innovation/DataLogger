@@ -287,7 +287,7 @@ void setup()
     };
   
     int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
-    int uploadInterval = Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL);
+    int uploadInterval = Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL_SECS);
     int averagesToStore = uploadInterval/averaging_interval;
 
     APP_SD_Init();

@@ -41,6 +41,9 @@ static char const * const s_errorStrings[] = {
 static char s_errorBuffer[100];
 static SETTINGS_READER_RESULT s_lastResult = ERR_READER_NONE;
 
+static bool s_intSettingIsRequired[INT_SETTINGS_COUNT];
+static bool s_stringSettingIsRequired[INT_SETTINGS_COUNT];
+
 /*
  * Private Functions
  */
@@ -104,8 +107,8 @@ static SETTINGS_READER_RESULT noError(void)
 
 SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 {
-	char settingNameCopy[30];
-	char settingValueCopy[30];
+	char settingNameCopy[64];
+	char settingValueCopy[64];
 
 	if (!string) { return noStringError(); }
 
@@ -175,4 +178,39 @@ void Settings_InitReader(void)
 {
 	s_lastResult = ERR_READER_NONE;
 	s_errorBuffer[0] = '\0';
+}
+
+void Settings_requireInt(INTSETTING setting)
+{
+	if (setting < INT_SETTINGS_COUNT) { s_intSettingIsRequired[setting] = true; }
+}
+
+void Settings_requireString(STRINGSETTING setting)
+{
+	if (setting < STRING_SETTINGS_COUNT) { s_stringSettingIsRequired[setting] = true; }
+}
+
+bool Settings_allRequiredSettingsRead(void)
+{
+	bool allRequiredSettingsRead = true;
+	uint8_t i;
+
+	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+	{
+		if (s_intSettingIsRequired[i])
+		{
+			allRequiredSettingsRead &= Settings_intIsSet((INTSETTING)i);
+		}
+	}
+
+	// Searching for ints didn't work, try to find string setting
+	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+	{
+		if (s_stringSettingIsRequired[i])
+		{
+			allRequiredSettingsRead &= Settings_stringIsSet((STRINGSETTING)i);
+		}
+	}
+
+	return allRequiredSettingsRead;
 }
