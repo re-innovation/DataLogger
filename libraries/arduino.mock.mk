@@ -15,6 +15,8 @@ SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DL
 SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest/DLTest.Mock.Sensor.ADS1x1x.cpp
 SRC_FILES += DLTest/DLTest.Mock.Location.cpp TaskAction/TaskAction.cpp
 
+SYMBOLS = -DMOCK
+
 -include $(DIR)/mock.mk
 
 all:

@@ -1,7 +1,9 @@
 /* This is the entry point for mocked Arduino applications.
  * It accesses setup and loop via extern
  */
- 
+
+#include <stdlib.h>
+
 #include <time.h>
 
 #include "DLTest.Mock.arduino.h"
@@ -23,6 +25,11 @@ void pinMode(uint8_t pin, uint8_t mode)
 void digitalWrite(uint8_t pin, uint8_t value)
 {
 	(void)pin; (void)value;
+}
+
+void _exitMock(void)
+{
+	exit(1);
 }
 
 int main(void)

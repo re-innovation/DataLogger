@@ -55,7 +55,10 @@ static TM s_lastSDTimestamp;
 static char s_directory[] = "Datalogger";
 static char s_filePath[100];
 
-static char s_settingsFilename[] = "Datalogger.Settings";
+static void localPrintFn(char const * const toPrint)
+{
+    Serial.print(toPrint);
+}
 
 static void writeToSDCardTaskFn(void)
 {
@@ -213,58 +216,7 @@ void APP_SD_WriteEntryIDToOpenFile(void)
     }
 }*/
 
-void APP_SD_ReadSettings(void)
-{
-    char lineBuffer[100];
-    
-    if (s_sdCard->fileExists(s_settingsFilename))
-    {
-        Serial.print("Reading settings from '");
-        Serial.print(s_settingsFilename);
-        Serial.println("'.");
-    }
-    else
-    {
-        Serial.print("Settings file '");
-        Serial.print(s_settingsFilename);
-        Serial.println("' not found.");
-        return;
-    }
-
-    uint8_t hndl = s_sdCard->openFile(s_settingsFilename, false);
-    while (!s_sdCard->endOfFile(hndl))
-    {
-        // Read from file into lineBuffer and strip CRLF endings
-        s_sdCard->readLine(hndl, lineBuffer, 50, true);
-        Serial.print("Reading setting line '");
-        Serial.print(lineBuffer);
-        Serial.println("'");
-        Settings_readFromString(lineBuffer);
-    }
-    s_sdCard->closeFile(hndl);
-
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
-    }
-
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
-    }
-
-}
-
-void APP_SD_ReadSettings(char * filename)
+void APP_SD_ReadSettings(char const * const filename)
 {
     char lineBuffer[100];
     if (s_sdCard->fileExists(filename))
@@ -292,24 +244,7 @@ void APP_SD_ReadSettings(char * filename)
     }
     s_sdCard->closeFile(hndl);
 
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
-    }
-
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
-    }
+    Settings_echoAllSet(localPrintFn);
 }
 
 void APP_SD_Tick(void)

@@ -41,6 +41,11 @@ static char s_settingsFilename[] = "Datalogger.Settings";
 static LocalStorageInterface * s_sdCard;
 static char lineBuffer[100];
 
+static void localPrintFn(char const * const toPrint)
+{
+    Serial.print(toPrint);
+}
+
 void setup()
 {
     // setup Serial port
@@ -78,30 +83,7 @@ void setup()
     }
     s_sdCard->closeFile(hndl);
 
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    {
-        if (Settings_intIsSet((INTSETTING)i))
-        {
-            Serial.print(Settings_getIntName((INTSETTING)i));
-            Serial.print(": ");
-            Serial.println(Settings_getInt((INTSETTING)i));
-        }
-    }
-
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    {
-        if (Settings_stringIsSet((STRINGSETTING)i))
-        {
-            Serial.print(Settings_getStringName((STRINGSETTING)i));
-            Serial.print(": ");
-            Serial.println(Settings_getString((STRINGSETTING)i));
-        }
-    }
+    Settings_echoAllSet(localPrintFn);
 }
 
 void loop()

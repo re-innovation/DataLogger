@@ -157,7 +157,7 @@ void setup()
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
     
-    APP_SD_ReadSettings();
+    APP_SD_ReadSettings("Datalogger.settings");
 
     APP_DATA_Setup(
         averaging_interval, // seconds to average readings over
@@ -195,6 +195,7 @@ void APP_FatalError(char * err)
 {
     Serial.println(err);
 
+    #ifdef ARDUINO
     while (1)
     {
         digitalWrite(LED2_PIN, HIGH);
@@ -202,4 +203,8 @@ void APP_FatalError(char * err)
         digitalWrite(LED2_PIN, LOW);
         delay(200);
     }
+    #else
+    _exitMock();
+    #endif
+    
 }

@@ -2,7 +2,7 @@
 #define _APP_SD_STORAGE_H_
 
 void APP_SD_Init(void);
-void APP_SD_ReadSettings(void);
+void APP_SD_ReadSettings(char const * const filename);
 
 void APP_SD_Setup(unsigned long msInterval);
 

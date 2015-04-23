@@ -11,9 +11,11 @@
 /*
  * Standard Library Includes
  */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /*
  * Local Includes
@@ -203,4 +205,39 @@ void Settings_setInt(INTSETTING setting, int set)
     {
         s_ints[setting].set(set);
     }  
+}
+
+void Settings_echoAllSet(PRINTFN printfn)
+{
+    // Echo out integer settings
+
+    printfn("Integer Settings:");
+    int i;
+
+    char intBuffer[10];
+
+    for (i = 0; i < INT_SETTINGS_COUNT; i++)
+    {
+        if (Settings_intIsSet((INTSETTING)i))
+        {
+            sprintf(intBuffer, "%d", Settings_getInt((INTSETTING)i));
+            printfn(Settings_getIntName((INTSETTING)i));
+            printfn(": ");
+            printfn(intBuffer);
+            printfn("\r\n");
+        }
+    }
+
+    // Echo out string settings
+    printfn("String Settings:");
+    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
+    {
+        if (Settings_stringIsSet((STRINGSETTING)i))
+        {
+            printfn(Settings_getStringName((STRINGSETTING)i));
+            printfn(": ");
+            printfn(Settings_getString((STRINGSETTING)i));
+            printfn("\r\n");
+        }
+    }   
 }

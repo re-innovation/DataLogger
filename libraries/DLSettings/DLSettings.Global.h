@@ -44,6 +44,8 @@ enum intsetting
 };
 typedef enum intsetting INTSETTING;
 
+typedef void (*PRINTFN)(char const * const);
+
 // Each setting is either a string or an integer.
 // If an incorrect request is made (e.g. expecting a char * from an integer),
 // or if that setting has not been set, a null value is returned instead.
@@ -60,5 +62,7 @@ char * Settings_getString(STRINGSETTING setting);
 void Settings_setString(STRINGSETTING setting, char const * const pSet);
 bool Settings_stringIsSet(STRINGSETTING setting);
 void Settings_resetString(STRINGSETTING setting);
+
+void Settings_echoAllSet(PRINTFN printfn);
 
 #endif

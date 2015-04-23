@@ -19,4 +19,6 @@ void pinMode(uint8_t pin, uint8_t mode);
 void digitalWrite(uint8_t pin, uint8_t value); 
 unsigned long millis(void);
 
+void _exitMock(void);
+
 #endif
