@@ -1,5 +1,5 @@
 /*
- * DLTime.PC.cpp
+ * DLTest.Mock.Time.cpp
  * 
  * Abstraction for PC time resources
  *
@@ -12,6 +12,7 @@
  * C++ Library Includes
  */
 
+#include <stdint.h>
 #include <time.h>
 
 /*

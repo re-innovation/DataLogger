@@ -8,8 +8,6 @@ SRC_FILES += DLUtility/DLUtility.ArrayFunctions.cpp
 SRC_FILES += DLUtility/DLUtility.Averager.cpp
 SRC_FILES += DLUtility/DLUtility.Time.cpp
 
-SRC_FILES += DLTime/DLTime.PC.cpp
-
 SRC_FILES += DLCSV/DLCSV.cpp
 
 SRC_FILES += DLFilename/DLFilename.cpp
