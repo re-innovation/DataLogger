@@ -22,6 +22,7 @@
  * Local Includes
  */
 
+#include "DLLocalStorage.h"
 #include "DLDataField.Types.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"

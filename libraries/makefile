@@ -1,6 +1,6 @@
 CC = g++
 
-CFLAGS=-Wall -Wextra -Werror
+CFLAGS=-Wall -Wextra -Werror -g
 
 SRC_FILES=$(UNITY_PATH)/unity.c
 INC_DIRS=-I$(UNITY_PATH) -IDLTest

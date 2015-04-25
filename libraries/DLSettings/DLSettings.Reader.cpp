@@ -19,9 +19,16 @@
 #include <ctype.h>
 
 /*
+ * Standard Library Includes
+ */
+
+#include <arduino.h>
+
+/*
  * Local Includes
  */
 
+#include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLUtility.h"
 
@@ -35,6 +42,8 @@ static char const * const s_errorStrings[] = {
 	ERROR_STR_NO_EQUALS,
 	ERROR_STR_NO_NAME,
 	ERROR_STR_INVALID_INT,
+	ERROR_STR_NO_FILE,
+	ERROR_STR_NO_INTERFACE
 };
 
 static char s_errorBuffer[100];
@@ -93,6 +102,20 @@ static SETTINGS_READER_RESULT invalidIntError(char * pName, char * pSetting)
 	return s_lastResult;
 }
 
+static SETTINGS_READER_RESULT noFile(char const * pFilename)
+{
+	s_lastResult = ERR_READER_NO_FILE;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_FILE], pFilename);
+	return s_lastResult;
+}
+
+static SETTINGS_READER_RESULT noInterfaceError(void)
+{
+	s_lastResult = ERR_READER_NO_INTERFACE;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_INTERFACE]);
+	return s_lastResult;
+}
+
 static SETTINGS_READER_RESULT noError(void)
 {
 	s_lastResult = ERR_READER_NONE;
@@ -103,6 +126,34 @@ static SETTINGS_READER_RESULT noError(void)
 /*
  * Public Functions
  */
+
+SETTINGS_READER_RESULT Settings_readFromFile(LocalStorageInterface * pInterface, char const * const filename)
+{
+	char lineBuffer[100];
+
+	if (!pInterface)
+	{
+		return noInterfaceError();
+	}
+
+    if (!pInterface->fileExists(filename))
+    {
+        return noFile(filename);
+    }
+    
+    uint8_t hndl = pInterface->openFile(filename, false);
+    while (!pInterface->endOfFile(hndl))
+    {
+        // Read from file into lineBuffer and strip CRLF endings
+        pInterface->readLine(hndl, lineBuffer, 50, true);
+        if (ERR_READER_NONE != Settings_readFromString(lineBuffer))
+        {
+            return s_lastResult;
+        }
+    }
+    pInterface->closeFile(hndl);
+    return noError();
+}
 
 SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 {
@@ -148,7 +199,6 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 			return noError();
 		}
 	}
-
 
 	// Searching for ints didn't work, try to find string setting
 	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)

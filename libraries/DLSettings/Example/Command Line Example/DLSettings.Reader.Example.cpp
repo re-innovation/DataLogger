@@ -11,8 +11,14 @@ Reads from "datalogger.settings" and echoes those settings back to the command l
 #include <fstream>
 #include <string>
 
+#include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLSettings.Reader.h"
+
+static void localPrintFn(char const * const toPrint)
+{
+    std::cout << toPrint;
+}
 
 int main(int argc, char * argv[])
 {
@@ -20,6 +26,10 @@ int main(int argc, char * argv[])
     (void)argv;
 
     std::string line;
+
+    Settings_Init();
+
+    std::cout << "Reading using Settings_readFromString" << std::endl;
   	std::ifstream settingsFile("datalogger.settings");
  	if (settingsFile.is_open())
  	{
@@ -30,19 +40,17 @@ int main(int argc, char * argv[])
     	}
     	settingsFile.close();
 
-    	// Echo out integer settings
-    	int i;
-    	for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    	{
-    		std::cout << Settings_getIntName((INTSETTING)i) << ": " << Settings_getInt((INTSETTING)i) << std::endl;
-    	}
-
-    	// Echo out string settings
-    	for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    	{
-    		std::cout << Settings_getStringName((STRINGSETTING)i) << ": " << Settings_getString((STRINGSETTING)i) << std::endl;
-    	}
+    	Settings_echoAllSet(localPrintFn);
   	}
     
+    Settings_Init();
+
+    std::cout << std::endl << "Reading using Settings_readFromFile" << std::endl;
+
+    LocalStorageInterface * s_storageIf = LocalStorage_GetLocalStorageInterface(LOCAL_STORAGE_TYPE(0));
+    Settings_readFromFile(s_storageIf, "datalogger.settings");
+
+    Settings_echoAllSet(localPrintFn);
+
     return 0;
 }

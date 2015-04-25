@@ -127,7 +127,7 @@ void APP_SD_Setup(unsigned long msInterval)
     writeToSDCardTask.ResetTime();
 }
 
-void createNewFileForToday(void)
+void createAndOpenNewFileForToday(void)
 {
     char const * const pFilename = Filename_get();
 
@@ -154,7 +154,6 @@ void createNewFileForToday(void)
 
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
-    s_sdCard->closeFile(s_fileHandle);
 }
 
 void APP_SD_OpenDataFileForToday(void)
@@ -177,7 +176,7 @@ void APP_SD_OpenDataFileForToday(void)
     }
     else
     {
-        createNewFileForToday();
+        createAndOpenNewFileForToday();
     }
 }
 
@@ -233,39 +232,12 @@ void APP_SD_WriteEntryIDToOpenFile(void)
 
 void APP_SD_ReadSettings(char const * const filename)
 {
-    char lineBuffer[100];
-    if (!s_sdCard->fileExists(filename))
-    {
-        sprintf(s_errString, "Settings file '%s' not found.", filename);
-        APP_FatalError(s_errString);
-    }
-    else
-    {
-        Serial.print("Reading settings from '");
-        Serial.print(filename);
-        Serial.println("'.");
-    }
+    SETTINGS_READER_RESULT result = Settings_readFromFile(s_sdCard, filename);
 
-    uint8_t hndl = s_sdCard->openFile(filename, false);
-    while (!s_sdCard->endOfFile(hndl))
+    if (result != ERR_READER_NONE)
     {
-        // Read from file into lineBuffer and strip CRLF endings
-        s_sdCard->readLine(hndl, lineBuffer, 50, true);
-        Serial.print("Reading setting line '");
-        Serial.print(lineBuffer);
-        Serial.print("'... ");
-        if (ERR_READER_NONE == Settings_readFromString(lineBuffer))
-        {
-            Serial.println(" success!");
-        }
-        else
-        {
-            Serial.print(" error: '");
-            Serial.print(Settings_getLastReaderResultText());
-            Serial.println("'");
-        }
+        APP_FatalError(Settings_getLastReaderResultText());
     }
-    s_sdCard->closeFile(hndl);
 
     Settings_echoAllSet(localPrintFn);
 
@@ -288,6 +260,7 @@ void APP_SD_ReadSettings(char const * const filename)
 void APP_SD_EnableDebugging(void)
 {
     s_debugThisModule = true;
+    s_sdCard->setEcho(true);
 }
 
 void APP_SD_Tick(void)

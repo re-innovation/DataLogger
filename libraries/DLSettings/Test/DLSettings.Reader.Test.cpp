@@ -19,6 +19,7 @@
  * Local Application Includes
  */
 
+#include "../../DLLocalStorage/DLLocalStorage.h"
 #include "../DLSettings.h"
 
 /*
@@ -125,6 +126,12 @@ void test_SettingCountIsCorrect(void)
     TEST_ASSERT_EQUAL(1, Settings_getStringCount());   
 }
 
+void test_readFromFileReturnsNoFileErrorForMissingFile(void)
+{
+    LocalStorageInterface * s_storage = LocalStorage_GetLocalStorageInterface((LOCAL_STORAGE_TYPE)0);
+    TEST_ASSERT_EQUAL(ERR_READER_NO_FILE, Settings_readFromFile(s_storage, "Not a file"));
+}
+
 int main(void)
 {
     UnityBegin("DLSettings.Reader.cpp");
@@ -141,6 +148,8 @@ int main(void)
 
     RUN_TEST(test_AllRequiredSettingsMustBeParsedBeforeReaderValidates);
     RUN_TEST(test_SettingCountIsCorrect);
+
+    RUN_TEST(test_readFromFileReturnsNoFileErrorForMissingFile);
 
   	UnityEnd();
   	return 0;

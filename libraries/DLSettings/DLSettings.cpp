@@ -19,6 +19,7 @@
  * Local Includes
  */
 
+#include "DLLocalStorage.h"
 #include "DLSettings.h"
  
 void Settings_Init(void)

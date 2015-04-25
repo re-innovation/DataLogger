@@ -74,6 +74,11 @@ void TestStorageInterface::write(FILE_HANDLE file, char const * const toWrite)
     if (!toWrite) { return; }
 
     s_file << toWrite;
+
+    if (m_echo)
+    {
+        std::cout << toWrite;
+    }
 }
 
 uint32_t TestStorageInterface::readBytes(FILE_HANDLE file, char * buffer, uint32_t n)
@@ -121,7 +126,7 @@ bool TestStorageInterface::endOfFile(FILE_HANDLE file)
 
 void TestStorageInterface::setEcho(bool set)
 {
-    (void)set;
+    m_echo = set;
 }
 
 void TestStorageInterface::removeFile(char const * const dirPath)

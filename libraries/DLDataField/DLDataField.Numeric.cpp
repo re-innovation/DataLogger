@@ -70,6 +70,7 @@ void NumericDataField::storeData(int32_t data)
 
 void NumericDataField::getDataAsString(char * buf, char const * const fmt, uint8_t index)
 {
+    index = getRealReadIndex(index);
     sprintf(buf, fmt, m_data[index]); // Write data point to buffer
 }
 

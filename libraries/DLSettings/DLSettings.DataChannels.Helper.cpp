@@ -21,6 +21,7 @@
  * Local Includes
  */
 
+#include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLUtility.h"
 

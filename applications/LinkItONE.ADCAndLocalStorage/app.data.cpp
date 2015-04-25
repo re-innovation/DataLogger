@@ -47,9 +47,8 @@
  * Applications Data
  */
 
-static Averager<uint16_t> ** s_debugAveragers;
-
 static DataFieldManager * s_dataManager;
+static DataFieldManager * s_dataDebugManager;
 
 static CONVERSION_FN s_conversionFunctions[] = 
 {
@@ -94,20 +93,20 @@ static uint16_t calculateNumberOfAveragesToStore(uint16_t storageInterval, uint1
 static void debugTaskFn(void)
 {
     uint8_t i;
-    uint8_t fieldCount = s_dataManager->count();
+    uint8_t fieldCount = s_dataDebugManager->count();
 
     for (i = 0; i < fieldCount; i++)
     {
-        uint16_t average = s_debugAveragers[i]->getAverage();
-    
+        float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getData(0);
         float toShow;
+
         if (s_conversionFunctions[i])
         {
             toShow = s_conversionFunctions[i](average); 
         }
         else
         {
-            toShow = (float)average;
+            toShow = average;
         }
 
         Serial.print(toShow);
@@ -144,34 +143,32 @@ void APP_DATA_Setup(unsigned long averagingInterval,
     uint32_t averagerSize = valuesPerSecond * averagingInterval;
     uint32_t numberOfAveragesToStore = calculateNumberOfAveragesToStore(storageInterval, averagingInterval);
 
-    // Create an array of averager pointers to be filled
+    // Create two data managers, one for actual data and one for debugging
     
-    s_debugAveragers = new Averager<uint16_t>*[fieldCount];
-    if (!s_debugAveragers) { APP_FatalError("Failed to create debug averager array"); }
-
     s_dataManager = new DataFieldManager();
+    s_dataDebugManager = new DataFieldManager();
+
     if (!s_dataManager) { APP_FatalError("Failed to create datafield manager"); }
+    if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager"); }
 
     for (i = 0; i < fieldCount; ++i)
     {
         // Create a new numeric field and add to the manager
         DataField * field = new NumericDataField(fieldTypes[i], numberOfAveragesToStore, averagerSize);
+        DataField * debugField = new NumericDataField(fieldTypes[i], 1, fieldCount);
 
-        if (field)
-        {
+        if (field) {
             s_dataManager->addField(field);
-        }
-        else
-        {
+        } else {
             APP_FatalError("Failed to create datafield");
         }
-        
-        s_debugAveragers[i] = new Averager<uint16_t>(valuesPerSecond);
 
-        if (!s_debugAveragers[i])
-        {
-            APP_FatalError("Failed to create debug averager");
+        if (debugField) {
+            s_dataDebugManager->addField(debugField);
+        } else {
+            APP_FatalError("Failed to create debug datafield");
         }
+
     }
 
     if (s_debugOut)
@@ -185,7 +182,7 @@ void APP_DATA_Setup(unsigned long averagingInterval,
 void APP_DATA_NewData(int32_t data, uint16_t field)
 {
     ((NumericDataField*)s_dataManager->getField(field))->storeData( data );
-    s_debugAveragers[field]->newData(data);
+    ((NumericDataField*)s_dataDebugManager->getField(field))->storeData( data );
 }
 
 uint16_t APP_DATA_GetNumberOfFields(void)
