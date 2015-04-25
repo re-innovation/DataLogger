@@ -1,6 +1,7 @@
 *.sublime-project
 *.sublime-workspace
 *.Test
+*.o
 *.exe
 *.mocked
 *.modified

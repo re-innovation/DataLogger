@@ -37,6 +37,7 @@
  * Application Includes
  */
 
+#include "app.h"
 #include "app.data.h"
 #include "app.data_conversion.h"
 
@@ -68,6 +69,8 @@ static CONVERSION_FN s_conversionFunctions[] =
 };
 
 static bool s_debugOut = true;
+
+static bool s_setupValid = false;
 
 /*
  * calculateNumberOfAveragesToStore
@@ -153,15 +156,27 @@ static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
 void APP_DATA_Setup(unsigned long averagingInterval,
     uint16_t fieldCount, uint16_t valuesPerSecond, uint16_t storageInterval, FIELD_TYPE fieldTypes[])
 {
-    uint8_t i;
+    uint8_t i = 0;
     
+    if (averagingInterval == 0) { APP_FatalError("Averaging interval is 0 seconds!"); }
+
+    if (averagingInterval > storageInterval)
+    {
+        APP_FatalError("Averaging interval cannot be longer than storage interval.");
+    }
+
     uint32_t averagerSize = valuesPerSecond * averagingInterval;
     uint32_t numberOfAveragesToStore = calculateNumberOfAveragesToStore(storageInterval, averagingInterval);
 
-    s_debugAveragers = new Averager<uint16_t>*[fieldCount];
+    // Create an array of averager pointers to be filled
     s_averagers = new Averager<uint16_t>*[fieldCount];
+    if (!s_averagers) { APP_FatalError("Failed to create averager array"); }
+
+    s_debugAveragers = new Averager<uint16_t>*[fieldCount];
+    if (!s_debugAveragers) { APP_FatalError("Failed to create debug averager array"); }
 
     s_dataManager = new DataFieldManager();
+    if (!s_dataManager) { APP_FatalError("Failed to create datafield manager"); }
 
     for (i = 0; i < fieldCount; ++i)
     {
@@ -174,10 +189,7 @@ void APP_DATA_Setup(unsigned long averagingInterval,
         }
         else
         {
-            Serial.print("Failed to create datafield of size ");
-            Serial.print(numberOfAveragesToStore);
-            Serial.print(" and type ");
-            Serial.println((int)fieldTypes[i]);
+            APP_FatalError("Failed to create datafield");
         }
         
         s_averagers[i] = new Averager<uint16_t>(averagerSize);
@@ -185,8 +197,12 @@ void APP_DATA_Setup(unsigned long averagingInterval,
 
         if (!s_averagers[i])
         {
-            Serial.print("Failed to create averager of size ");
-            Serial.println(averagerSize);
+            APP_FatalError("Failed to create averager");
+        }
+
+        if (!s_debugAveragers[i])
+        {
+            APP_FatalError("Failed to create debug averager");
         }
     }
 
@@ -197,6 +213,8 @@ void APP_DATA_Setup(unsigned long averagingInterval,
     {
         debugTask.ResetTime();
     }
+
+    s_setupValid = true;
 }
 
 void APP_DATA_NewData(uint16_t data, uint16_t field)
@@ -222,9 +240,12 @@ NumericDataField * APP_Data_GetField(uint8_t i)
 
 void APP_DATA_Tick(void)
 {
-    if (s_debugOut)
+    if (s_setupValid)
     {
-        debugTask.tick();
+        if (s_debugOut)
+        {
+            debugTask.tick();
+        }
+        averageAndStoreTask.tick();
     }
-    averageAndStoreTask.tick();
 }

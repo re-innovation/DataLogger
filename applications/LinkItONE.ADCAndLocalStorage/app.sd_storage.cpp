@@ -38,12 +38,11 @@
  * Application Includes
  */
 
+#include "app.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-
 #include "TaskAction.h"
 
-extern void APP_FatalError(char * err);
 
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
@@ -54,6 +53,8 @@ static TM s_lastSDTimestamp;
 
 static char s_directory[] = "Datalogger";
 static char s_filePath[100];
+
+static char s_errString[128];
 
 static void localPrintFn(char const * const toPrint)
 {
@@ -227,9 +228,8 @@ void APP_SD_ReadSettings(char const * const filename)
     }
     else
     {
-        char errString[128];
-        sprintf(errString, "Settings file '%s' not found.", filename);
-        APP_FatalError(errString);
+        sprintf(s_errString, "Settings file '%s' not found.", filename);
+        APP_FatalError(s_errString);
     }
 
     uint8_t hndl = s_sdCard->openFile(filename, false);
@@ -245,6 +245,16 @@ void APP_SD_ReadSettings(char const * const filename)
     s_sdCard->closeFile(hndl);
 
     Settings_echoAllSet(localPrintFn);
+
+    if (!Settings_allRequiredSettingsRead())
+    {
+        char missingSettings[128];
+        Settings_getMissingNames(missingSettings, 128);
+        sprintf(s_errString, "Some or all required settings not found in '%s': %s",
+            filename, missingSettings);
+
+        APP_FatalError(s_errString);
+    }
 }
 
 void APP_SD_Tick(void)

@@ -87,6 +87,27 @@ static ADS1115 s_ADCs[] = {
 #define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
 /*
+ * APP_FatalError
+ */
+void APP_FatalError(char const * const err)
+{
+    Serial.println("Application error:");
+    Serial.println(err);
+
+    #ifdef ARDUINO
+    while (1)
+    {
+        digitalWrite(LED2_PIN, HIGH);
+        delay(200);
+        digitalWrite(LED2_PIN, LOW);
+        delay(200);
+    }
+    #else
+    _exitMock();
+    #endif    
+}
+
+/*
  * Tasks
  */
 
@@ -118,7 +139,7 @@ void readFromADCsTaskFn(void)
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 
 void setup()
-{
+{   
     // setup Serial port
     Serial.begin(115200);
 
@@ -151,13 +172,16 @@ void setup()
         TEMPERATURE_C
     };
   
-    int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
-    int storage_interval = Settings_getInt(CSV_RECORD_INTERVAL_SECS);
-
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
     
+    Settings_requireInt(DATA_AVERAGING_INTERVAL_SECS);
+    Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
+    
     APP_SD_ReadSettings("Datalogger.settings");
+
+    int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
+    int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);
 
     APP_DATA_Setup(
         averaging_interval, // seconds to average readings over
@@ -186,25 +210,4 @@ void loop()
     APP_DATA_Tick();
     APP_SD_Tick();
     heartbeatTask.tick();
-}
-
-/*
- * APP_FatalError
- */
-void APP_FatalError(char * err)
-{
-    Serial.println(err);
-
-    #ifdef ARDUINO
-    while (1)
-    {
-        digitalWrite(LED2_PIN, HIGH);
-        delay(200);
-        digitalWrite(LED2_PIN, LOW);
-        delay(200);
-    }
-    #else
-    _exitMock();
-    #endif
-    
 }

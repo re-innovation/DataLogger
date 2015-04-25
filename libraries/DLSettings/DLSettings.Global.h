@@ -22,7 +22,7 @@
 #define FOREACH_INTSET(INT) \
     INT(THINGSPEAK_UPLOAD_INTERVAL_SECS) \
     INT(DATA_AVERAGING_INTERVAL_SECS) \
-    INT(CSV_RECORD_INTERVAL_SECS) \
+    INT(DATA_STORAGE_INTERVAL_SECS) \
     INT(SERIAL_DATA_INTERVAL_SECS) \
 
 #define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
@@ -51,6 +51,8 @@ typedef void (*PRINTFN)(char const * const);
 // or if that setting has not been set, a null value is returned instead.
 // 0 is returned for integers, NULL for strings
 
+void Settings_InitGlobal(void);
+    
 char const * Settings_getIntName(INTSETTING setting);
 int Settings_getInt(INTSETTING setting);
 void Settings_setInt(INTSETTING setting, int set);
@@ -62,6 +64,10 @@ char * Settings_getString(STRINGSETTING setting);
 void Settings_setString(STRINGSETTING setting, char const * const pSet);
 bool Settings_stringIsSet(STRINGSETTING setting);
 void Settings_resetString(STRINGSETTING setting);
+
+uint8_t Settings_getIntCount(void);
+uint8_t Settings_getStringCount(void);
+uint8_t Settings_getCount(void);
 
 void Settings_echoAllSet(PRINTFN printfn);
 

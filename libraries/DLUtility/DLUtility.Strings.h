@@ -24,7 +24,9 @@ class FixedLengthAccumulator
         bool writeChar(char c);
         bool writeString(const char * s);
         bool writeLine(const char * s);
-        
+    
+        void remove(uint32_t chars);
+                
         void reset(void);
         char * c_str(void);
         

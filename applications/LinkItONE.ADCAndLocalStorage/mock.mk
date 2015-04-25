@@ -1,3 +1,7 @@
+SRC_FILES += ../applications/LinkitONE.ADCAndLocalStorage/app.data.cpp
+SRC_FILES += ../applications/LinkitONE.ADCAndLocalStorage/app.data_conversion.cpp
+SRC_FILES += ../applications/LinkitONE.ADCAndLocalStorage/app.sd_storage.cpp
+
 SRC_FILES += DLDataField/DLDataField.cpp
 SRC_FILES += DLDataField/DLDataField.Manager.cpp
 SRC_FILES += DLDataField/DLDataField.Numeric.cpp

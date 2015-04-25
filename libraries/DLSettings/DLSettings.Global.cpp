@@ -60,10 +60,8 @@ class IntSetting
 StringSetting::StringSetting() {m_pSetting = NULL;}
 StringSetting::~StringSetting() {}
 
-
 IntSetting::IntSetting() { m_set = false; m_setting = 0;}
 IntSetting::~IntSetting() {}
-
 
 bool StringSetting::isSet() {return m_pSetting != NULL;}
 void StringSetting::set(char const * const pSetting)
@@ -108,6 +106,28 @@ static const char * s_intSettingNames[] = {
 
 static StringSetting s_strings[STRING_SETTINGS_COUNT];
 static IntSetting s_ints[INT_SETTINGS_COUNT];
+
+static uint8_t s_intSettingCount = 0;
+static uint8_t s_stringSettingCount = 0;
+
+void Settings_InitGlobal(void)
+{
+    uint8_t i;
+    for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+    {
+        Settings_resetInt((INTSETTING)i);
+    }
+
+
+    // Searching for ints didn't work, try to find string setting
+    for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+    {
+        Settings_resetString((STRINGSETTING)i);
+    }
+
+    s_stringSettingCount = 0;
+    s_intSettingCount = 0;
+}
 
 void Settings_resetInt(INTSETTING setting)
 {
@@ -172,6 +192,7 @@ void Settings_setString(STRINGSETTING setting, char const * const pSet)
     if (setting < STRING_SETTINGS_COUNT)
     {
         s_strings[setting].set(pSet);
+        s_stringSettingCount++;
     }
 }
 
@@ -204,40 +225,63 @@ void Settings_setInt(INTSETTING setting, int set)
     if (setting < INT_SETTINGS_COUNT)
     {
         s_ints[setting].set(set);
+        s_intSettingCount++;
     }  
+}
+
+uint8_t Settings_getIntCount(void)
+{
+    return s_intSettingCount;
+}
+
+uint8_t Settings_getStringCount(void)
+{
+    return s_stringSettingCount;
+}
+
+uint8_t Settings_getCount(void)
+{
+    return s_intSettingCount + s_stringSettingCount;
 }
 
 void Settings_echoAllSet(PRINTFN printfn)
 {
     // Echo out integer settings
 
-    printfn("Integer Settings:");
     int i;
 
     char intBuffer[10];
 
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
+    if ((Settings_getIntCount()))
     {
-        if (Settings_intIsSet((INTSETTING)i))
+        printfn("Integer Settings:");
+    
+        for (i = 0; i < INT_SETTINGS_COUNT; i++)
         {
-            sprintf(intBuffer, "%d", Settings_getInt((INTSETTING)i));
-            printfn(Settings_getIntName((INTSETTING)i));
-            printfn(": ");
-            printfn(intBuffer);
-            printfn("\r\n");
+            if (Settings_intIsSet((INTSETTING)i))
+            {
+                sprintf(intBuffer, "%d", Settings_getInt((INTSETTING)i));
+                printfn(Settings_getIntName((INTSETTING)i));
+                printfn(": ");
+                printfn(intBuffer);
+                printfn("\r\n");
+            }
         }
     }
 
     // Echo out string settings
-    printfn("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
+    if ((Settings_getStringCount()))
     {
-        if (Settings_stringIsSet((STRINGSETTING)i))
+        printfn("String Settings:");
+        for (i = 0; i < STRING_SETTINGS_COUNT; i++)
         {
-            printfn(Settings_getStringName((STRINGSETTING)i));
-            printfn(": ");
-            printfn(Settings_getString((STRINGSETTING)i));
-            printfn("\r\n");
-        }
-    }   
+            if (Settings_stringIsSet((STRINGSETTING)i))
+            {
+                printfn(Settings_getStringName((STRINGSETTING)i));
+                printfn(": ");
+                printfn(Settings_getString((STRINGSETTING)i));
+                printfn("\r\n");
+            }
+        }   
+    }
 }

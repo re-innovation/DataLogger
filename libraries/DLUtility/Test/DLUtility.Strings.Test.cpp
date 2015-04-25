@@ -155,6 +155,20 @@ void test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength(void)
     TEST_ASSERT_EQUAL(99, accumulator->length());
 }
 
+void test_FixedLengthAccumulator_CorrectlyRemovesAndAddsNewContent(void)
+{
+    accumulator->reset();
+    accumulator->writeString("This is some content, ");
+    accumulator->remove(2);
+
+    TEST_ASSERT_EQUAL(20, accumulator->length());
+    TEST_ASSERT_EQUAL_STRING("This is some content", buffer);
+    accumulator->writeString(", this is some more content");
+
+    TEST_ASSERT_EQUAL(47, accumulator->length());
+    TEST_ASSERT_EQUAL_STRING("This is some content, this is some more content", buffer);
+}
+
 void test_SplitAndStripWhitespaceErrorsWithInvalidStrings(void)
 {
     char * pLStart;
@@ -163,6 +177,7 @@ void test_SplitAndStripWhitespaceErrorsWithInvalidStrings(void)
     char * pREnd;
 
     TEST_ASSERT_FALSE(splitAndStripWhiteSpace(NULL, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
+    TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
     TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"NoEqualsSign", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
     TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"NoRightHandSide=", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
     TEST_ASSERT_FALSE(splitAndStripWhiteSpace((char*)"=NoLeftHandSide", '=', &pLStart, &pLEnd, &pRStart, &pREnd));
@@ -231,6 +246,7 @@ int main(void)
   RUN_TEST(test_FixedLengthAccumulator_CopiesPartialStringUpToMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_WritesCRLFUsingWriteLine);
   RUN_TEST(test_FixedLengthAccumulator_CorrectlyReturnsCurrentLength);
+  RUN_TEST(test_FixedLengthAccumulator_CorrectlyRemovesAndAddsNewContent);
 
   RUN_TEST(test_SplitAndStripWhitespaceErrorsWithInvalidStrings);
   RUN_TEST(test_SplitAndStripWhitespaceWorksWithStringWithoutWhitespace);

@@ -126,6 +126,8 @@ void test_readLine_CanReadLineFromOpenFileWithoutCRLF(void)
 void test_eof_IsTrueAtEndOfFile(void)
 {
     int s_handle = s_testInterface->openFile(QUOTED_DL_PATH "/DLTest/Test/TempForRead", false);
+    TEST_ASSERT_FALSE(s_testInterface->endOfFile(s_handle));
+
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char buffer[30];

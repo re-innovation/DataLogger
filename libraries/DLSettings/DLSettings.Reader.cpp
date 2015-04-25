@@ -203,7 +203,6 @@ bool Settings_allRequiredSettingsRead(void)
 		}
 	}
 
-	// Searching for ints didn't work, try to find string setting
 	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
 	{
 		if (s_stringSettingIsRequired[i])
@@ -213,4 +212,30 @@ bool Settings_allRequiredSettingsRead(void)
 	}
 
 	return allRequiredSettingsRead;
+}
+
+void Settings_getMissingNames(char * buffer, uint32_t size)
+{
+	uint8_t i;
+	FixedLengthAccumulator accum(buffer, size);
+
+	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+	{
+		if (s_intSettingIsRequired[i] & !Settings_intIsSet((INTSETTING)i))
+		{
+			accum.writeString(Settings_getIntName((INTSETTING)(i)));
+			accum.writeString(", "); 
+		}
+	}
+
+	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+	{
+		if (s_stringSettingIsRequired[i] & !Settings_stringIsSet((STRINGSETTING)i))
+		{
+			accum.writeString(Settings_getStringName((STRINGSETTING)(i)));
+			accum.writeString(", "); 
+		}
+	}
+
+	accum.remove(2); // Remove last ", "
 }

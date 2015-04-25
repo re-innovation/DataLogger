@@ -3,9 +3,11 @@
  */
 
 #include <stdlib.h>
-
+#include <unistd.h>
 #include <time.h>
 
+#include <iostream>
+ 
 #include "DLTest.Mock.arduino.h"
 
 extern void setup(void);
@@ -29,6 +31,7 @@ void digitalWrite(uint8_t pin, uint8_t value)
 
 void _exitMock(void)
 {
+	std::cout.flush();
 	exit(1);
 }
 
@@ -39,5 +42,6 @@ int main(void)
 	while (1)
 	{
 		loop();
+		std::cin.ignore();
 	}
 }

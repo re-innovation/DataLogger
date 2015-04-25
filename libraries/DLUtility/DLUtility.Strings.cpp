@@ -306,3 +306,24 @@ uint16_t FixedLengthAccumulator::length(void)
 {
     return m_writeIndex;
 }
+
+/*
+ * FixedLengthAccumulator::remove
+ *
+ * Removes chars from the end of the buffer by placing a '\0' in the appropriate position
+ */
+
+void FixedLengthAccumulator::remove(uint32_t chars)
+{
+    if (chars > m_writeIndex)
+    {
+        m_writeIndex = 0;
+    }
+    else
+    {
+        m_writeIndex -= chars;
+    }
+
+    m_buffer[m_writeIndex] = '\0';
+}
+        

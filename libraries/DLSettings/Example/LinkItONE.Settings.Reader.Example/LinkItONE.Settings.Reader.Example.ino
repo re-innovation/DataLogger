@@ -79,14 +79,21 @@ void setup()
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
-        Settings_readFromString(lineBuffer);
+        if (ERR_READER_NONE != Settings_readFromString(lineBuffer))
+        {
+            Serial.print("Error: ");
+            Serial.println(Settings_getLastReaderResultText());
+        }
     }
     s_sdCard->closeFile(hndl);
 
+    Serial.print("Successfully read ");
+    Serial.print(Settings_getCount());
+    Serial.print(" settings."); 
     Settings_echoAllSet(localPrintFn);
 }
 
 void loop()
 {
-    
+        
 }

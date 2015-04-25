@@ -102,6 +102,22 @@ void test_AllRequiredSettingsMustBeParsedBeforeReaderValidates(void)
   TEST_ASSERT_TRUE(Settings_allRequiredSettingsRead());
 }
 
+void test_SettingCountIsCorrect(void)
+{
+    TEST_ASSERT_EQUAL(0, Settings_getCount());
+    TEST_ASSERT_EQUAL(0, Settings_getIntCount());
+    TEST_ASSERT_EQUAL(0, Settings_getStringCount());
+    Settings_readFromString("GPRS_APN = www.exampleapn.com");
+    TEST_ASSERT_EQUAL(1, Settings_getCount());
+    TEST_ASSERT_EQUAL(0, Settings_getIntCount());
+    TEST_ASSERT_EQUAL(1, Settings_getStringCount());
+ 
+    Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL_SECS=30");
+    TEST_ASSERT_EQUAL(2, Settings_getCount());
+    TEST_ASSERT_EQUAL(1, Settings_getIntCount());
+    TEST_ASSERT_EQUAL(1, Settings_getStringCount());   
+}
+
 int main(void)
 {
     UnityBegin("DLSettings.Reader.cpp");
@@ -115,7 +131,8 @@ int main(void)
     RUN_TEST(test_ReadingFromValidStringSettingWithSpacesReturnsNoErrorAndSetsThatSetting);
     RUN_TEST(test_CommentLinesAreIgnoredButValid);
     RUN_TEST(test_AllRequiredSettingsMustBeParsedBeforeReaderValidates);
-    
+    RUN_TEST(test_SettingCountIsCorrect);
+
   	UnityEnd();
   	return 0;
 }
