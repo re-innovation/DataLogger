@@ -62,7 +62,7 @@ FILE_HANDLE TestStorageInterface::openFile(char const * const filename, bool for
 
     if (!filename) { return INVALID_HANDLE; }
 
-    s_file.open(filename, forWrite ? std::ios::out : std::ios::in);
+    s_file.open(filename, forWrite ? std::ios::app : std::ios::in);
 
     return 0;
 }

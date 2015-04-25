@@ -47,7 +47,6 @@
  * Applications Data
  */
 
-static Averager<uint16_t> ** s_averagers;
 static Averager<uint16_t> ** s_debugAveragers;
 
 static DataFieldManager * s_dataManager;
@@ -126,29 +125,6 @@ static void debugTaskFn(void)
 }
 static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
 
-static void averageAndStoreTaskFn(void)
-{
-    uint8_t i;
-
-    for (i = 0; i < s_dataManager->count(); i++)
-    {
-        uint16_t average = s_averagers[i]->getAverage();
-
-        float toStore;
-        if (s_conversionFunctions[i])
-        {
-            toStore = s_conversionFunctions[i](average); 
-        }
-        else
-        {
-            toStore = (float)average;
-        }
-
-        ((NumericDataField*)s_dataManager->getField(i))->storeData( toStore );
-    }
-}
-static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
-
 /*
  * Public Functions
  */
@@ -169,9 +145,7 @@ void APP_DATA_Setup(unsigned long averagingInterval,
     uint32_t numberOfAveragesToStore = calculateNumberOfAveragesToStore(storageInterval, averagingInterval);
 
     // Create an array of averager pointers to be filled
-    s_averagers = new Averager<uint16_t>*[fieldCount];
-    if (!s_averagers) { APP_FatalError("Failed to create averager array"); }
-
+    
     s_debugAveragers = new Averager<uint16_t>*[fieldCount];
     if (!s_debugAveragers) { APP_FatalError("Failed to create debug averager array"); }
 
@@ -181,7 +155,7 @@ void APP_DATA_Setup(unsigned long averagingInterval,
     for (i = 0; i < fieldCount; ++i)
     {
         // Create a new numeric field and add to the manager
-        DataField * field = new NumericDataField(fieldTypes[i], numberOfAveragesToStore);
+        DataField * field = new NumericDataField(fieldTypes[i], numberOfAveragesToStore, averagerSize);
 
         if (field)
         {
@@ -192,22 +166,13 @@ void APP_DATA_Setup(unsigned long averagingInterval,
             APP_FatalError("Failed to create datafield");
         }
         
-        s_averagers[i] = new Averager<uint16_t>(averagerSize);
         s_debugAveragers[i] = new Averager<uint16_t>(valuesPerSecond);
-
-        if (!s_averagers[i])
-        {
-            APP_FatalError("Failed to create averager");
-        }
 
         if (!s_debugAveragers[i])
         {
             APP_FatalError("Failed to create debug averager");
         }
     }
-
-    averageAndStoreTask.SetInterval(averagingInterval * 1000);
-    averageAndStoreTask.ResetTime();
 
     if (s_debugOut)
     {
@@ -217,9 +182,9 @@ void APP_DATA_Setup(unsigned long averagingInterval,
     s_setupValid = true;
 }
 
-void APP_DATA_NewData(uint16_t data, uint16_t field)
+void APP_DATA_NewData(int32_t data, uint16_t field)
 {
-    s_averagers[field]->newData(data);
+    ((NumericDataField*)s_dataManager->getField(field))->storeData( data );
     s_debugAveragers[field]->newData(data);
 }
 
@@ -246,6 +211,5 @@ void APP_DATA_Tick(void)
         {
             debugTask.tick();
         }
-        averageAndStoreTask.tick();
     }
 }

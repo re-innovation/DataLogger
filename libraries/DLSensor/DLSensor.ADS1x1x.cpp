@@ -259,6 +259,9 @@ ADS1x1x::ADS1x1x(uint8_t i2cAddress)
     // Set defaults for the lowest performance ADC (ADS1013)
     m_i2cAddress = i2cAddress;
     m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
+    m_fake = false;
+    minFakeRead = 0;
+    maxFakeRead = 0;
 }
 
 ADS1013::ADS1013(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
@@ -267,6 +270,18 @@ ADS1015::ADS1015(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1113::ADS1113(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1114::ADS1114(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1115::ADS1115(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
+
+/**************************************************************************/
+/*!
+@brief  Sets up the class to return fake ADC readings
+*/
+/**************************************************************************/
+void ADC1x1x::fake(uint16_t minFakeRead, uint16_t maxFakeRead)
+{
+    m_fake = true;
+    m_minFakeRead[ch] = minFakeRead;
+    m_maxFakeRead[ch] = maxFakeRead;
+}
 
 /**************************************************************************/
 /*!

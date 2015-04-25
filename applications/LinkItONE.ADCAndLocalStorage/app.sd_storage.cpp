@@ -56,6 +56,8 @@ static char s_filePath[100];
 
 static char s_errString[128];
 
+static bool s_debugThisModule = false;
+
 static void localPrintFn(char const * const toPrint)
 {
     Serial.print(toPrint);
@@ -68,10 +70,13 @@ static void writeToSDCardTaskFn(void)
 
     NumericDataField * pField;
     uint16_t nFields = APP_DATA_GetNumberOfFields();
-
-    Serial.print("Writing averages to SD card (");
-    Serial.print(nFields);
-    Serial.println("fields).");
+    
+    if (s_debugThisModule)
+    {       
+        Serial.print("Writing averages to SD card (");
+        Serial.print(nFields);
+        Serial.println("fields).");
+    }
 
     APP_SD_OpenDataFileForToday();
 
@@ -98,11 +103,15 @@ static void writeToSDCardTaskFn(void)
     }
     else
     {
-        Serial.print("Could not open '");
-        Serial.print(Filename_get());
-        Serial.println("' when trying to write data.");
+        if (s_debugThisModule)
+        {
+            Serial.print("Could not open '");
+            Serial.print(Filename_get());
+            Serial.println("' when trying to write data.");
+        }
     }
 }
+
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
 
 void APP_SD_Init(void)
@@ -122,13 +131,16 @@ void createNewFileForToday(void)
 {
     char const * const pFilename = Filename_get();
 
-    Serial.print("Creating new file: ");
-    Serial.println(pFilename);
+    if (s_debugThisModule)
+    {
+        Serial.print("Creating new file: ");
+        Serial.println(pFilename);
+    }
 
     sprintf(s_filePath, "%s/%s", s_directory, pFilename);    
     s_fileHandle = s_sdCard->openFile(s_filePath, true);
 
-    if (s_fileHandle == INVALID_HANDLE)
+    if (s_fileHandle == INVALID_HANDLE && s_debugThisModule)
     {
         Serial.print("Failed to create ");
         Serial.println(pFilename);
@@ -156,9 +168,11 @@ void APP_SD_OpenDataFileForToday(void)
     
     if (s_sdCard->fileExists(s_filePath))
     {
-        Serial.print("Opening existing file: ");
-        Serial.println(pFilename);
-
+        if (s_debugThisModule)
+        {
+            Serial.print("Opening existing file: ");
+            Serial.println(pFilename);
+        }
         s_fileHandle = s_sdCard->openFile(s_filePath, true);
     }
     else
@@ -220,16 +234,16 @@ void APP_SD_WriteEntryIDToOpenFile(void)
 void APP_SD_ReadSettings(char const * const filename)
 {
     char lineBuffer[100];
-    if (s_sdCard->fileExists(filename))
+    if (!s_sdCard->fileExists(filename))
+    {
+        sprintf(s_errString, "Settings file '%s' not found.", filename);
+        APP_FatalError(s_errString);
+    }
+    else
     {
         Serial.print("Reading settings from '");
         Serial.print(filename);
         Serial.println("'.");
-    }
-    else
-    {
-        sprintf(s_errString, "Settings file '%s' not found.", filename);
-        APP_FatalError(s_errString);
     }
 
     uint8_t hndl = s_sdCard->openFile(filename, false);
@@ -239,8 +253,17 @@ void APP_SD_ReadSettings(char const * const filename)
         s_sdCard->readLine(hndl, lineBuffer, 50, true);
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
-        Serial.println("'");
-        Settings_readFromString(lineBuffer);
+        Serial.print("'... ");
+        if (ERR_READER_NONE == Settings_readFromString(lineBuffer))
+        {
+            Serial.println(" success!");
+        }
+        else
+        {
+            Serial.print(" error: '");
+            Serial.print(Settings_getLastReaderResultText());
+            Serial.println("'");
+        }
     }
     s_sdCard->closeFile(hndl);
 
@@ -255,9 +278,19 @@ void APP_SD_ReadSettings(char const * const filename)
 
         APP_FatalError(s_errString);
     }
+
+    if (Settings_stringIsSet(DEBUG_MODULES))
+    {
+        APP_SetDebugModules(Settings_getString(DEBUG_MODULES));
+    }
+}
+
+void APP_SD_EnableDebugging(void)
+{
+    s_debugThisModule = true;
 }
 
 void APP_SD_Tick(void)
 {
-	//writeToSDCardTask.tick();
+	writeToSDCardTask.tick();
 }

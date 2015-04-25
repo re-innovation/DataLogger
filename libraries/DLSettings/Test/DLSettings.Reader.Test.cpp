@@ -89,6 +89,13 @@ void test_CommentLinesAreIgnoredButValid(void)
   TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("# This is a comment"));
 }
 
+void test_BlankLinesAreIgnoredButValid(void)
+{
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString(""));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString(" "));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("\t"));
+}
+
 void test_AllRequiredSettingsMustBeParsedBeforeReaderValidates(void)
 {
   Settings_requireInt(THINGSPEAK_UPLOAD_INTERVAL_SECS);
@@ -130,6 +137,8 @@ int main(void)
     RUN_TEST(test_ReadingFromValidStringSettingReturnsNoErrorAndSetsThatSetting);
     RUN_TEST(test_ReadingFromValidStringSettingWithSpacesReturnsNoErrorAndSetsThatSetting);
     RUN_TEST(test_CommentLinesAreIgnoredButValid);
+    RUN_TEST(test_BlankLinesAreIgnoredButValid);
+
     RUN_TEST(test_AllRequiredSettingsMustBeParsedBeforeReaderValidates);
     RUN_TEST(test_SettingCountIsCorrect);
 

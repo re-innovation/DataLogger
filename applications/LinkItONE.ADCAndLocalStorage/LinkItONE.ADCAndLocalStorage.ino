@@ -88,6 +88,8 @@ static ADS1115 s_ADCs[] = {
 
 /*
  * APP_FatalError
+ *
+ * Prints error to serial and then loops flashing LED
  */
 void APP_FatalError(char const * const err)
 {
@@ -105,6 +107,20 @@ void APP_FatalError(char const * const err)
     #else
     _exitMock();
     #endif    
+}
+
+/*
+ * APP_SetDebugModules
+ *
+ * For each module in the comma separated list of modules, turn serial debugging on
+ */
+void APP_SetDebugModules(char const * const modules)
+{
+    if (strstr(modules, "LocalStorage"))
+    {
+        Serial.println("Turning debugging on for LocalStorage module.");
+        APP_SD_EnableDebugging();
+    }
 }
 
 /*
@@ -147,13 +163,6 @@ void setup()
 
     Location_Setup(0);
 
-    uint8_t i = 0;
-    for (i = 0; i < 3; i++)
-    {
-        s_ADCs[i].begin();
-        s_ADCs[i].setGain(GAIN_ONE);
-    }
-
     FIELD_TYPE fieldTypes[] = {
         VOLTAGE,
         VOLTAGE,
@@ -177,7 +186,7 @@ void setup()
     
     Settings_requireInt(DATA_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
-    
+
     APP_SD_ReadSettings("Datalogger.settings");
 
     int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
@@ -190,16 +199,23 @@ void setup()
         storage_interval, // Number of seconds between SD card writes
         fieldTypes);
 
-    Serial.print("ADC reads every ");
-    Serial.print(MS_PER_ADC_READ);
-    Serial.println("ms");
-
-    Serial.print("Averaging every ");
-    Serial.print(averaging_interval);
-    Serial.println("s");
-
     pinMode(LED1_PIN, OUTPUT);
     pinMode(LED2_PIN, OUTPUT);
+
+    uint8_t i = 0;
+    for (i = 0; i < 3; i++)
+    {
+        s_ADCs[i].begin();
+        s_ADCs[i].setGain(GAIN_ONE);
+
+        if (Settings_stringIsSet(FAKE_ADC_READS))
+        {
+            s_ADCs[i].fake(0, 0, 1023);
+            s_ADCs[i].fake(1, 0, 1023);
+            s_ADCs[i].fake(2, 0, 1023);
+            s_ADCs[i].fake(3, 0, 1023);
+        }
+    }
 
     readFromADCsTask.ResetTime();
 }

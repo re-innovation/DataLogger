@@ -121,16 +121,23 @@ uint32_t strncpy_safe(char * dst, char const * src, uint32_t max)
     return count;
 }
 
+bool stringIsWhitespace(char const * str)
+{
+    if (!str) return false;
+    str = skipSpaces(str);
+    return *str == '\0';
+}
+
 bool splitAndStripWhiteSpace(char * toSplit, char splitChar, char ** pStartOnLeft, char ** pEndOnLeft, char ** pStartOnRight, char ** pEndOnRight)
 {
     if (!toSplit) { return false; }
 
-    // Find the equals sign (separates L from R)
+    // Find the separator (separates L from R)
     char * pSeparator = strchr((char*)toSplit, splitChar);   
     char * _pEndOnLeft = pSeparator - 1;
     char * _pStartOnRight = pSeparator + 1;
 
-    // If there is no equals sign, fail early
+    // If there is no separator, fail early
     if (!pSeparator) { return false; }
 
     // Skip over any whitespace to find real start of lefthandside
@@ -147,8 +154,8 @@ bool splitAndStripWhiteSpace(char * toSplit, char splitChar, char ** pStartOnLef
     char * _pEndOnRight = toSplit + strlen(toSplit) - 1;
     _pEndOnRight = skipSpacesRev(_pEndOnRight);
 
-    if (_pStartOnLeft >= _pEndOnLeft) { return false;} // No text on left
-    if (_pStartOnRight >= _pEndOnRight) { return false;} // No text on right
+    if (_pStartOnLeft > _pEndOnLeft) { return false;} // No text on left
+    if (_pStartOnRight > _pEndOnRight) { return false;} // No text on right
 
     if (pStartOnLeft) { *pStartOnLeft = _pStartOnLeft; }
     if (pEndOnLeft) { *pEndOnLeft = _pEndOnLeft; }

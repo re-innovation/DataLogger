@@ -82,6 +82,40 @@ void test_strncpy_safe_CorrectlyCopiesAllOfSourseWhenRequestingMoreThanLength(vo
     TEST_ASSERT_EQUAL_STRING("ABCDEFGHIJKLMNO", destination);
 }
 
+void test_skipSpacesCorrectlyJumpsOverWhitespace(void)
+{
+    char test[] = "Nowhitespaceinstring";
+    char * out = skipSpaces(test);
+    TEST_ASSERT_EQUAL_PTR(test, out);
+
+    char test2[] = "     spacesAtStart";
+    out = skipSpaces(test2);
+    TEST_ASSERT_EQUAL_STRING("spacesAtStart", out);
+    
+    char test3[] = "";
+    out = skipSpaces(test3);
+    TEST_ASSERT_EQUAL_PTR(test3, out);
+
+    char test4[] = "\t";
+    out = skipSpaces(test4);
+    TEST_ASSERT_EQUAL_PTR(test4+1, out);
+
+    char test5[] = " ";
+    out = skipSpaces(test5);
+    TEST_ASSERT_EQUAL_PTR(test5+1, out);
+}
+
+void test_stringIsWhitespaceReturnsTrueForWhitespaceOrBlankAndTrueOtherwise(void)
+{
+    TEST_ASSERT_TRUE(stringIsWhitespace(""));
+    TEST_ASSERT_TRUE(stringIsWhitespace(" "));
+    TEST_ASSERT_TRUE(stringIsWhitespace("\t"));
+    TEST_ASSERT_FALSE(stringIsWhitespace(NULL));    
+    TEST_ASSERT_FALSE(stringIsWhitespace("1"));
+    TEST_ASSERT_FALSE(stringIsWhitespace(" 1"));
+    TEST_ASSERT_FALSE(stringIsWhitespace("1 "));
+}
+
 void test_FixedLengthAccumulator_InitsCorrectly(void)
 {
     accumulator = new FixedLengthAccumulator(buffer, 100);
@@ -185,7 +219,7 @@ void test_SplitAndStripWhitespaceErrorsWithInvalidStrings(void)
 
 void test_SplitAndStripWhitespaceWorksWithStringWithoutWhitespace(void)
 {
-    char test[] = "Stringon left of equals=string On right of equals";
+    char test[] = "DATA_AVERAGING_INTERVAL_SECS=1";
 
     char * pLStart;
     char * pLEnd;
@@ -194,19 +228,19 @@ void test_SplitAndStripWhitespaceWorksWithStringWithoutWhitespace(void)
 
     TEST_ASSERT_TRUE(splitAndStripWhiteSpace(test, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
 
-    char expected1[] = "Stringon left of equals";
+    char expected1[] = "DATA_AVERAGING_INTERVAL_SECS";
     char expected2[] = "";
-    char expected3[] = "string On right of equals";
+    char expected3[] = "1";
     char expected4[] = "";
     TEST_ASSERT_EQUAL(0, strncmp(expected1, pLStart, strlen(expected1)));
     TEST_ASSERT_EQUAL(0, strncmp(expected2, pLEnd+1, strlen(expected2)));
     TEST_ASSERT_EQUAL(0, strncmp(expected3, pRStart, strlen(expected3)));
-    TEST_ASSERT_EQUAL(0, strncmp(expected4, pREnd+1, strlen(expected4))); 
+    TEST_ASSERT_EQUAL(0, strncmp(expected4, pREnd+1, strlen(expected4)));
 }
 
 void test_SplitAndStripWhitespaceWorksWithStringWithWhitespace(void)
 {
-    char test[] = "\t  Stringon left of equals\t=   string On right of equals  \t";
+    char test[] = "DATA_AVERAGING_INTERVAL_SECS = 1";
 
     char * pLStart;
     char * pLEnd;
@@ -215,10 +249,10 @@ void test_SplitAndStripWhitespaceWorksWithStringWithWhitespace(void)
 
     TEST_ASSERT_TRUE(splitAndStripWhiteSpace(test, '=', &pLStart, &pLEnd, &pRStart, &pREnd));
 
-    char expected1[] = "Stringon left of equals";
-    char expected2[] = "\t";
-    char expected3[] = "string On right of equals";
-    char expected4[] = "  \t";
+    char expected1[] = "DATA_AVERAGING_INTERVAL_SECS";
+    char expected2[] = "";
+    char expected3[] = "1";
+    char expected4[] = "";
     TEST_ASSERT_EQUAL(0, strncmp(expected1, pLStart, strlen(expected1)));
     TEST_ASSERT_EQUAL(0, strncmp(expected2, pLEnd+1, strlen(expected2)));
     TEST_ASSERT_EQUAL(0, strncmp(expected3, pRStart, strlen(expected3)));
@@ -238,7 +272,11 @@ int main(void)
   RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringGreaterThanMaxLength);
   RUN_TEST(test_strncpy_safe_CorrectlyCopiesStringOfRequestedLength);
   RUN_TEST(test_strncpy_safe_CorrectlyCopiesAllOfSourseWhenRequestingMoreThanLength);
-  
+ 
+  RUN_TEST(test_skipSpacesCorrectlyJumpsOverWhitespace);
+
+  RUN_TEST(test_stringIsWhitespaceReturnsTrueForWhitespaceOrBlankAndTrueOtherwise);
+
   RUN_TEST(test_FixedLengthAccumulator_InitsCorrectly);
   RUN_TEST(test_FixedLengthAccumulator_FillsUpToMaxLength);
   RUN_TEST(test_FixedLengthAccumulator_ResetsCorrectly);

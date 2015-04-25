@@ -22,16 +22,17 @@ class DataField
         uint32_t m_index[2];
         uint32_t m_maxIndex;
 
+        Averager<int32_t> * m_averager;
 };
 
 class NumericDataField : public DataField
 {
     public:
-        NumericDataField(FIELD_TYPE type, uint32_t N); // N is length of storage buffer
+         // N is length of storage buffer, averagerN is length of averager buffer
+        NumericDataField(FIELD_TYPE type, uint32_t N, uint32_t averagerN);
         ~NumericDataField();
 
-        template <typename T>
-        void storeData(T data);
+        void storeData(int32_t data);
 
         float getData(uint32_t index);
         void getDataAsString(char * buf, char const * const fmt, uint8_t index);

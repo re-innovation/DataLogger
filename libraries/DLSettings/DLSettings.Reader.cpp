@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-
 /*
  * Local Includes
  */
@@ -111,6 +110,9 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 	char settingValueCopy[64];
 
 	if (!string) { return noStringError(); }
+
+	// If line is blank, fail early
+    if (stringIsWhitespace(string)) { return noError(); }
 
 	// If line is a comment, skip immediately
 	if (*string == '#') { return noError(); }

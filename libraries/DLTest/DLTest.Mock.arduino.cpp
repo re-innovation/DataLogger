@@ -39,9 +39,16 @@ int main(void)
 {
 	setup();
 
-	while (1)
+
+	int32_t runLoopCount;
+	do
 	{
-		loop();
-		std::cin.ignore();
-	}
+		std::cout << "Enter number of times to run loop: ";
+		std::cin >> runLoopCount;
+		std::cout << "Running loop " << runLoopCount << " times..." << std::endl;
+		while (--runLoopCount > 0)
+		{
+			loop();
+		}
+	} while (runLoopCount >= 0);
 }

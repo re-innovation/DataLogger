@@ -11,6 +11,8 @@
 /* Define each string setting for the application */
 
 #define FOREACH_STRINGSET(STRING) \
+    STRING(FAKE_ADC_READS) \
+    STRING(DEBUG_MODULES) \
     STRING(GPRS_APN) \
     STRING(GPRS_USERNAME) \
     STRING(GPRS_PASSWORD) \

@@ -28,6 +28,7 @@
  * Local Application Includes
  */
 
+#include "DLUtility.Averager.h"
 #include "DLDataField.h"
 #include "DLUtility.h"
 

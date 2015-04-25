@@ -50,6 +50,12 @@ void setup()
     for (i = 0; i < 3; i++)
     {
         s_adcs[i].begin();
+        #if 1 //Use 0 for real ADS1115, or 0 for random values
+        s_adcs[i].fake(0, 0, 1023);
+        s_adcs[i].fake(1, 0, 1023);
+        s_adcs[i].fake(2, 0, 1023);
+        s_adcs[i].fake(3, 0, 1023);
+        #endif
     }
 
     delay(10000);
@@ -60,7 +66,6 @@ void loop()
 {
 
     uint8_t i = 0;
-    uint8_t ch = 0;
     
     for (i = 0; i < 3; i++)
     {

@@ -28,8 +28,14 @@ class ADS1x1x
 
         int16_t readADC_DifferentialWithConfig(uint16_t);
 
+        bool m_fake;
+        uint16_t m_minFakeRead[4];
+        uint16_t m_maxFakeRead[4];
+
     public:
         ADS1x1x(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
+
+        void      fake(uint8_t ch, uint16_t minFakeRead, uint16_t maxFakeRead);
         void      begin(void);
         int16_t   readADC_SingleEnded(uint8_t channel);
         int16_t   readADC_Differential(uint8_t channel);

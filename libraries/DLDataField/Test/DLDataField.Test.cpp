@@ -21,6 +21,7 @@
  * Local Application Includes
  */
 
+#include "../../DLUtility/DLUtility.Averager.h"
 #include "../DLDataField.h"
 
 /*
@@ -29,7 +30,9 @@
 
 #include "unity.h"
 
-static int16_t intDataArray[] = {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4};
+static int32_t s_intDataArray[] = {-5, -4, -3, -2, -1, 0, 20, 40, 60, 80};
+static float s_expectedAverage = 18.5f;
+
 static char strDataArray[][5] = {"N","NE", "E", "SE", "S"};
 
 static void fillWithTestIntData(DataField * pDataField)
@@ -37,7 +40,7 @@ static void fillWithTestIntData(DataField * pDataField)
 	uint8_t i;
 	for (i = 0; i < 10; ++i)
 	{
-		((NumericDataField*)pDataField)->storeData(intDataArray[i]);
+		((NumericDataField*)pDataField)->storeData(s_intDataArray[i]);
 	}
 }
 
@@ -52,22 +55,19 @@ static void fillWithTestStringData(DataField * pDataField)
 
 static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, 1, 1);
 	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
 	TEST_ASSERT_EQUAL(0, dataField.getData(0));
 }
 
-static void test_DatafieldStoreFloats_CorrectlyFormattedAsStrings(void)
+static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, 1, 1);
 	static char buffer[20];
-	dataField.storeData(100.12345f);
+	dataField.storeData(100);
 	
 	dataField.getDataAsString(buffer, "%.0f", 0);
 	TEST_ASSERT_EQUAL_STRING("100", buffer);
-
-	dataField.getDataAsString(buffer, "%.5f", 0);
-	TEST_ASSERT_EQUAL_STRING("100.12345", buffer);
 }
 
 static void test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue(void)
@@ -100,21 +100,22 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 	TEST_ASSERT_EQUAL_STRING(expectedStr, buffer);	
 }
 
-static void test_DatafieldStoreArrayOfInts_CorrectlyStoresInts(void)
+static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
-	fillWithTestIntData(&dataField);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 10);
 
-	int16_t i;
-	for (i = 0; i < 10; ++i)
-	{
-		TEST_ASSERT_EQUAL(intDataArray[i], dataField.getData(i));
-	}
+	fillWithTestIntData(&dataField);
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getData(0));
+	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getData(1));
+
+	fillWithTestIntData(&dataField);
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getData(1));
+	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getData(2));
 }
 
 static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 1);
 	fillWithTestIntData(&dataField);
 
 	dataField.storeData(5);
@@ -125,13 +126,13 @@ static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 	// Datafield should have stored last 7 points in data array
 	for (i = 0; i < 7; ++i)
 	{
-		TEST_ASSERT_EQUAL(intDataArray[i+3], dataField.getData(i));
+		TEST_ASSERT_EQUAL_FLOAT((float)s_intDataArray[i+3], dataField.getData(i));
 	}
 
 	// Newest three additions should be in last three entries
-	TEST_ASSERT_EQUAL(5, dataField.getData(7));
-	TEST_ASSERT_EQUAL(6, dataField.getData(8));
-	TEST_ASSERT_EQUAL(7, dataField.getData(9));
+	TEST_ASSERT_EQUAL_FLOAT(5, dataField.getData(7));
+	TEST_ASSERT_EQUAL_FLOAT(6, dataField.getData(8));
+	TEST_ASSERT_EQUAL_FLOAT(7, dataField.getData(9));
 }
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
@@ -179,7 +180,7 @@ static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 1);
 	fillWithTestIntData(&dataField);
 
 	TEST_ASSERT_EQUAL(-3, dataField.getData(98357952));
@@ -234,12 +235,12 @@ int main(void)
     UnityBegin("DLDataField.cpp");
 
     RUN_TEST(test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue);
-    RUN_TEST(test_DatafieldStoreFloats_CorrectlyFormattedAsStrings);
+    RUN_TEST(test_DatafieldStoreInts_CorrectlyFormattedAsStrings);
     RUN_TEST(test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue);
     RUN_TEST(test_DatafieldStoreAsStringThenSet_ReturnsSameString);
     RUN_TEST(test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength);
 
-    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresInts);
+    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength);
     

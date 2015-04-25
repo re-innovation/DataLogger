@@ -4,7 +4,7 @@
 void APP_DATA_Setup(unsigned long msInterval,
     uint16_t fieldCount, uint16_t averagerSize, uint16_t dataFieldBufferSize, FIELD_TYPE fieldTypes[]);
 
-void APP_DATA_NewData(uint16_t data, uint16_t field);
+void APP_DATA_NewData(int32_t data, uint16_t field);
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength);
 

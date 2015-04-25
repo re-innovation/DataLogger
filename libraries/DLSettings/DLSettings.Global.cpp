@@ -252,9 +252,14 @@ void Settings_echoAllSet(PRINTFN printfn)
 
     char intBuffer[10];
 
+    printfn("Successfully read ");
+    sprintf(intBuffer, "%d", Settings_getCount());
+    printfn(intBuffer);
+    printfn(" settings\r\n");
+    
     if ((Settings_getIntCount()))
     {
-        printfn("Integer Settings:");
+        printfn("Integer Settings:\r\n");
     
         for (i = 0; i < INT_SETTINGS_COUNT; i++)
         {
@@ -272,7 +277,7 @@ void Settings_echoAllSet(PRINTFN printfn)
     // Echo out string settings
     if ((Settings_getStringCount()))
     {
-        printfn("String Settings:");
+        printfn("String Settings:\r\n");
         for (i = 0; i < STRING_SETTINGS_COUNT; i++)
         {
             if (Settings_stringIsSet((STRINGSETTING)i))
