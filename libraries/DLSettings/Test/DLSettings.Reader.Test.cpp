@@ -19,8 +19,11 @@
  * Local Application Includes
  */
 
-#include "../../DLLocalStorage/DLLocalStorage.h"
-#include "../DLSettings.h"
+#include "DLLocalStorage.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
+#include "DLSettings.h"
 
 /*
  * Unity Test Framework
@@ -59,18 +62,18 @@ void test_ReadingFromUnrecognizedSettingReturnsCorrectError(void)
 
 void test_ReadingFromInvalidIntSettingReturnsCorrectError(void)
 {
-	TEST_ASSERT_EQUAL(ERR_READER_INVALID_INT, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL_SECS=NOTANINTEGER"));
+	TEST_ASSERT_EQUAL(ERR_READER_INVALID_INT, Settings_readFromString("DATA_UPLOAD_INTERVAL_SECS=NOTANINTEGER"));
   TEST_ASSERT_EQUAL(ERR_READER_INVALID_INT, Settings_getLastReaderResult());
 
   char expected[100];
-  sprintf(expected, ERROR_STR_INVALID_INT, "NOTANINTEGER", "THINGSPEAK_UPLOAD_INTERVAL_SECS");
+  sprintf(expected, ERROR_STR_INVALID_INT, "NOTANINTEGER", "DATA_UPLOAD_INTERVAL_SECS");
   TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_ReadingFromValidIntSettingReturnsNoErrorAndSetsThatSetting(void)
 {
-  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL_SECS=30"));
-  TEST_ASSERT_EQUAL(30, Settings_getInt(THINGSPEAK_UPLOAD_INTERVAL_SECS));
+  TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_readFromString("DATA_UPLOAD_INTERVAL_SECS=30"));
+  TEST_ASSERT_EQUAL(30, Settings_getInt(DATA_UPLOAD_INTERVAL_SECS));
 }
 
 void test_ReadingFromValidStringSettingReturnsNoErrorAndSetsThatSetting(void)
@@ -99,14 +102,14 @@ void test_BlankLinesAreIgnoredButValid(void)
 
 void test_AllRequiredSettingsMustBeParsedBeforeReaderValidates(void)
 {
-  Settings_requireInt(THINGSPEAK_UPLOAD_INTERVAL_SECS);
+  Settings_requireInt(DATA_UPLOAD_INTERVAL_SECS);
   Settings_requireString(GPRS_APN);
   TEST_ASSERT_FALSE(Settings_allRequiredSettingsRead());
 
   Settings_readFromString("GPRS_APN = www.exampleapn.com");
   TEST_ASSERT_FALSE(Settings_allRequiredSettingsRead());
 
-  Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL_SECS=30");
+  Settings_readFromString("DATA_UPLOAD_INTERVAL_SECS=30");
   TEST_ASSERT_TRUE(Settings_allRequiredSettingsRead());
 }
 
@@ -120,7 +123,7 @@ void test_SettingCountIsCorrect(void)
     TEST_ASSERT_EQUAL(0, Settings_getIntCount());
     TEST_ASSERT_EQUAL(1, Settings_getStringCount());
  
-    Settings_readFromString("THINGSPEAK_UPLOAD_INTERVAL_SECS=30");
+    Settings_readFromString("DATA_UPLOAD_INTERVAL_SECS=30");
     TEST_ASSERT_EQUAL(2, Settings_getCount());
     TEST_ASSERT_EQUAL(1, Settings_getIntCount());
     TEST_ASSERT_EQUAL(1, Settings_getStringCount());   
@@ -129,7 +132,7 @@ void test_SettingCountIsCorrect(void)
 void test_readFromFileReturnsNoFileErrorForMissingFile(void)
 {
     LocalStorageInterface * s_storage = LocalStorage_GetLocalStorageInterface((LOCAL_STORAGE_TYPE)0);
-    TEST_ASSERT_EQUAL(ERR_READER_NO_FILE, Settings_readFromFile(s_storage, "Not a file"));
+    TEST_ASSERT_EQUAL(ERR_READER_NO_FILE, Settings_readGlobalFromFile(s_storage, "Not a file"));
 }
 
 int main(void)

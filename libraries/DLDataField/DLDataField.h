@@ -1,13 +1,56 @@
 #ifndef _DATA_FIELD_H_
 #define _DATA_FIELD_H_
 
-#include "DLDataField.Types.h"
+/* Each datafield has an associated datatype */
+enum field_type
+{
+    // Electrical values
+    VOLTAGE,
+    CURRENT,
+
+    // Temperature values
+    TEMPERATURE_C,
+    TEMPERATURE_F,
+    TEMPERATURE_K,
+    
+    // Solar values
+    IRRADIANCE_WpM2,
+
+    // Wind values
+    CARDINAL_DIRECTION, //N, NE, E, etc.
+    DEGREES_DIRECTION,
+
+    INVALID_TYPE
+};
+typedef enum field_type FIELD_TYPE;
+
+/* Each FIELD_TYPE has a data structure associated with it 
+ * in order to perform conversions from raw values to units.
+  In addition, the number of settings is #defined so that the
+  settings module can figure out if everything is set */
+struct voltagechannel
+{
+    float mvPerBit;
+    float R1;
+    float R2;
+};
+typedef struct voltagechannel VOLTAGECHANNEL;
+
+struct currentchannel
+{
+    float mvPerBit;
+    float offset;
+    float mvPerAmp;
+};
+typedef struct currentchannel CURRENTCHANNEL;
 
 class DataField
 {
     public:
-        DataField(FIELD_TYPE fieldType, uint32_t length);
+        DataField(FIELD_TYPE fieldType);
         ~DataField();
+
+        void setSize(uint32_t length);
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
 
@@ -28,13 +71,18 @@ class DataField
 class NumericDataField : public DataField
 {
     public:
-         // N is length of storage buffer, averagerN is length of averager buffer
-        NumericDataField(FIELD_TYPE type, uint32_t N, uint32_t averagerN);
+        /* type: VOLTAGE, CURRENT etc.
+         * fieldData: Pointer to VOLTAGECHANNEL, CURRENTCHANNEL to match field type
+         */
+        NumericDataField(FIELD_TYPE type, void * fieldData);
         ~NumericDataField();
+
+        void setDataSizes(uint32_t N, uint32_t averagerN);
 
         void storeData(int32_t data);
 
-        float getData(uint32_t index);
+        float getRawData(uint32_t index);
+        float getConvData(uint32_t index);
         void getDataAsString(char * buf, char const * const fmt, uint8_t index);
 
         bool isString(void) { return false; }
@@ -42,6 +90,7 @@ class NumericDataField : public DataField
         
     private:
         float * m_data;
+        void * m_conversionData;
         #ifdef TEST
         void printContents(void);
         #endif
@@ -74,4 +123,9 @@ uint32_t DataField_writeNumericDataToBuffer(
 uint32_t DataField_writeStringDataToBuffer(
     char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 */
+
+// Conversion functions provided by DLDataField.Conversion.cpp
+float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData);
+float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData);
+
 #endif

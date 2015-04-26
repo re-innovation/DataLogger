@@ -21,6 +21,9 @@
  * Local Includes
  */
 
+#include "DLUtility.Averager.h"
+#include "DLDataField.h" 
+#include "DLDataField.Manager.h"
 #include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLUtility.h"
@@ -49,12 +52,12 @@ class IntSetting
         
         ~IntSetting();
     
-        int get();
+        int32_t get();
         bool isSet(void);
-        void set(int);
+        void set(int32_t);
         void reset();
     private:
-        int m_setting;
+        int32_t m_setting;
         bool m_set;
 };
 
@@ -77,8 +80,8 @@ void StringSetting::set(char const * const pSetting)
 char * StringSetting::get(void) { return m_pSetting; }
 
 bool IntSetting::isSet() {return m_set;}
-void IntSetting::set(int setting) { if (!m_set) { m_setting = setting; m_set = true;} }
-int IntSetting::get(void) { return m_setting; }
+void IntSetting::set(int32_t setting) { if (!m_set) { m_setting = setting; m_set = true;} }
+int32_t IntSetting::get(void) { return m_setting; }
 
 #ifdef TEST
 void StringSetting::reset(void) { m_pSetting = NULL; }
@@ -209,7 +212,7 @@ bool Settings_intIsSet(INTSETTING setting)
     } 
 }
 
-int Settings_getInt(INTSETTING setting)
+int32_t Settings_getInt(INTSETTING setting)
 {
     if (setting < INT_SETTINGS_COUNT)
     {
@@ -221,7 +224,7 @@ int Settings_getInt(INTSETTING setting)
     }    
 }
 
-void Settings_setInt(INTSETTING setting, int set)
+void Settings_setInt(INTSETTING setting, int32_t set)
 {
     if (setting < INT_SETTINGS_COUNT)
     {

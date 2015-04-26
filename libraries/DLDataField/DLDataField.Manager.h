@@ -6,9 +6,10 @@
 class DataFieldManager
 {
     public:
-        DataFieldManager();
+        DataFieldManager(uint32_t dataSize, uint32_t averagerSize);
         uint8_t count();
-        bool addField(DataField * field);
+        bool addField(NumericDataField * field);
+        bool addField(StringDataField * field);
         DataField * getField(uint8_t index);
         DataField ** getFields(void);
 
@@ -17,6 +18,8 @@ class DataFieldManager
     private:
         DataField * m_fields[MAX_FIELDS];
         uint8_t m_count;
+        uint32_t m_dataSize;
+        uint32_t m_averagerSize;
 };
 
 #endif

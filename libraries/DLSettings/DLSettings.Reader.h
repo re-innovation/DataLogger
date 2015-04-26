@@ -13,7 +13,8 @@ enum settings_reader_result
     ERR_READER_NO_NAME,
     ERR_READER_INVALID_INT,
     ERR_READER_NO_FILE,
-    ERR_READER_NO_INTERFACE
+    ERR_READER_NO_INTERFACE,
+    ERR_READER_NO_MANAGER
 };
 typedef enum settings_reader_result SETTINGS_READER_RESULT;
 
@@ -23,7 +24,8 @@ typedef enum settings_reader_result SETTINGS_READER_RESULT;
 #define ERROR_STR_NO_NAME       "Setting name '%s' was not found."
 #define ERROR_STR_INVALID_INT   "Setting '%s' for '%s' is not a whole number."
 #define ERROR_STR_NO_FILE		"Settings file %s was not found."
-#define ERROR_STR_NO_INTERFACE "No storage interface provided for reading file."
+#define ERROR_STR_NO_INTERFACE	"No storage interface provided for reading file."
+#define ERROR_STR_NO_MANAGER	"No datafield manager provided for reading file."
 
 /*
  * Public Functions
@@ -31,7 +33,9 @@ typedef enum settings_reader_result SETTINGS_READER_RESULT;
 
 void Settings_InitReader(void);
 
-SETTINGS_READER_RESULT Settings_readFromFile(LocalStorageInterface * pInterface, char const * const filename);
+SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInterface, char const * const filename);
+SETTINGS_READER_RESULT Settings_readChannelsFromFile(
+	DataFieldManager * pManager, LocalStorageInterface * pInterface, char const * const filename);
 
 void Settings_requireInt(INTSETTING setting);
 void Settings_requireString(STRINGSETTING setting);

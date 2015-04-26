@@ -35,6 +35,18 @@ static float s_expectedAverage = 18.5f;
 
 static char strDataArray[][5] = {"N","NE", "E", "SE", "S"};
 
+static VOLTAGECHANNEL s_voltageChannelSettings = {
+	.mvPerBit = 0.125f,
+	.R1 = 200000.0f,
+	.R2= 10000.0f,
+};
+
+static CURRENTCHANNEL s_currentChannelSettings = {
+	.mvPerBit = 0.125f,
+	.offset = 60.0f,
+	.mvPerAmp = 600.0f,
+};
+
 static void fillWithTestIntData(DataField * pDataField)
 {
 	uint8_t i;
@@ -55,14 +67,18 @@ static void fillWithTestStringData(DataField * pDataField)
 
 static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, 1, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(1,1);
+
 	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
-	TEST_ASSERT_EQUAL(0, dataField.getData(0));
+	TEST_ASSERT_EQUAL(0, dataField.getRawData(0));
 }
 
 static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, 1, 1);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(1,1);
+
 	static char buffer[20];
 	dataField.storeData(100);
 	
@@ -102,20 +118,43 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 10);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 10);
+	
+	fillWithTestIntData(&dataField);
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(0));
+	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getRawData(1));
 
 	fillWithTestIntData(&dataField);
-	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getData(0));
-	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getData(1));
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(1));
+	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getRawData(2));
+}
 
-	fillWithTestIntData(&dataField);
-	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getData(1));
-	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getData(2));
+static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(void)
+{
+	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	voltsDataField.setDataSizes(10, 10);
+	
+	fillWithTestIntData(&voltsDataField);
+	float expectedConverted = CONV_VoltsFromRaw(s_expectedAverage, &s_voltageChannelSettings);
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, voltsDataField.getRawData(0));
+	TEST_ASSERT_EQUAL_FLOAT(expectedConverted, voltsDataField.getConvData(0));
+
+	NumericDataField ampsDataField = NumericDataField(CURRENT, (void*)&s_currentChannelSettings);
+	ampsDataField.setDataSizes(10 ,10);
+	
+	fillWithTestIntData(&ampsDataField);
+	expectedConverted = CONV_AmpsFromRaw(s_expectedAverage, &s_currentChannelSettings);
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, ampsDataField.getRawData(0));
+	TEST_ASSERT_EQUAL_FLOAT(expectedConverted, ampsDataField.getConvData(0));
+
 }
 
 static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 1);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+	
 	fillWithTestIntData(&dataField);
 
 	dataField.storeData(5);
@@ -126,13 +165,13 @@ static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 	// Datafield should have stored last 7 points in data array
 	for (i = 0; i < 7; ++i)
 	{
-		TEST_ASSERT_EQUAL_FLOAT((float)s_intDataArray[i+3], dataField.getData(i));
+		TEST_ASSERT_EQUAL_FLOAT((float)s_intDataArray[i+3], dataField.getRawData(i));
 	}
 
 	// Newest three additions should be in last three entries
-	TEST_ASSERT_EQUAL_FLOAT(5, dataField.getData(7));
-	TEST_ASSERT_EQUAL_FLOAT(6, dataField.getData(8));
-	TEST_ASSERT_EQUAL_FLOAT(7, dataField.getData(9));
+	TEST_ASSERT_EQUAL_FLOAT(5, dataField.getRawData(7));
+	TEST_ASSERT_EQUAL_FLOAT(6, dataField.getRawData(8));
+	TEST_ASSERT_EQUAL_FLOAT(7, dataField.getRawData(9));
 }
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
@@ -180,10 +219,12 @@ static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, 10, 1);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+	
 	fillWithTestIntData(&dataField);
 
-	TEST_ASSERT_EQUAL(-3, dataField.getData(98357952));
+	TEST_ASSERT_EQUAL(-3, dataField.getRawData(98357952));
 }
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength(void)
@@ -241,6 +282,7 @@ int main(void)
     RUN_TEST(test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength);
 
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager);
+    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength);
     

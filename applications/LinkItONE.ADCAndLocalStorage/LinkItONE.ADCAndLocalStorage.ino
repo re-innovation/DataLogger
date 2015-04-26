@@ -72,19 +72,8 @@ static ADS1115 s_ADCs[] = {
 #define LED1_PIN (4)
 #define LED2_PIN (5)
 
-// There are 12 averages for voltage and current data
-#define V_AND_I_COUNT (12)
-
-#define FIELD_COUNT (V_AND_I_COUNT)
-
 #define ADC_READS_PER_SECOND (10)
-#define AVERAGING_PERIOD_SECONDS (30)
-
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
-
-// Medium term in-RAM data storage and remote storage
-#define STORE_TO_SD_EVERY_N_AVERAGES (1)
-#define STORE_TO_SD_INTERVAL_MS (STORE_TO_SD_EVERY_N_AVERAGES * AVERAGING_PERIOD_SECONDS * 1000)
 
 /*
  * APP_FatalError
@@ -162,32 +151,15 @@ void setup()
     delay(10000);
 
     Location_Setup(0);
-
-    FIELD_TYPE fieldTypes[] = {
-        VOLTAGE,
-        VOLTAGE,
-        VOLTAGE,
-        VOLTAGE,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        CURRENT,
-        TEMPERATURE_C,
-        TEMPERATURE_C,
-        TEMPERATURE_C
-    };
-  
+ 
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
     
     Settings_requireInt(DATA_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
 
-    APP_SD_ReadSettings("Datalogger.settings");
+    APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
+    APP_SD_ReadDataChannelSettings("Datalogger.channels.conf");
 
     int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
     int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);

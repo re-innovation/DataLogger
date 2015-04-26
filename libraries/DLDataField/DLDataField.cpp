@@ -61,25 +61,28 @@ static char const * _getTypeString(FIELD_TYPE type)
     	"Wind Direction" // DEGREES_DIRECTION		
 	};
 
-	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";
-	
+	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";	
 }
 
 /*
  * DataField Class Functions 
  */
 
-DataField::DataField(FIELD_TYPE fieldType, uint32_t length)
+DataField::DataField(FIELD_TYPE fieldType)
 {
  	m_fieldType = fieldType;
  	m_full = false;
- 	m_maxIndex = length - 1;
-
  	m_index[R] = 0;
     m_index[W] = 0;
+    m_maxIndex = 0;
 }
 
 DataField::~DataField() {}
+
+void DataField::setSize(uint32_t length)
+{
+ 	m_maxIndex = length - 1;
+}
 
 FIELD_TYPE DataField::getType(void)
 {

@@ -6,3 +6,6 @@
 *.mocked
 *.modified
 *.stackdump
+
+libraries/Datalogger
+libraries/*.conf

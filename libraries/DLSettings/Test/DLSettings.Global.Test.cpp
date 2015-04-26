@@ -19,7 +19,11 @@
  * Local Application Includes
  */
 
-#include "../DLSettings.h"
+#include "DLLocalStorage.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
+#include "DLSettings.h"
 
 /*
  * Unity Test Framework
@@ -31,6 +35,10 @@ void setUp(void)
 {
 	Settings_Init();
 }
+
+// Fake other settings init functions
+void Settings_InitDataChannels(void) {}
+void Settings_InitReader(void) {}
 
 static void test_GetString_ReturnsNULLIfNotSet(void)
 {
@@ -102,7 +110,7 @@ static void test_GetStringSettingName_ReturnsCorrectName(void)
 
 static void test_GetIntSettingName_ReturnsCorrectName(void)
 {
-	TEST_ASSERT_EQUAL_STRING("THINGSPEAK_UPLOAD_INTERVAL_SECS", Settings_getIntName(THINGSPEAK_UPLOAD_INTERVAL_SECS));
+	TEST_ASSERT_EQUAL_STRING("DATA_UPLOAD_INTERVAL_SECS", Settings_getIntName(DATA_UPLOAD_INTERVAL_SECS));
 }
 
 int main(void)

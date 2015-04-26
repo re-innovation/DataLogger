@@ -32,10 +32,22 @@
 #include "DLDataField.h"
 #include "DLUtility.h"
 
-NumericDataField::NumericDataField(FIELD_TYPE type, uint32_t N, uint32_t averagerN) : DataField(type, N)
+NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData) : DataField(type)
+{
+    m_conversionData = fieldData;
+}
+
+NumericDataField::~NumericDataField()
+{
+    delete[] m_data;
+}
+
+void NumericDataField::setDataSizes(uint32_t N, uint32_t averagerN)
 {
     if (N == 0 || averagerN == 0) { return; }
 
+    setSize(N);
+    
     m_data = new float[N];
     
     if (m_data)
@@ -46,15 +58,32 @@ NumericDataField::NumericDataField(FIELD_TYPE type, uint32_t N, uint32_t average
     m_averager = new Averager<int32_t>(averagerN);
 }
 
-NumericDataField::~NumericDataField()
-{
-    delete[] m_data;
-}
-
-float NumericDataField::getData(uint32_t index)
+float NumericDataField::getRawData(uint32_t index)
 {
     index = getRealReadIndex(index);
     return m_data[index];
+}
+
+float NumericDataField::getConvData(uint32_t index)
+{
+    float data = getRawData(index);
+
+    if (m_conversionData)
+    {
+        switch (m_fieldType)
+        {
+        case VOLTAGE:
+            data = CONV_VoltsFromRaw(data, (VOLTAGECHANNEL*)m_conversionData);
+            break;
+        case CURRENT:
+            data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return data;
 }
 
 void NumericDataField::storeData(int32_t data)

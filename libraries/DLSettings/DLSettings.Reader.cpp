@@ -28,6 +28,9 @@
  * Local Includes
  */
 
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLUtility.h"
@@ -43,7 +46,8 @@ static char const * const s_errorStrings[] = {
 	ERROR_STR_NO_NAME,
 	ERROR_STR_INVALID_INT,
 	ERROR_STR_NO_FILE,
-	ERROR_STR_NO_INTERFACE
+	ERROR_STR_NO_INTERFACE,
+	ERROR_STR_NO_MANAGER
 };
 
 static char s_errorBuffer[100];
@@ -116,6 +120,13 @@ static SETTINGS_READER_RESULT noInterfaceError(void)
 	return s_lastResult;
 }
 
+static SETTINGS_READER_RESULT noManagerError(void)
+{
+	s_lastResult = ERR_READER_NO_MANAGER;
+	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_MANAGER]);
+	return s_lastResult;
+}
+
 static SETTINGS_READER_RESULT noError(void)
 {
 	s_lastResult = ERR_READER_NONE;
@@ -127,7 +138,7 @@ static SETTINGS_READER_RESULT noError(void)
  * Public Functions
  */
 
-SETTINGS_READER_RESULT Settings_readFromFile(LocalStorageInterface * pInterface, char const * const filename)
+SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInterface, char const * const filename)
 {
 	char lineBuffer[100];
 
@@ -145,13 +156,58 @@ SETTINGS_READER_RESULT Settings_readFromFile(LocalStorageInterface * pInterface,
     while (!pInterface->endOfFile(hndl))
     {
         // Read from file into lineBuffer and strip CRLF endings
-        pInterface->readLine(hndl, lineBuffer, 50, true);
+        pInterface->readLine(hndl, lineBuffer, 100, true);
         if (ERR_READER_NONE != Settings_readFromString(lineBuffer))
         {
             return s_lastResult;
         }
     }
     pInterface->closeFile(hndl);
+    return noError();
+}
+
+/*
+ * Settings_readChannelsFromFile
+ *
+ * Read datachannel settings from the specified file
+ * and configure the datafield manager
+ *
+ * pManager - pointer to the application datafield manager
+ * pInterface - pointer to the application storage interface
+ * filename - filename to read
+ */
+SETTINGS_READER_RESULT Settings_readChannelsFromFile(
+	DataFieldManager * pManager, LocalStorageInterface * pInterface, char const * const filename)
+{
+    char lineBuffer[100];
+
+	if (!pManager)
+    {
+        return noManagerError();
+    }
+
+    if (!pInterface)
+    {
+        return noInterfaceError();
+    }
+
+    if (!pInterface->fileExists(filename))
+    {
+        return noFile(filename);
+    }
+    
+    uint8_t hndl = pInterface->openFile(filename, false);
+    while (!pInterface->endOfFile(hndl))
+    {
+        // Read from file into lineBuffer and strip CRLF endings
+        pInterface->readLine(hndl, lineBuffer, 100, true);
+        (void)Settings_parseDataChannelSetting(lineBuffer);
+    }
+
+    pInterface->closeFile(hndl);
+
+    Settings_SetupAllValidChannels(pManager);
+    
     return noError();
 }
 

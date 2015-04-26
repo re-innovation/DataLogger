@@ -22,7 +22,7 @@
 /* Define each int setting for the application */
 
 #define FOREACH_INTSET(INT) \
-    INT(THINGSPEAK_UPLOAD_INTERVAL_SECS) \
+    INT(DATA_UPLOAD_INTERVAL_SECS) \
     INT(DATA_AVERAGING_INTERVAL_SECS) \
     INT(DATA_STORAGE_INTERVAL_SECS) \
     INT(SERIAL_DATA_INTERVAL_SECS) \
@@ -56,7 +56,7 @@ typedef void (*PRINTFN)(char const * const);
 void Settings_InitGlobal(void);
     
 char const * Settings_getIntName(INTSETTING setting);
-int Settings_getInt(INTSETTING setting);
+int32_t Settings_getInt(INTSETTING setting);
 void Settings_setInt(INTSETTING setting, int set);
 bool Settings_intIsSet(INTSETTING setting);
 void Settings_resetInt(INTSETTING setting);

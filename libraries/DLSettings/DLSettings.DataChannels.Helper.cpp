@@ -21,6 +21,9 @@
  * Local Includes
  */
 
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLLocalStorage.h"
 #include "DLSettings.h"
 #include "DLUtility.h"

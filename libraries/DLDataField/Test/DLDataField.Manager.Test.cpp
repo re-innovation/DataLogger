@@ -21,8 +21,9 @@
  * Local Application Includes
  */
 
-#include "../DLDataField.h"
-#include "../DLDataField.Manager.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
 
 /*
  * Unity Test Framework
@@ -30,11 +31,23 @@
 
 #include "unity.h"
 
-DataFieldManager * s_manager;
+static DataFieldManager * s_manager;
+
+static VOLTAGECHANNEL s_voltageChannelSettings = {
+    .mvPerBit = 0.125f,
+    .R1 = 200000.0f,
+    .R2= 10000.0f,
+};
+
+static CURRENTCHANNEL s_currentChannelSettings = {
+    .mvPerBit = 0.125f,
+    .offset = 60.0f,
+    .mvPerAmp = 600.0f,
+};
 
 void setUp(void)
 {
-    s_manager = new DataFieldManager();
+    s_manager = new DataFieldManager(10, 10);
 }
 
 void test_dataFieldCountStartsAtZero(void)
@@ -53,7 +66,7 @@ void test_stringDataFieldCanBeAdded(void)
 
 void test_numericDataFieldCanBeAdded(void)
 {
-    NumericDataField * field = new NumericDataField(VOLTAGE, 10);
+    NumericDataField * field = new NumericDataField(VOLTAGE, &s_voltageChannelSettings);
     TEST_ASSERT_TRUE(s_manager->addField(field));
     TEST_ASSERT_EQUAL(1, s_manager->count());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
@@ -61,12 +74,12 @@ void test_numericDataFieldCanBeAdded(void)
 
 void test_getFieldsReturnsPointerToArrayOfFields(void)
 {
-    DataField * expected[6];
+    NumericDataField * expected[6];
 
     uint8_t i;
     for (i = 0; i < 6; ++i)
     {
-        expected[i] = new NumericDataField(VOLTAGE, 10);
+        expected[i] = new NumericDataField(VOLTAGE, &s_voltageChannelSettings);
         s_manager->addField(expected[i]);
     }
 
@@ -82,8 +95,8 @@ void test_getFieldsReturnsPointerToArrayOfFields(void)
 
 static void test_writeHeadersToBufferWritesCorrectFields(void)
 {
-    s_manager->addField( new NumericDataField(VOLTAGE, 1) );
-    s_manager->addField( new NumericDataField(CURRENT, 1) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
+    s_manager->addField( new NumericDataField(CURRENT, &s_currentChannelSettings) );
     s_manager->addField( new StringDataField(CARDINAL_DIRECTION, 3, 1) );
 
     char buffer[100];

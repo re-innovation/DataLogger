@@ -22,8 +22,10 @@
  * Local Includes
  */
 
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLLocalStorage.h"
-#include "DLDataField.Types.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"
 #include "DLUtility.h"
@@ -32,7 +34,19 @@
  * Private Variables
  */
 
-static CHANNEL s_channels[MAX_CHANNELS];
+static void * s_channels[MAX_CHANNELS];
+static FIELD_TYPE s_fieldTypes[MAX_CHANNELS];
+
+/*
+ * For each of the channels that can be stored,
+ * the bitfield stores a 1 if a setting has been set.
+ * For example, the VOLTAGECHANNEL needs mvPerBit (0x01),
+ * R1 (0x02) and R2 (0x04) settings.
+ * 
+ * If only R1 and mvPerBit are set, the value in the bitfield will be
+ * 0x03, not 0x07 and the field will not be considered complete.
+ */
+static uint8_t s_valuesSetBitFields[MAX_CHANNELS];
 
 static DATACHANNELERROR s_lastResult = ERR_DATA_CH_NONE;
 
@@ -90,18 +104,15 @@ static DATACHANNELERROR channelNotSetError(void)
 
 static void setupChannel(uint8_t ch, FIELD_TYPE type)
 {
-    s_channels[ch].type = type;
+    s_valuesSetBitFields[ch] = 0;
     switch(type)    
     {
     case VOLTAGE:
-        s_channels[ch].data = new VOLTAGECHANNEL();
-        ((VOLTAGECHANNEL*)s_channels[ch].data)->valuesSet[0] = false;
-        ((VOLTAGECHANNEL*)s_channels[ch].data)->valuesSet[1] = false;
+        s_channels[ch] = new VOLTAGECHANNEL();
         break;
     case CURRENT:
-        s_channels[ch].data = new CURRENTCHANNEL();
-        ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[0] = false;
-        ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[1] = false;
+        s_channels[ch] = new CURRENTCHANNEL();
+        
         break;
     default:
     case INVALID_TYPE:
@@ -109,38 +120,44 @@ static void setupChannel(uint8_t ch, FIELD_TYPE type)
     }
 }
 
-static bool voltageChannelIsValid(VOLTAGECHANNEL * channelData)
+static bool voltageChannelIsValid(uint8_t channel)
 {
-    return channelData->valuesSet[0] && channelData->valuesSet[1];
+    return s_valuesSetBitFields[channel] == 0x07; // Voltage needs three values set   
 }
 
-static bool currentChannelIsValid(CURRENTCHANNEL * channelData)
+static bool currentChannelIsValid(uint8_t channel)
 {
-    return channelData->valuesSet[0] && channelData->valuesSet[1];
+    return s_valuesSetBitFields[channel] == 0x07; // Current needs three values set   
 }
 
 static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName, char * pValueString)
 {
-    float resistance;
-    if (0 == strncmp(pSettingName, "r1", 2))
+    float setting;
+
+    bool settingParsedAsFloat = Setting_parseSettingAsFloat(&setting, pValueString);
+
+    if (0 == strncmp(pSettingName, "mvperbit", 8))
     {
-        if (Setting_parseSettingAsFloat(&resistance, pValueString))
-        {
-            ((VOLTAGECHANNEL*)s_channels[ch].data)->R1 = resistance;
-            ((VOLTAGECHANNEL*)s_channels[ch].data)->valuesSet[0] = true;
-            return noError();
-        }
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->mvPerBit = setting;
+        s_valuesSetBitFields[ch] |= 0x01;
+        return noError();
     }
 
+    if (0 == strncmp(pSettingName, "r1", 2))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->R1 = setting;
+        s_valuesSetBitFields[ch] |= 0x02;
+        return noError();
+    }
 
     if (0 == strncmp(pSettingName, "r2", 2))
     {
-        if (Setting_parseSettingAsFloat(&resistance, pValueString))
-        {
-            ((VOLTAGECHANNEL*)s_channels[ch].data)->R2 = resistance;
-            ((VOLTAGECHANNEL*)s_channels[ch].data)->valuesSet[1] = true;
-            return noError();
-        }
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->R2 = setting;
+        s_valuesSetBitFields[ch] |= 0x04;
+        return noError();
     }
 
     return unknownSettingError();
@@ -148,33 +165,32 @@ static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName
 
 static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName, char * pValueString)
 {
-    float value;
+    float setting;
+    
+    bool settingParsedAsFloat = Setting_parseSettingAsFloat(&setting, pValueString);
+    
+    if (0 == strncmp(pSettingName, "mvperbit", 8))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->mvPerBit = setting;
+        s_valuesSetBitFields[ch] |= 0x01;
+        return noError();
+    }
+    
     if (0 == strncmp(pSettingName, "offset", 6))
     {
-        if (Setting_parseSettingAsFloat(&value, pValueString))
-        {
-            ((CURRENTCHANNEL*)s_channels[ch].data)->offset = value;
-            ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[0] = true;
-            return noError();
-        }
-        else
-        {
-            return invalidSettingError();
-        }
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((CURRENTCHANNEL*)s_channels[ch])->offset = setting;
+        s_valuesSetBitFields[ch] |= 0x02;
+        return noError();
     }
 
     if (0 == strncmp(pSettingName, "mvperamp", 8))
     {
-        if (Setting_parseSettingAsFloat(&value, pValueString))
-        {
-            ((CURRENTCHANNEL*)s_channels[ch].data)->mvPerAmp = value;
-            ((CURRENTCHANNEL*)s_channels[ch].data)->valuesSet[1] = true;
-            return noError();
-        }
-        else
-        {
-            return invalidSettingError();
-        }
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((CURRENTCHANNEL*)s_channels[ch])->mvPerAmp = setting;
+        s_valuesSetBitFields[ch] |= 0x04;
+        return noError();
     }
 
     return unknownSettingError();
@@ -189,8 +205,8 @@ void Settings_InitDataChannels(void)
     uint8_t i;
     for (i = 0; i < MAX_CHANNELS; ++i)
     {
-        s_channels[i].type = INVALID_TYPE;
-        s_channels[i].data = NULL;
+        s_channels[i] = NULL;
+        s_valuesSetBitFields[i] = 0x00;
     }
 }
 
@@ -210,7 +226,7 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     bool success = true;
 
     // Split the string by '=' to get setting and name
-    success &= splitAndStripWhiteSpace((char*)lowercaseCopy, '=', &pSettingString, NULL, &pValueString, NULL);
+    success &= splitAndStripWhiteSpace(lowercaseCopy, '=', &pSettingString, NULL, &pValueString, NULL);
     if (!success) { return noEqualsError(); }
 
     // Split the setting to get channel and setting name
@@ -224,15 +240,15 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     if (0 == strncmp(pChannelSettingString, "type", 4))
     {
         // Try to interpret setting as a channel type
-        FIELD_TYPE type = Setting_parseSettingAsType(pValueString);
-        if (type == INVALID_TYPE) { return unknownTypeError(); }
+        s_fieldTypes[ch] = Setting_parseSettingAsType(pValueString);
+        if (s_fieldTypes[ch] == INVALID_TYPE) { return unknownTypeError(); }
 
-        setupChannel(ch, type);
+        setupChannel(ch, s_fieldTypes[ch]);
         return noError();
     }
 
     /* If processing got this far, the setting needs to be interpreted based on the channel datatype */
-    switch (s_channels[ch].type)
+    switch (s_fieldTypes[ch])
     {
     case VOLTAGE:
         return tryParseAsVoltageSetting(ch, pChannelSettingString, pValueString);
@@ -245,22 +261,44 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     }
 }
 
+void Settings_SetupAllValidChannels(DataFieldManager * pManager)
+{
+    uint8_t ch;
+    NumericDataField * field;
+
+    for (ch = 0; ch < MAX_CHANNELS; ch++)
+    {
+        if (Settings_ChannelSettingIsValid(ch))
+        {
+            switch(s_fieldTypes[ch])
+            {
+            case VOLTAGE:
+            case CURRENT:
+                field = new NumericDataField(s_fieldTypes[ch], s_channels[ch]);
+                pManager->addField(field);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
 FIELD_TYPE Settings_GetChannelType(uint8_t channel)
 {
-    return (channel < MAX_CHANNELS) ? s_channels[channel].type : INVALID_TYPE;
+    return (channel < MAX_CHANNELS) ? s_fieldTypes[channel] : INVALID_TYPE;
 }
 
 bool Settings_ChannelSettingIsValid(uint8_t channel)
 {
-    if (s_channels[channel].type == INVALID_TYPE) { return false; }
-    if (s_channels[channel].data == NULL) { return false; }
+    if (s_fieldTypes[channel] == INVALID_TYPE) { return false; }
 
-    switch(s_channels[channel].type)
+    switch(s_fieldTypes[channel])
     {
     case VOLTAGE:
-        return voltageChannelIsValid((VOLTAGECHANNEL*)s_channels[channel].data);
+        return voltageChannelIsValid(channel);
     case CURRENT:
-        return currentChannelIsValid((CURRENTCHANNEL*)s_channels[channel].data);
+        return currentChannelIsValid(channel);
     default:
         return false;
     }
@@ -268,12 +306,12 @@ bool Settings_ChannelSettingIsValid(uint8_t channel)
 
 VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel)
 {
-    if (s_channels[channel].type != VOLTAGE) { return NULL; }
-    return (VOLTAGECHANNEL*)s_channels[channel].data;
+    if (s_fieldTypes[channel] != VOLTAGE) { return NULL; }
+    return (VOLTAGECHANNEL*)s_channels[channel];
 }
 
 CURRENTCHANNEL * Settings_GetDataAsCurrent(uint8_t channel)
 {
-    if (s_channels[channel].type != CURRENT) { return NULL; }
-    return (CURRENTCHANNEL*)s_channels[channel].data;
+    if (s_fieldTypes[channel] != CURRENT) { return NULL; }
+    return (CURRENTCHANNEL*)s_channels[channel];
 }

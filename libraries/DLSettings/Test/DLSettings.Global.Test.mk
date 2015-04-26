@@ -1,10 +1,7 @@
 SRC_FILES += DLSettings/DLSettings.cpp
-SRC_FILES += DLSettings/DLSettings.DataChannels.cpp
-SRC_FILES += DLSettings/DLSettings.Reader.cpp
-SRC_FILES += DLSettings/DLSettings.DataChannels.Helper.cpp
 SRC_FILES += DLUtility/DLUtility.Strings.cpp
 
-INC_DIRS += -IDLUtility -IDLDataField
+INC_DIRS += -IDLUtility -IDLDataField -IDLLocalStorage
 
 local_setup: ;
 

@@ -33,8 +33,10 @@
 #include "DLDataField.Manager.h"
 #include "DLUtility.h"
 
-DataFieldManager::DataFieldManager()
+DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 {
+    m_dataSize = dataSize;
+    m_averagerSize = averagerSize;
     m_count = 0;
 
     uint8_t i = 0;
@@ -49,7 +51,19 @@ uint8_t DataFieldManager::count()
     return m_count;
 }
 
-bool DataFieldManager::addField(DataField * field)
+bool DataFieldManager::addField(NumericDataField * field)
+{
+    if (!field) { return false; }
+
+    if (m_count == MAX_FIELDS) { return false; }
+
+    field->setDataSizes(m_dataSize, m_averagerSize);
+
+    m_fields[m_count++] = field;
+    return true;
+}
+
+bool DataFieldManager::addField(StringDataField * field)
 {
     if (!field) { return false; }
 

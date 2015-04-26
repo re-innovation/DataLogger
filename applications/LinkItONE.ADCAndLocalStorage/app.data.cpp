@@ -39,7 +39,6 @@
 
 #include "app.h"
 #include "app.data.h"
-#include "app.data_conversion.h"
 
 #include "TaskAction.h"
 
@@ -49,22 +48,6 @@
 
 static DataFieldManager * s_dataManager;
 static DataFieldManager * s_dataDebugManager;
-
-static CONVERSION_FN s_conversionFunctions[] = 
-{
-    channel01Conversion,
-    channel02Conversion,
-    channel03Conversion,
-    channel04Conversion,
-    channel05Conversion,
-    channel06Conversion,
-    channel07Conversion,
-    channel08Conversion,
-    channel09Conversion,
-    channel10Conversion,
-    channel11Conversion,
-    channel12Conversion,
-};
 
 static bool s_debugOut = true;
 
@@ -97,17 +80,8 @@ static void debugTaskFn(void)
 
     for (i = 0; i < fieldCount; i++)
     {
-        float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getData(0);
-        float toShow;
-
-        if (s_conversionFunctions[i])
-        {
-            toShow = s_conversionFunctions[i](average); 
-        }
-        else
-        {
-            toShow = average;
-        }
+        float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(0);
+        float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(0);
 
         Serial.print(toShow);
         Serial.print("(");

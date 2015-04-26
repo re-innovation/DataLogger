@@ -230,9 +230,9 @@ void APP_SD_WriteEntryIDToOpenFile(void)
     }
 }*/
 
-void APP_SD_ReadSettings(char const * const filename)
+void APP_SD_ReadGlobalSettings(char const * const filename)
 {
-    SETTINGS_READER_RESULT result = Settings_readFromFile(s_sdCard, filename);
+    SETTINGS_READER_RESULT result = Settings_readGlobalFromFile(s_sdCard, filename);
 
     if (result != ERR_READER_NONE)
     {
@@ -255,6 +255,11 @@ void APP_SD_ReadSettings(char const * const filename)
     {
         APP_SetDebugModules(Settings_getString(DEBUG_MODULES));
     }
+}
+
+void APP_SD_ReadDataChannelSettings(char const * const filename)
+{
+    SETTINGS_READER_RESULT result = Settings_readChannelsFromFile(s_sdCard, filename);
 }
 
 void APP_SD_EnableDebugging(void)

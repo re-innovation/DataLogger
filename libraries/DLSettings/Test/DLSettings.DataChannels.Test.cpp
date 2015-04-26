@@ -19,7 +19,10 @@
  * Local Application Includes
  */
 
-#include "../DLSettings.h"
+#include "DLLocalStorage.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.h"
+#include "DLSettings.h"
  
 /*
  * Unity Test Framework
@@ -139,10 +142,14 @@ void test_ValidVoltageSettingsAreParsedCorrectly(void)
     TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.R2 = 10000.0"));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+
+    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.mvperbit = 0.125"));
     TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
 
     TEST_ASSERT_EQUAL_FLOAT(18300.0, Settings_GetDataAsVoltage(1)->R1);
     TEST_ASSERT_EQUAL_FLOAT(10000.0, Settings_GetDataAsVoltage(1)->R2);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsVoltage(1)->mvPerBit);
 }
 
 void test_ValidCurrentSettingsAreParsedCorrectly(void)
@@ -155,10 +162,14 @@ void test_ValidCurrentSettingsAreParsedCorrectly(void)
     TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.offset = 12"));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+
+    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.mvperbit = 0.125"));
     TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
 
     TEST_ASSERT_EQUAL_FLOAT(400.0, Settings_GetDataAsCurrent(1)->mvPerAmp);
     TEST_ASSERT_EQUAL_FLOAT(12.0, Settings_GetDataAsCurrent(1)->offset);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsCurrent(1)->mvPerBit);
 }
 
 int main(void)

@@ -3,7 +3,7 @@ CC = g++
 CFLAGS=-Wall -Wextra -Werror -g
 
 SRC_FILES=$(UNITY_PATH)/unity.c
-INC_DIRS=-I$(UNITY_PATH) -IDLTest
+INC_DIRS=-I$(UNITY_PATH) -IDLTest -I$(TEST_MODULE)
 SYMBOLS=-DTEST -DDL_PATH="."
 
 ifdef TEST_MODULE
