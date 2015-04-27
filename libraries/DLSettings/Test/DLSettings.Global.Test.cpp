@@ -21,9 +21,9 @@
 
 #include "DLLocalStorage.h"
 #include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLDataField.Manager.h"
+#include "DLDataField.Types.h"
 #include "DLSettings.h"
+#include "DLSettings.Global.h"
 
 /*
  * Unity Test Framework
@@ -35,10 +35,6 @@ void setUp(void)
 {
 	Settings_Init();
 }
-
-// Fake other settings init functions
-void Settings_InitDataChannels(void) {}
-void Settings_InitReader(void) {}
 
 static void test_GetString_ReturnsNULLIfNotSet(void)
 {

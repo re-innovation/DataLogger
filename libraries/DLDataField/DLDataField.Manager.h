@@ -15,6 +15,8 @@ class DataFieldManager
 
         uint32_t writeHeadersToBuffer(char * buffer, uint8_t bufferLength);
         
+        void setupAllValidChannels(void);
+
     private:
         DataField * m_fields[MAX_FIELDS];
         uint8_t m_count;

@@ -21,8 +21,9 @@
  * Local Application Includes
  */
 
-#include "../../DLUtility/DLUtility.Averager.h"
-#include "../DLDataField.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.Types.h"
+#include "DLDataField.h"
 
 /*
  * Unity Test Framework

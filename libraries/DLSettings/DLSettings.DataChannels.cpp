@@ -22,10 +22,7 @@
  * Local Includes
  */
 
-#include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLDataField.Manager.h"
-#include "DLLocalStorage.h"
+#include "DLDataField.Types.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"
 #include "DLUtility.h"
@@ -261,29 +258,6 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     }
 }
 
-void Settings_SetupAllValidChannels(DataFieldManager * pManager)
-{
-    uint8_t ch;
-    NumericDataField * field;
-
-    for (ch = 0; ch < MAX_CHANNELS; ch++)
-    {
-        if (Settings_ChannelSettingIsValid(ch))
-        {
-            switch(s_fieldTypes[ch])
-            {
-            case VOLTAGE:
-            case CURRENT:
-                field = new NumericDataField(s_fieldTypes[ch], s_channels[ch]);
-                pManager->addField(field);
-                break;
-            default:
-                break;
-            }
-        }
-    }
-}
-
 FIELD_TYPE Settings_GetChannelType(uint8_t channel)
 {
     return (channel < MAX_CHANNELS) ? s_fieldTypes[channel] : INVALID_TYPE;
@@ -304,6 +278,11 @@ bool Settings_ChannelSettingIsValid(uint8_t channel)
     }
 }
 
+void * Settings_GetData(uint8_t channel)
+{
+    return s_channels[channel];
+}
+
 VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel)
 {
     if (s_fieldTypes[channel] != VOLTAGE) { return NULL; }
@@ -314,4 +293,9 @@ CURRENTCHANNEL * Settings_GetDataAsCurrent(uint8_t channel)
 {
     if (s_fieldTypes[channel] != CURRENT) { return NULL; }
     return (CURRENTCHANNEL*)s_channels[channel];
+}
+
+uint32_t Settings_GetMaxChannels(void)
+{
+    return (uint32_t)MAX_CHANNELS;
 }

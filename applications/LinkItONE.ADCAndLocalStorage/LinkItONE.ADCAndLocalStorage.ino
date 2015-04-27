@@ -45,9 +45,15 @@
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
 #include "DLLocation.h"
-#include "DLSettings.h"
-#include "DLSettings.Reader.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
+#include "DLDataField.Manager.h"
+#include "DLSettings.h"
+#include "DLSettings.Global.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
+#include "DLSettings.Reader.h"
+#include "DLSettings.DataChannels.h"
 #include "DLSensor.ADS1x1x.h"
 #include "DLSensor.LinkItONE.h"
 #include "DLSensor.Thermistor.h"
@@ -136,8 +142,11 @@ void readFromADCsTaskFn(void)
         for (ch = 0; ch < 4; ch++)
         {
             field = (adc*4)+ch;
-            uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
-            APP_DATA_NewData(data, field);
+            if (Settings_ChannelSettingIsValid(field))
+            {
+                uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
+                APP_DATA_NewData(data, field);
+            }
         }
     }
 }
@@ -159,17 +168,16 @@ void setup()
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
 
     APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
-    APP_SD_ReadDataChannelSettings("Datalogger.channels.conf");
-
+    
     int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
     int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);
 
     APP_DATA_Setup(
-        averaging_interval, // seconds to average readings over
-        FIELD_COUNT, // Number of fields to create
+        averaging_interval, // Seconds to average readings over
         ADC_READS_PER_SECOND, // Number of reads per second per field
         storage_interval, // Number of seconds between SD card writes
-        fieldTypes);
+        "Datalogger.channels.conf" // Filename to read channel settings from
+        );
 
     pinMode(LED1_PIN, OUTPUT);
     pinMode(LED2_PIN, OUTPUT);

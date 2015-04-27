@@ -20,10 +20,11 @@
  */
 
 #include "DLLocalStorage.h"
-#include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLDataField.Manager.h"
 #include "DLSettings.h"
+#include "DLSettings.Global.h"
+#include "DLSettings.Reader.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
 
 /*
  * Unity Test Framework
@@ -33,7 +34,8 @@
 
 void setUp(void)
 {
-  Settings_Init();
+  Settings_InitGlobal();
+  Settings_InitReader();
 }
 
 void test_ReadingFromNULLStringReturnsCorrectError(void)

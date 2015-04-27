@@ -27,12 +27,17 @@
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "DLSettings.h"
-#include "DLSettings.Reader.h"
+#include "DLSettings.Global.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
+#include "DLSettings.DataChannels.Reader.h"
 
 /*
  * Application Includes
@@ -257,9 +262,12 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
     }
 }
 
-void APP_SD_ReadDataChannelSettings(char const * const filename)
+void APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
 {
-    SETTINGS_READER_RESULT result = Settings_readChannelsFromFile(s_sdCard, filename);
+    if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
+    {
+        APP_FatalError(Settings_getLastReaderResultText());
+    }
 }
 
 void APP_SD_EnableDebugging(void)

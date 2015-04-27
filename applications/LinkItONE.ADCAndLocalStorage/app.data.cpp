@@ -27,20 +27,22 @@
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
-
+#include "TaskAction.h"
+ 
 /*
  * Application Includes
  */
 
 #include "app.h"
 #include "app.data.h"
+#include "app.sd_storage.h"
 
-#include "TaskAction.h"
 
 /*
  * Applications Data
@@ -102,11 +104,10 @@ static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
  * Public Functions
  */
 
-void APP_DATA_Setup(unsigned long averagingInterval,
-    uint16_t fieldCount, uint16_t valuesPerSecond, uint16_t storageInterval, FIELD_TYPE fieldTypes[])
-{
-    uint8_t i = 0;
-    
+void APP_DATA_Setup(
+    unsigned long averagingInterval, uint16_t valuesPerSecond,
+    uint16_t storageInterval, char const * const filename)
+{    
     if (averagingInterval == 0) { APP_FatalError("Averaging interval is 0 seconds!"); }
 
     if (averagingInterval > storageInterval)
@@ -119,30 +120,29 @@ void APP_DATA_Setup(unsigned long averagingInterval,
 
     // Create two data managers, one for actual data and one for debugging
     
-    s_dataManager = new DataFieldManager();
-    s_dataDebugManager = new DataFieldManager();
+    s_dataManager = new DataFieldManager(numberOfAveragesToStore, averagerSize);
+    s_dataDebugManager = new DataFieldManager(1, averagerSize);
 
     if (!s_dataManager) { APP_FatalError("Failed to create datafield manager"); }
     if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager"); }
 
-    for (i = 0; i < fieldCount; ++i)
+    APP_SD_ReadDataChannelSettings(s_dataManager, filename);
+    APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
+
+    uint32_t count = s_dataManager->count();
+    Serial.print("Datamanager created with ");
+    Serial.print(count);
+    Serial.println(" fields.");
+
+    uint32_t i;
+
+    for (i = 0; i < count; i++)
     {
-        // Create a new numeric field and add to the manager
-        DataField * field = new NumericDataField(fieldTypes[i], numberOfAveragesToStore, averagerSize);
-        DataField * debugField = new NumericDataField(fieldTypes[i], 1, fieldCount);
-
-        if (field) {
-            s_dataManager->addField(field);
-        } else {
-            APP_FatalError("Failed to create datafield");
-        }
-
-        if (debugField) {
-            s_dataDebugManager->addField(debugField);
-        } else {
-            APP_FatalError("Failed to create debug datafield");
-        }
-
+        Serial.print("Field ");
+        Serial.print(i);
+        Serial.print(" type is ");
+        Serial.print(s_dataManager->getField(i)->getTypeString());
+        Serial.println(".");
     }
 
     if (s_debugOut)
@@ -155,8 +155,24 @@ void APP_DATA_Setup(unsigned long averagingInterval,
 
 void APP_DATA_NewData(int32_t data, uint16_t field)
 {
-    ((NumericDataField*)s_dataManager->getField(field))->storeData( data );
-    ((NumericDataField*)s_dataDebugManager->getField(field))->storeData( data );
+    char errBuffer[64];
+    NumericDataField* pField;
+
+    pField =  (NumericDataField*)(s_dataManager->getField(field));
+    if (!pField)
+    {
+        sprintf(errBuffer, "Attempt to add data to non-existent field %d", field);
+        APP_FatalError(errBuffer);
+    }
+    pField->storeData( data );
+    
+    pField = (NumericDataField*)(s_dataDebugManager->getField(field));
+    if (!pField)
+    {
+        sprintf(errBuffer, "Attempt to add data to non-existent debug field %d", field);
+        APP_FatalError(errBuffer);
+    }
+    pField->storeData( data );
 }
 
 uint16_t APP_DATA_GetNumberOfFields(void)

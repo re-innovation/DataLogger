@@ -19,11 +19,10 @@
  * Local Application Includes
  */
 
-#include "DLLocalStorage.h"
-#include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLSettings.h"
- 
+#include "DLDataField.Types.h"
+#include "DLSettings.DataChannels.h"
+#include "DLSettings.DataChannels.Helper.h"
+
 /*
  * Unity Test Framework
  */
@@ -32,22 +31,22 @@
 
 void setUp(void)
 {
-    Settings_Init();
+    Settings_InitDataChannels();
 }
 
 void test_MinusOneIsReturnedFromInvalidChannelNumber(void)
 {
     TEST_ASSERT_EQUAL(-1, Settings_getChannelFromSetting("Channel")); // No channel number
     TEST_ASSERT_EQUAL(-1, Settings_getChannelFromSetting("Chanel0")); // Misspelt "channel"
+    TEST_ASSERT_EQUAL(-1, Settings_getChannelFromSetting("Channel0")); // Channel 0 is not valid
     TEST_ASSERT_EQUAL(-1, Settings_getChannelFromSetting("Channel-3")); // Negative number
 }
 
 void test_CorrectChannelNumberIsReturnedFromSetting(void)
 {
-    TEST_ASSERT_EQUAL(0, Settings_getChannelFromSetting("Channel0")); 
-    TEST_ASSERT_EQUAL(1, Settings_getChannelFromSetting("channel1"));
-    TEST_ASSERT_EQUAL(2, Settings_getChannelFromSetting("cHannel2"));
-    TEST_ASSERT_EQUAL(3, Settings_getChannelFromSetting("CH3")); // CH can be used as shorthand for channel
+    TEST_ASSERT_EQUAL(0, Settings_getChannelFromSetting("channel1"));
+    TEST_ASSERT_EQUAL(1, Settings_getChannelFromSetting("cHannel2"));
+    TEST_ASSERT_EQUAL(2, Settings_getChannelFromSetting("CH3")); // CH can be used as shorthand for channel
 }
 
 void test_CorrectChannelTypeIsMatchedFromSetting(void)
@@ -135,41 +134,41 @@ void test_ValidSettingWithoutChannelTypeReturnChannelTypeNotSetError(void)
 void test_ValidVoltageSettingsAreParsedCorrectly(void)
 {
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("CH1.Type =Voltage"));
-    TEST_ASSERT_EQUAL(VOLTAGE, Settings_GetChannelType(1));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_EQUAL(VOLTAGE, Settings_GetChannelType(0));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("cH1.r1= 18300.0"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.R2 = 10000.0"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.mvperbit = 0.125"));
-    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(0));
 
-    TEST_ASSERT_EQUAL_FLOAT(18300.0, Settings_GetDataAsVoltage(1)->R1);
-    TEST_ASSERT_EQUAL_FLOAT(10000.0, Settings_GetDataAsVoltage(1)->R2);
-    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsVoltage(1)->mvPerBit);
+    TEST_ASSERT_EQUAL_FLOAT(18300.0, Settings_GetDataAsVoltage(0)->R1);
+    TEST_ASSERT_EQUAL_FLOAT(10000.0, Settings_GetDataAsVoltage(0)->R2);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsVoltage(0)->mvPerBit);
 }
 
 void test_ValidCurrentSettingsAreParsedCorrectly(void)
 {
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.Type =Current"));
-    TEST_ASSERT_EQUAL(CURRENT, Settings_GetChannelType(1));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_EQUAL(CURRENT, Settings_GetChannelType(0));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.mvperAmp= 400"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.offset = 12"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
 
     TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.mvperbit = 0.125"));
-    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
+    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(0));
 
-    TEST_ASSERT_EQUAL_FLOAT(400.0, Settings_GetDataAsCurrent(1)->mvPerAmp);
-    TEST_ASSERT_EQUAL_FLOAT(12.0, Settings_GetDataAsCurrent(1)->offset);
-    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsCurrent(1)->mvPerBit);
+    TEST_ASSERT_EQUAL_FLOAT(400.0, Settings_GetDataAsCurrent(0)->mvPerAmp);
+    TEST_ASSERT_EQUAL_FLOAT(12.0, Settings_GetDataAsCurrent(0)->offset);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsCurrent(0)->mvPerBit);
 }
 
 int main(void)

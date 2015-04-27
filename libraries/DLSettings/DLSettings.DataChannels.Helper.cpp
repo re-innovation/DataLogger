@@ -21,10 +21,7 @@
  * Local Includes
  */
 
-#include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLDataField.Manager.h"
-#include "DLLocalStorage.h"
+#include "DLDataField.Types.h"
 #include "DLSettings.h"
 #include "DLUtility.h"
 
@@ -79,9 +76,11 @@ int8_t Settings_getChannelFromSetting(char const * const setting)
         channel = getChannel(lcaseSetting+2);      
     }
 
-    if (channel < 0) { return -1; }
+    if (channel < 1) { return -1; }
 
-    return channel;
+    // Channels in file are CH1, CH2, CH3..., which correspond to indexes 0, 1, 2..
+    // i.e. file is one-indexed, code is zero-indexed.
+    return channel - 1; 
 }
 
 bool Setting_getChannelSettingStr(char * buffer, char const * const setting)

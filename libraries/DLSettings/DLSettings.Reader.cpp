@@ -28,30 +28,13 @@
  * Local Includes
  */
 
-#include "DLUtility.Averager.h"
-#include "DLDataField.h"
-#include "DLDataField.Manager.h"
 #include "DLLocalStorage.h"
 #include "DLSettings.h"
+#include "DLSettings.Global.h"
+#include "DLSettings.Reader.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
 #include "DLUtility.h"
-
-/*
- * Private Variables
- */
-
-static char const * const s_errorStrings[] = {
-	"", 
-	ERROR_STR_NO_STRING,
-	ERROR_STR_NO_EQUALS,
-	ERROR_STR_NO_NAME,
-	ERROR_STR_INVALID_INT,
-	ERROR_STR_NO_FILE,
-	ERROR_STR_NO_INTERFACE,
-	ERROR_STR_NO_MANAGER
-};
-
-static char s_errorBuffer[100];
-static SETTINGS_READER_RESULT s_lastResult = ERR_READER_NONE;
 
 static bool s_intSettingIsRequired[INT_SETTINGS_COUNT];
 static bool s_stringSettingIsRequired[INT_SETTINGS_COUNT];
@@ -78,61 +61,6 @@ static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 	return true;
 }
 
-static SETTINGS_READER_RESULT noStringError(void)
-{
-	s_lastResult = ERR_READER_NO_STRING;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_STRING]);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noEqualsError(void)
-{
-	s_lastResult = ERR_READER_NO_EQUALS;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_EQUALS]);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noNameError(char * pName)
-{
-	s_lastResult = ERR_READER_NO_NAME;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_NAME], pName);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT invalidIntError(char * pName, char * pSetting)
-{
-	s_lastResult = ERR_READER_INVALID_INT;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_INVALID_INT], pSetting, pName);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noFile(char const * pFilename)
-{
-	s_lastResult = ERR_READER_NO_FILE;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_FILE], pFilename);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noInterfaceError(void)
-{
-	s_lastResult = ERR_READER_NO_INTERFACE;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_INTERFACE]);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noManagerError(void)
-{
-	s_lastResult = ERR_READER_NO_MANAGER;
-	sprintf(s_errorBuffer, s_errorStrings[ERR_READER_NO_MANAGER]);
-	return s_lastResult;
-}
-
-static SETTINGS_READER_RESULT noError(void)
-{
-	s_lastResult = ERR_READER_NONE;
-	s_errorBuffer[0] = '\0';
-	return s_lastResult;
-}
 
 /*
  * Public Functions
@@ -157,57 +85,11 @@ SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInte
     {
         // Read from file into lineBuffer and strip CRLF endings
         pInterface->readLine(hndl, lineBuffer, 100, true);
-        if (ERR_READER_NONE != Settings_readFromString(lineBuffer))
-        {
-            return s_lastResult;
-        }
-    }
-    pInterface->closeFile(hndl);
-    return noError();
-}
-
-/*
- * Settings_readChannelsFromFile
- *
- * Read datachannel settings from the specified file
- * and configure the datafield manager
- *
- * pManager - pointer to the application datafield manager
- * pInterface - pointer to the application storage interface
- * filename - filename to read
- */
-SETTINGS_READER_RESULT Settings_readChannelsFromFile(
-	DataFieldManager * pManager, LocalStorageInterface * pInterface, char const * const filename)
-{
-    char lineBuffer[100];
-
-	if (!pManager)
-    {
-        return noManagerError();
-    }
-
-    if (!pInterface)
-    {
-        return noInterfaceError();
-    }
-
-    if (!pInterface->fileExists(filename))
-    {
-        return noFile(filename);
-    }
-    
-    uint8_t hndl = pInterface->openFile(filename, false);
-    while (!pInterface->endOfFile(hndl))
-    {
-        // Read from file into lineBuffer and strip CRLF endings
-        pInterface->readLine(hndl, lineBuffer, 100, true);
-        (void)Settings_parseDataChannelSetting(lineBuffer);
+        SETTINGS_READER_RESULT res = Settings_readFromString(lineBuffer);
+        if (res != ERR_READER_NONE) { return res; }
     }
 
     pInterface->closeFile(hndl);
-
-    Settings_SetupAllValidChannels(pManager);
-    
     return noError();
 }
 
@@ -272,21 +154,8 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 	return noNameError(settingNameCopy);
 }
 
-SETTINGS_READER_RESULT Settings_getLastReaderResult(void)
-{
-	return s_lastResult;
-}
 
-char const * Settings_getLastReaderResultText(void)
-{
-	return s_errorBuffer;
-}
-
-void Settings_InitReader(void)
-{
-	s_lastResult = ERR_READER_NONE;
-	s_errorBuffer[0] = '\0';
-}
+void Settings_InitReader(void) {}
 
 void Settings_requireInt(INTSETTING setting)
 {

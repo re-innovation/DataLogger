@@ -29,8 +29,10 @@
  */
 
 #include "DLUtility.Averager.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
+#include "DLSettings.DataChannels.h"
 #include "DLUtility.h"
 
 DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
@@ -103,4 +105,34 @@ uint32_t DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLen
     headerAccumulator.writeString("\r\n");
 
     return headerAccumulator.length();
+}
+
+void DataFieldManager::setupAllValidChannels(void)
+{
+    uint8_t ch;
+    NumericDataField * field;
+    FIELD_TYPE type;
+    void * data;
+
+    uint32_t maxChannels = Settings_GetMaxChannels();
+
+    for (ch = 0; ch < maxChannels; ch++)
+    {
+        if (Settings_ChannelSettingIsValid(ch))
+        {
+            type = Settings_GetChannelType(ch);
+            data = Settings_GetData(ch);
+
+            switch(type)
+            {
+            case VOLTAGE:
+            case CURRENT:
+                field = new NumericDataField(type, data);
+                addField(field);
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }

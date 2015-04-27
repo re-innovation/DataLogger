@@ -26,13 +26,15 @@ typedef enum datachannelerror DATACHANNELERROR;
  
 void Settings_InitDataChannels(void);
 
-void Settings_SetupAllValidChannels(DataFieldManager * pManager);
 DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting);
 
 FIELD_TYPE Settings_GetChannelType(uint8_t channel);
 bool Settings_ChannelSettingIsValid(uint8_t channel);
 
+void * Settings_GetData(uint8_t channel);
 VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel);
 CURRENTCHANNEL * Settings_GetDataAsCurrent(uint8_t channel);
+
+uint32_t Settings_GetMaxChannels(void);
 
 #endif
