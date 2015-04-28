@@ -208,8 +208,6 @@ void readFromADCsTaskFn(void)
             }
         }
     }
-    // Count how much new data is stored
-    APP_DATA_IncrementCounts();
 }
 
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
@@ -236,7 +234,7 @@ void remoteUploadTaskFn(void)
 
     uint16_t toUpload = APP_DATA_GetToUploadCount();
     int32_t i;
-    for (i = toUpload-1; i >= 0; ++i)
+    for (i = toUpload-1; i >= 0; --i)
     {    
         updateUploadData(i);
         

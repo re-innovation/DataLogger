@@ -1,6 +1,9 @@
 #ifndef _DATA_FIELD_H_
 #define _DATA_FIELD_H_
 
+// A datafield should return this value if data is requested when none exists
+#define DATAFIELD_NO_DATA_VALUE (float)(0xFFFFFFFF)
+
 class DataField
 {
     public:
@@ -11,14 +14,24 @@ class DataField
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
 
+        uint32_t length(void);
+        void removeOldest(void);
+
     protected:
 
-        void incrementIndexes(void);
-        uint32_t getRealReadIndex(uint32_t requestedIndex);
+        //void incrementIndexes(void);
+        void pop(void);
+        void prePush(void);
+        void postPush(void);
+        bool full(void);
+
+        uint32_t getTailIndex(void);
+
+        //uint32_t getRealReadIndex(uint32_t requestedIndex);
+
         uint32_t getWriteIndex(void);
         
         FIELD_TYPE m_fieldType;
-        bool m_full; // Set to true when buffer is first filled
         uint32_t m_index[2];
         uint32_t m_maxIndex;
 
@@ -38,9 +51,10 @@ class NumericDataField : public DataField
 
         void storeData(int32_t data);
 
-        float getRawData(uint32_t index);
-        float getConvData(uint32_t index);
-        void getDataAsString(char * buf, char const * const fmt, uint8_t index);
+        float getRawData(bool alsoRemove);
+        float getConvData(bool alsoRemove);
+        void getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove);
+        void getConvDataAsString(char * buf, char const * const fmt, bool alsoRemove);
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
@@ -62,8 +76,8 @@ class StringDataField : public DataField
         ~StringDataField();
 
         void storeData(char const * data);
-        char * getData(uint32_t index);
-        void copy(char * buf, uint32_t index);
+        char * getData(bool alsoRemove);
+        void copy(char * buf, bool alsoRemove);
 
         bool isString(void) { return true; }
         bool isNumeric(void) { return false; }

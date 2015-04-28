@@ -59,15 +59,23 @@ void NumericDataField::setDataSizes(uint32_t N, uint32_t averagerN)
     m_averager = new Averager<int32_t>(averagerN);
 }
 
-float NumericDataField::getRawData(uint32_t index)
+float NumericDataField::getRawData(bool alsoRemove)
 {
-    index = getRealReadIndex(index);
-    return m_data[index];
+    if (length() > 0)
+    {
+        float data = m_data[ getTailIndex() ];
+        if (alsoRemove) { pop(); }
+        return data;
+    }
+    else
+    {
+        return DATAFIELD_NO_DATA_VALUE;
+    }
 }
 
-float NumericDataField::getConvData(uint32_t index)
+float NumericDataField::getConvData(bool alsoRemove)
 {
-    float data = getRawData(index);
+    float data = getRawData(alsoRemove);
 
     if (m_conversionData)
     {
@@ -92,16 +100,23 @@ void NumericDataField::storeData(int32_t data)
     m_averager->newData(data);
     if (m_averager->full())
     {
+        prePush();
         m_data[getWriteIndex()] = (float)m_averager->getFloatAverage();
-        incrementIndexes();
+        postPush();
         m_averager->reset(NULL);
     }
 }
 
-void NumericDataField::getDataAsString(char * buf, char const * const fmt, uint8_t index)
+void NumericDataField::getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove)
 {
-    index = getRealReadIndex(index);
-    sprintf(buf, fmt, m_data[index]); // Write data point to buffer
+    float data = getRawData(alsoRemove);
+    sprintf(buf, fmt, data); // Write data point to buffer
+}
+
+void NumericDataField::getConvDataAsString(char * buf, char const * const fmt, bool alsoRemove)
+{
+    float data = getConvData(alsoRemove);
+    sprintf(buf, fmt, data); // Write data point to buffer
 }
 
 #ifdef TEST

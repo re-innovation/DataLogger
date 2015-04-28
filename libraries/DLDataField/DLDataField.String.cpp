@@ -65,18 +65,22 @@ StringDataField::~StringDataField()
 
 void StringDataField::storeData(char const * data)
 {
+    prePush();
     strncpy_safe(m_data[getWriteIndex()], data, m_maxLength);
-    incrementIndexes();
+    postPush();
 }
 
-char * StringDataField::getData(uint32_t index)
+char * StringDataField::getData(bool alsoRemove)
 {
-    index = getRealReadIndex(index);
-    return m_data[index];
+    char * data = m_data[ getTailIndex() ];
+    if (alsoRemove) { pop(); }
+    return data;
 }
 
-void StringDataField::copy(char * buf, uint32_t index)
+void StringDataField::copy(char * buf, bool alsoRemove)
 {
-    index = getRealReadIndex(index);
-    strncpy_safe(buf, m_data[index], m_maxLength);
+    char * data = m_data[ getTailIndex() ];
+    strncpy_safe(buf, data, m_maxLength);
+    if (alsoRemove) { pop(); }
 }
+

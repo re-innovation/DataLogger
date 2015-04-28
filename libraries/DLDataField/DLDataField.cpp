@@ -37,9 +37,9 @@
  * Defines and Typedefs
  */
 
-// The read/write indexes for data arrays are stored in a two-value array.
-#define R 0 // First entry is the read index
-#define W 1 // Second entry is the write index
+// The had/tail indexes for data arrays are stored in a two-value array.
+#define H 0 // First entry is the head of the list
+#define T 1 // Second entry is the tail
 
 /*
  * Private Functions 
@@ -72,9 +72,8 @@ static char const * _getTypeString(FIELD_TYPE type)
 DataField::DataField(FIELD_TYPE fieldType)
 {
  	m_fieldType = fieldType;
- 	m_full = false;
- 	m_index[R] = 0;
-    m_index[W] = 0;
+ 	m_index[T] = 0;
+    m_index[H] = 0;
     m_maxIndex = 0;
 }
 
@@ -90,35 +89,77 @@ FIELD_TYPE DataField::getType(void)
 	return m_fieldType;
 }
 
-void DataField::incrementIndexes(void)
+void DataField::pop(void)
 {
-	incrementwithrollover(m_index[W], m_maxIndex);
-	if (m_index[W] == 0) { m_full = true; } // Write index has rolled over, so buffer is full
-
-	if (m_full)
+	if (length())
 	{
-		// When full, the write index points to the oldest value (where data should be read from)
-		m_index[R] = m_index[W];
+		m_index[T]++;
 	}
 }
 
-uint32_t DataField::getWriteIndex(void)
+void DataField::prePush(void)
 {
-	return m_index[W];
+	if (full()) { removeOldest(); }
 }
 
-uint32_t DataField::getRealReadIndex(uint32_t requestedIndex)
+void DataField::postPush(void)
 {
-	/* Translate request for index based on 0 being oldest stored value
-	into index based on circular array storage */
-	requestedIndex += m_index[R];
+	m_index[H]++;
+}
+
+bool DataField::full(void)
+{
+	return (m_index[H] - m_index[T]) >= (m_maxIndex + 1);
+}
+
+/*void DataField::incrementIndexes(void)
+{
+	incrementwithrollover(m_index[H], m_maxIndex);
+	if (m_index[H] == 0) { full() = true; } // Write index has rolled over, so buffer is full
+
+	if (full())
+	{
+		// When full, the write index points to the oldest value (where data should be read from)
+		m_index[T] = m_index[H];
+	}
+}*/
+
+uint32_t DataField::getWriteIndex(void)
+{
+	return m_index[H] % (m_maxIndex + 1);
+}
+
+uint32_t DataField::getTailIndex(void)
+{
+	return m_index[T] % (m_maxIndex + 1);
+}
+
+/*uint32_t DataField::getRealReadIndex(uint32_t requestedIndex)
+{
+	//Translate request for index based on 0 being oldest stored value
+	//into index based on circular array storage
+	requestedIndex += m_index[T];
 	requestedIndex %= (m_maxIndex + 1);
 	return requestedIndex;
-}
+}*/
 
 char const * DataField::getTypeString(void)
 {
 	return _getTypeString(m_fieldType);
+}
+
+uint32_t DataField::length(void)
+{
+		return min((m_index[H] - m_index[T]), m_maxIndex + 1);
+}
+
+void DataField::removeOldest(void)
+{
+	// Move the read index on one, effectively ignoring the oldest value.
+	if (length() > 0)
+	{
+		m_index[T]++;
+	}
 }
 
 /* In-progress functions

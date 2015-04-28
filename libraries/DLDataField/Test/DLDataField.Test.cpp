@@ -72,7 +72,7 @@ static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValu
 	dataField.setDataSizes(1,1);
 
 	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
-	TEST_ASSERT_EQUAL(0, dataField.getRawData(0));
+	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(0));
 }
 
 static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
@@ -83,7 +83,7 @@ static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 	static char buffer[20];
 	dataField.storeData(100);
 	
-	dataField.getDataAsString(buffer, "%.0f", 0);
+	dataField.getRawDataAsString(buffer, "%.0f", true);
 	TEST_ASSERT_EQUAL_STRING("100", buffer);
 }
 
@@ -123,12 +123,10 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 	dataField.setDataSizes(10, 10);
 	
 	fillWithTestIntData(&dataField);
-	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(0));
-	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getRawData(1));
-
-	fillWithTestIntData(&dataField);
-	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(1));
-	TEST_ASSERT_EQUAL_FLOAT(0.0f, dataField.getRawData(2));
+	// The oldest value should have the average of the int array
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(true));
+	// The second-oldest value has not yet been set
+	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(false));
 }
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(void)
@@ -155,24 +153,34 @@ static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 {
 	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
 	dataField.setDataSizes(10, 1);
-	
-	fillWithTestIntData(&dataField);
 
+	// If data is pushed three times, it should be popped three times
+	dataField.storeData(0);
+	dataField.storeData(1);
+	dataField.storeData(2);
+	
+	TEST_ASSERT_EQUAL_FLOAT(0, dataField.getRawData(true));
+	TEST_ASSERT_EQUAL_FLOAT(1, dataField.getRawData(true));
+	TEST_ASSERT_EQUAL_FLOAT(2, dataField.getRawData(true));
+	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(true));	
+	
+	// If data overflows buffer, oldest entries should be overwritten
+	fillWithTestIntData(&dataField);
 	dataField.storeData(5);
 	dataField.storeData(6);
 	dataField.storeData(7);
-
+	
 	int16_t i;
 	// Datafield should have stored last 7 points in data array
 	for (i = 0; i < 7; ++i)
 	{
-		TEST_ASSERT_EQUAL_FLOAT((float)s_intDataArray[i+3], dataField.getRawData(i));
+		TEST_ASSERT_EQUAL((float)s_intDataArray[i+3], dataField.getRawData(true));
 	}
 
 	// Newest three additions should be in last three entries
-	TEST_ASSERT_EQUAL_FLOAT(5, dataField.getRawData(7));
-	TEST_ASSERT_EQUAL_FLOAT(6, dataField.getRawData(8));
-	TEST_ASSERT_EQUAL_FLOAT(7, dataField.getRawData(9));
+	TEST_ASSERT_EQUAL_FLOAT(5, dataField.getRawData(true));
+	TEST_ASSERT_EQUAL_FLOAT(6, dataField.getRawData(true));
+	TEST_ASSERT_EQUAL_FLOAT(7, dataField.getRawData(true));
 }
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
@@ -183,7 +191,7 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
 	int16_t i;
 	for (i = 0; i < 5; ++i)
 	{
-		TEST_ASSERT_EQUAL_STRING(strDataArray[i], dataField.getData(i));
+		TEST_ASSERT_EQUAL_STRING(strDataArray[i], dataField.getData(true));
 	}
 }
 
@@ -200,13 +208,13 @@ static void test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer(void)
 	// Datafield should have stored last 2 points in data array
 	for (i = 0; i < 2; ++i)
 	{
-		TEST_ASSERT_EQUAL_STRING(strDataArray[i+3], dataField.getData(i));
+		TEST_ASSERT_EQUAL_STRING(strDataArray[i+3], dataField.getData(true));
 	}
 
 	// Newest three additions should be in last three entries
-	TEST_ASSERT_EQUAL_STRING("SW", dataField.getData(2));
-	TEST_ASSERT_EQUAL_STRING("W", dataField.getData(3));
-	TEST_ASSERT_EQUAL_STRING("NW", dataField.getData(4));
+	TEST_ASSERT_EQUAL_STRING("SW", dataField.getData(true));
+	TEST_ASSERT_EQUAL_STRING("W", dataField.getData(true));
+	TEST_ASSERT_EQUAL_STRING("NW", dataField.getData(true));
 }
 
 static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(void)
@@ -225,7 +233,111 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLen
 	
 	fillWithTestIntData(&dataField);
 
-	TEST_ASSERT_EQUAL(-3, dataField.getRawData(98357952));
+	TEST_ASSERT_EQUAL_FLOAT(-3, dataField.getRawData(98357952));
+}
+
+static void test_DatafieldReturnsCorrectLength(void)
+{
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+	
+	TEST_ASSERT_EQUAL(0, dataField.length());
+
+	dataField.storeData(0);
+	TEST_ASSERT_EQUAL(1, dataField.length());
+
+	dataField.storeData(0);
+	TEST_ASSERT_EQUAL(2, dataField.length());
+
+	fillWithTestIntData(&dataField);
+	TEST_ASSERT_EQUAL(10, dataField.length());
+
+	fillWithTestIntData(&dataField);
+	TEST_ASSERT_EQUAL(10, dataField.length());
+}
+
+static void test_DatafieldRemoveReducesLengthByOneDownToZero(void)
+{
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+
+	TEST_ASSERT_EQUAL(0, dataField.length());
+	dataField.storeData(0);
+	TEST_ASSERT_EQUAL(1, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(0, dataField.length());
+
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(0, dataField.length());
+}
+
+static void test_DatafieldRemoveReturnsCorrectLengthAfterFilling(void)
+{
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+
+	fillWithTestIntData(&dataField);
+
+	TEST_ASSERT_EQUAL(10, dataField.length());
+
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(9, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(8, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(7, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(6, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(5, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(4, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(3, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(2, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(1, dataField.length());
+	dataField.removeOldest();
+	TEST_ASSERT_EQUAL(0, dataField.length());
+}
+
+static void test_DatafieldCanBeCorrectlyReferencedAfterRemove(void)
+{
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
+
+	fillWithTestIntData(&dataField);
+	
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(-4, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(-3, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(-2, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(-1, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(0, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(20, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(40, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(60, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(80, dataField.getRawData(0));
+
+	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(0));
 }
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength(void)
@@ -286,6 +398,13 @@ int main(void)
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength);
+    
+    RUN_TEST(test_DatafieldReturnsCorrectLength);
+    RUN_TEST(test_DatafieldRemoveReducesLengthByOneDownToZero);
+    RUN_TEST(test_DatafieldRemoveReturnsCorrectLengthAfterFilling);
+
+    RUN_TEST(test_DatafieldCanBeCorrectlyReferencedAfterRemove);
+    //RUN_TEST(test_DatafieldReturnsCorrectBooleanForHasData);
     
     RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
     RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);

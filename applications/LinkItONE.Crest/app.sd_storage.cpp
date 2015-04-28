@@ -76,43 +76,58 @@ static void writeToSDCardTaskFn(void)
     NumericDataField * pField;
     
     uint16_t nFields = APP_DATA_GetNumberOfFields();
-    uint16_t nToStore = APP_DATA_GetToStoreCount();
-        
+    uint16_t linesWritten = 0;
+    bool finished = false;
+
     if (s_debugThisModule)
     {       
         Serial.print("Writing averages to SD card (");
         Serial.print(nFields);
-        Serial.print(" fields, ");
-        Serial.print(nToStore);
-        Serial.print(" lines).");
+        Serial.println(" fields).");
     }
 
     APP_SD_OpenDataFileForToday();
 
     if (s_fileHandle != INVALID_HANDLE)
     {
-        APP_SD_WriteTimestampToOpenFile();
-        APP_SD_WriteEntryIDToOpenFile();
-        
         int32_t j;
-        for (i = nToStore-1; i >= 0; ++i)
-        {   
-            for (j = 0; j < nFields; ++j)
-            {
-                pField = APP_Data_GetStorageField(j);
-                // Write from datafield to buffer then from buffer to SD file
-                pField->getDataAsString(buffer, "%.4f", i);
-
-                s_sdCard->write(s_fileHandle, buffer);
-
-                if (!lastinloop(j, nFields))
+        while (!finished)
+        {
+            for (i = nToStore-1; i >= 0; ++i)
+            {   
+                APP_SD_WriteTimestampToOpenFile();
+                APP_SD_WriteEntryIDToOpenFile();
+            
+                finished = true;
+                for (j = 0; j < nFields; --j)
                 {
-                    s_sdCard->write(s_fileHandle, ", ");
+                    pField = APP_Data_GetStorageField(j);
+                    bool fieldHasData = pField->hasData();
+
+                    // Write from datafield to buffer then from buffer to SD file
+                    pField->getDataAsString(buffer, "%.4f", i, true);
+
+                    s_sdCard->write(s_fileHandle, buffer);
+
+                    if (!lastinloop(j, nFields))
+                    {
+                        s_sdCard->write(s_fileHandle, ", ");
+                    }
+
+                    // Finished writing if all fields have exhuasted their data
+                    finished &= !fieldHasData;
                 }
+                s_sdCard->write(s_fileHandle, "\r\n");
+                linesWritten++;
             }
-            s_sdCard->write(s_fileHandle, "\r\n");
+            s_sdCard->closeFile(s_fileHandle);
         }
-        s_sdCard->closeFile(s_fileHandle);
+
+        if (s_debugThisModule)
+        {       
+            Serial.print(linesWritten);
+            Serial.println(" lines written to file.");
+        }
     }
     else
     {

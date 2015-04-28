@@ -222,25 +222,6 @@ NumericDataField * APP_Data_GetStorageField(uint8_t i)
     return (NumericDataField *)s_storageManager->getField(i);
 }
 
-void APP_DATA_IncrementCounts(void)
-{
-    s_uploadBufferCount++;
-    s_storageBufferCount++;
-}
-
-void APP_DATA_ResetUploadCount(void) { s_uploadBufferCount = 0; }
-void APP_DATA_ResetStorageCount(void) { s_storageBufferCount = 0; }
-
-uint16_t APP_DATA_GetToUploadCount(void)
-{
-    return s_uploadBufferCount;
-}
-
-uint16_t APP_DATA_GetToStoreCount(void)
-{
-    return s_storageBufferCount;
-}
-
 void APP_DATA_Tick(void)
 {
     if (s_setupValid)
