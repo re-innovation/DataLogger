@@ -16,7 +16,6 @@
 #endif
 
 #include "DLUtility.h"
-#include "DLDataField.h"
 #include "DLService.h"
 #include "DLService.thingspeak.h"
 #include "DLHTTP.h"

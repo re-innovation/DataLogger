@@ -57,7 +57,7 @@ void Settings_InitGlobal(void);
     
 char const * Settings_getIntName(INTSETTING setting);
 int32_t Settings_getInt(INTSETTING setting);
-void Settings_setInt(INTSETTING setting, int set);
+void Settings_setInt(INTSETTING setting, int32_t set);
 bool Settings_intIsSet(INTSETTING setting);
 void Settings_resetInt(INTSETTING setting);
 

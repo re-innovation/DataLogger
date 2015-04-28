@@ -5,8 +5,14 @@
  *
  * 06 April 2015
  *
- * Handles SD card storage for the Crest PV application
+ * Handles SD card storage for the CREST application
  */
+
+/*
+ * Arduino Library Includes
+ */
+
+#include <arduino.h>
 
 /*
  * Standard Library Includes
@@ -21,78 +27,77 @@
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
-
+#include "TaskAction.h"
+ 
 /*
  * Application Includes
  */
 
+#include "app.h"
 #include "app.data.h"
-#include "app.data_conversion.h"
+#include "app.sd_storage.h"
 
-#include "TaskAction.h"
 
 /*
  * Applications Data
  */
 
-static Averager<uint16_t> ** s_averagers;
-static Averager<uint16_t> ** s_debugAveragers;
+static DataFieldManager * s_storageManager = NULL;
+static DataFieldManager * s_uploadManager = NULL;
+static DataFieldManager * s_dataDebugManager = NULL;
 
-static DataFieldManager * s_dataManager;
+static uint32_t s_numberOfAveragesToStore= 0;
+static uint32_t s_numberOfAveragesToUpload = 0;
 
-static CONVERSION_FN s_conversionFunctions[] = 
-{
-    channel01Conversion,
-    channel02Conversion,
-    channel03Conversion,
-    channel04Conversion,
-    channel05Conversion,
-    channel06Conversion,
-    channel07Conversion,
-    channel08Conversion,
-    channel09Conversion,
-    channel10Conversion,
-    channel11Conversion,
-    channel12Conversion,
-    temp1Conversion,
-    temp2Conversion,
-    temp3Conversion
-};
-
-static uint16_t s_fieldCount;
+static uint16_t s_uploadBufferCount = 0;
+static uint16_t s_storageBufferCount = 0;
 
 static bool s_debugOut = true;
 
+static bool s_setupValid = false;
+
+/*
+ * calculateNumberOfAverages
+ *
+ * The storage interval will not always be an integer multiple of the averaging interval.
+ * For example, the averaging interval may be 2 seconds and the storage/upload interval may be 15 seconds.
+ * In this case, the number of averages that needs to be stored will be 7 or 8. This function returns
+ * the correct (highest possible) number of averages that need to be stored/uploaded)
+ */
+static uint16_t calculateNumberOfAverages(uint16_t interval, uint16_t averagingInterval)
+{
+    if (interval % averagingInterval == 0)
+    {
+        return interval / averagingInterval;
+    }
+    else
+    {
+        return (interval / averagingInterval) + 1;
+    }
+}
+
 static void debugTaskFn(void)
 {
-    uint8_t field = 0;
     uint8_t i;
+    uint8_t fieldCount = s_dataDebugManager->count();
 
-    for (i = 0; i < s_fieldCount; i++)
+    for (i = 0; i < fieldCount; i++)
     {
-        uint16_t average = s_debugAveragers[i]->getAverage();
-    
-        float toShow;
-        if (s_conversionFunctions[i])
-        {
-            toShow = s_conversionFunctions[i](average); 
-        }
-        else
-        {
-            toShow = (float)average;
-        }
+        float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(0);
+        float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(0);
 
         Serial.print(toShow);
         Serial.print("(");
         Serial.print(average);
         Serial.print(")");
 
-        if (!lastinloop(i, s_fieldCount))
+        if (!lastinloop(i, fieldCount))
         {
             Serial.print(", ");                
         }
@@ -102,108 +107,147 @@ static void debugTaskFn(void)
 }
 static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
 
-static void averageAndStoreTaskFn(void)
-{
-    uint8_t field = 0;
-    uint8_t i;
-
-    for (i = 0; i < s_fieldCount; i++)
-    {
-        uint16_t average = s_averagers[i]->getAverage();
-
-        float toStore;
-        if (s_conversionFunctions[i])
-        {
-            toStore = s_conversionFunctions[i](average); 
-        }
-        else
-        {
-            toStore = (float)average;
-        }
-
-        ((NumericDataField*)s_dataManager->getField(i))->storeData( toStore );
-    }
-}
-static TaskAction averageAndStoreTask(averageAndStoreTaskFn, 0, INFINITE_TICKS);
-
 /*
  * Public Functions
  */
 
-void APP_DATA_Setup(unsigned long msInterval,
-	uint16_t fieldCount, uint16_t averagerSize, uint16_t dataFieldBufferSize, FIELD_TYPE fieldTypes[])
-{
-	s_fieldCount = fieldCount;
+void APP_DATA_Setup(
+    unsigned long averagingInterval, uint16_t valuesPerSecond,
+    uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
+{    
+    if (averagingInterval == 0) { APP_FatalError("Averaging interval is 0 seconds!"); }
 
-	uint8_t i;
-	
-    s_debugAveragers = new Averager<uint16_t>*[fieldCount];
-	s_averagers = new Averager<uint16_t>*[fieldCount];
+    if (averagingInterval > storageInterval)
+    {
+        APP_FatalError("Averaging interval cannot be longer than storage interval.");
+    }
 
-	s_dataManager = new DataFieldManager();
+    if (averagingInterval > uploadInterval)
+    {
+        APP_FatalError("Averaging interval cannot be longer than upload interval.");
+    }
 
-	for (i = 0; i < fieldCount; ++i)
-	{
-        // Create a new numeric field and add to the manager
-        DataField * field = new NumericDataField(fieldTypes[i], dataFieldBufferSize);
+    uint32_t averagerSize = valuesPerSecond * averagingInterval;
+    s_numberOfAveragesToStore = calculateNumberOfAverages(storageInterval, averagingInterval);
+    s_numberOfAveragesToUpload = calculateNumberOfAverages(uploadInterval, averagingInterval);
 
-        if (field)
-        {
-            s_dataManager->addField(field);
-        }
-        else
-        {
-            Serial.print("Failed to create datafield of size ");
-            Serial.print(dataFieldBufferSize);
-            Serial.print(" and type ");
-            Serial.println(fieldTypes[i]);
-        }
-        
-        s_averagers[i] = new Averager<uint16_t>(averagerSize);
-        s_debugAveragers[i] = new Averager<uint16_t>(10);
+    // Create three data managers, one for storing data, one for uploading data and one for debugging
+    
+    s_storageManager = new DataFieldManager(s_numberOfAveragesToStore, averagerSize);
+    s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, averagerSize);
+    s_dataDebugManager = new DataFieldManager(1, averagerSize);
 
-        if (!s_averagers[i])
-        {
-            Serial.print("Failed to create averager of size ");
-            Serial.println(averagerSize);
-        }
-	}
+    if (!s_storageManager) { APP_FatalError("Failed to create storage manager"); }
+    if (!s_uploadManager) { APP_FatalError("Failed to create upload manager"); }
+    if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager"); }
 
-	averageAndStoreTask.SetInterval(msInterval);
-    averageAndStoreTask.ResetTime();
+    APP_SD_ReadDataChannelSettings(s_storageManager, filename);    
+    APP_SD_ReadDataChannelSettings(s_uploadManager, filename);
+    APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
+
+    uint32_t count = s_storageManager->count();
+    Serial.print("Data Managers created with ");
+    Serial.print(count);
+    Serial.println(" fields.");
+    
+    uint32_t i;
+
+    for (i = 0; i < count; i++)
+    {
+        Serial.print("Field ");
+        Serial.print(i);
+        Serial.print(" type is ");
+        Serial.print(s_storageManager->getField(i)->getTypeString());
+        Serial.println(".");
+    }
 
     if (s_debugOut)
     {
         debugTask.ResetTime();
     }
+
+    s_setupValid = true;
 }
 
-void APP_DATA_NewData(uint16_t data, uint16_t field)
+void APP_DATA_NewData(int32_t data, uint16_t field)
 {
-	s_averagers[field]->newData(data);
-    s_debugAveragers[field]->newData(data);
+    char errBuffer[64];
+    NumericDataField* pField;
+
+    pField =  (NumericDataField*)(s_storageManager->getField(field));
+    if (!pField)
+    {
+        sprintf(errBuffer, "Attempt to add data to non-existent field %d", field);
+        APP_FatalError(errBuffer);
+    }
+    pField->storeData( data );
+    
+    pField =  (NumericDataField*)(s_uploadManager->getField(field));
+    if (!pField)
+    {
+        sprintf(errBuffer, "Attempt to add data to non-existent field %d", field);
+        APP_FatalError(errBuffer);
+    }
+    pField->storeData( data );
+
+    pField = (NumericDataField*)(s_dataDebugManager->getField(field));
+    if (!pField)
+    {
+        sprintf(errBuffer, "Attempt to add data to non-existent debug field %d", field);
+        APP_FatalError(errBuffer);
+    }
+    pField->storeData( data );
 }
 
 uint16_t APP_DATA_GetNumberOfFields(void)
 {
-	return s_fieldCount;
+    return s_storageManager->count();
 }
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
 {
-    (void)s_dataManager->writeHeadersToBuffer(buffer, bufferLength);
+    (void)s_storageManager->writeHeadersToBuffer(buffer, bufferLength);
 }
 
-NumericDataField * APP_Data_GetField(uint8_t i)
+uint32_t APP_DATA_GetNumberOfAveragesForStorage(void) { return s_numberOfAveragesToStore; }
+uint32_t APP_DATA_GetNumberOfAveragesForUpload(void) { return s_numberOfAveragesToUpload; }
+
+NumericDataField * APP_Data_GetUploadField(uint8_t i)
 {
-    return (NumericDataField *)s_dataManager->getField(i);
+    return (NumericDataField *)s_uploadManager->getField(i);
+}
+
+NumericDataField * APP_Data_GetStorageField(uint8_t i)
+{
+    return (NumericDataField *)s_storageManager->getField(i);
+}
+
+void APP_DATA_IncrementCounts(void)
+{
+    s_uploadBufferCount++;
+    s_storageBufferCount++;
+}
+
+void APP_DATA_ResetUploadCount(void) { s_uploadBufferCount = 0; }
+void APP_DATA_ResetStorageCount(void) { s_storageBufferCount = 0; }
+
+uint16_t APP_DATA_GetToUploadCount(void)
+{
+    return s_uploadBufferCount;
+}
+
+uint16_t APP_DATA_GetToStoreCount(void)
+{
+    return s_storageBufferCount;
 }
 
 void APP_DATA_Tick(void)
 {
-    if (s_debugOut)
+    if (s_setupValid)
     {
-        debugTask.tick();
+        if (s_debugOut)
+        {
+            debugTask.tick();
+        }
     }
-	averageAndStoreTask.tick();
 }

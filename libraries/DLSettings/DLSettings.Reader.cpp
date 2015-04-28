@@ -37,7 +37,7 @@
 #include "DLUtility.h"
 
 static bool s_intSettingIsRequired[INT_SETTINGS_COUNT];
-static bool s_stringSettingIsRequired[INT_SETTINGS_COUNT];
+static bool s_stringSettingIsRequired[STRING_SETTINGS_COUNT];
 
 /*
  * Private Functions
@@ -49,7 +49,7 @@ static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 	// or == pValue if it failed
 	char * endOfConversion = NULL;
 
-	int value = (int)strtol(pValue, &endOfConversion, 10);
+	int32_t value = (int32_t)strtol(pValue, &endOfConversion, 10);
 
 	if (endOfConversion == pValue)
 	{
@@ -118,7 +118,7 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 	// The length of the setting name is the difference between the two pointers
 	int settingNameLength = pEndOfName - string + 1;
 	strncpy_safe(settingNameCopy, string, settingNameLength+1);
-	strncpy_safe(settingValueCopy, pStartOfSetting, 30);
+	strncpy_safe(settingValueCopy, pStartOfSetting, 64);
 
 	// Try to find int setting
 	char const * pSettingName;

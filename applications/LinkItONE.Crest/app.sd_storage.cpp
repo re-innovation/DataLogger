@@ -5,9 +5,15 @@
  *
  * 06 April 2015
  *
- * Handles SD card storage for the Crest PV application
+ * Handles SD card storage for the LinkIt ONE ADCAndLocalStorage example
  */
 
+/*
+ * Arduino Library Includes
+ */
+
+#include <arduino.h>
+ 
 /*
  * Standard Library Includes
  */
@@ -21,21 +27,27 @@
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
+#include "DLDataField.Manager.h"
 #include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "DLSettings.h"
-#include "DLSettings.Reader.h"
+#include "DLSettings.Global.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
+#include "DLSettings.DataChannels.Reader.h"
 
 /*
  * Application Includes
  */
 
+#include "app.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-
 #include "TaskAction.h"
+
 
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
@@ -47,19 +59,33 @@ static TM s_lastSDTimestamp;
 static char s_directory[] = "Datalogger";
 static char s_filePath[100];
 
-static char s_settingsFilename[] = "Datalogger.Settings";
+static char s_errString[128];
+
+static bool s_debugThisModule = false;
+
+static void localPrintFn(char const * const toPrint)
+{
+    Serial.print(toPrint);
+}
 
 static void writeToSDCardTaskFn(void)
 {
-    uint8_t field = 0;
-    uint8_t i, j;
+    uint8_t i;
     char buffer[10];
 
+    NumericDataField * pField;
+    
     uint16_t nFields = APP_DATA_GetNumberOfFields();
-
-    Serial.print("Writing averages to SD card (");
-    Serial.print(nFields);
-    Serial.println("fields).");
+    uint16_t nToStore = APP_DATA_GetToStoreCount();
+        
+    if (s_debugThisModule)
+    {       
+        Serial.print("Writing averages to SD card (");
+        Serial.print(nFields);
+        Serial.print(" fields, ");
+        Serial.print(nToStore);
+        Serial.print(" lines).");
+    }
 
     APP_SD_OpenDataFileForToday();
 
@@ -67,29 +93,40 @@ static void writeToSDCardTaskFn(void)
     {
         APP_SD_WriteTimestampToOpenFile();
         APP_SD_WriteEntryIDToOpenFile();
-            
-        for (j = 0; j < nFields; ++j)
-        {
-            // Write from datafield to buffer then from buffer to SD file
-            APP_Data_GetField(j)->getDataAsString(buffer, "%.4f", i);
-
-            s_sdCard->write(s_fileHandle, buffer);
-
-            if (!lastinloop(j, nFields))
+        
+        int32_t j;
+        for (i = nToStore-1; i >= 0; ++i)
+        {   
+            for (j = 0; j < nFields; ++j)
             {
-                s_sdCard->write(s_fileHandle, ", ");
+                pField = APP_Data_GetStorageField(j);
+                // Write from datafield to buffer then from buffer to SD file
+                pField->getDataAsString(buffer, "%.4f", i);
+
+                s_sdCard->write(s_fileHandle, buffer);
+
+                if (!lastinloop(j, nFields))
+                {
+                    s_sdCard->write(s_fileHandle, ", ");
+                }
             }
+            s_sdCard->write(s_fileHandle, "\r\n");
         }
-        s_sdCard->write(s_fileHandle, "\r\n");
         s_sdCard->closeFile(s_fileHandle);
     }
     else
     {
-        Serial.print("Could not open '");
-        Serial.print(Filename_get());
-        Serial.println("' when trying to write data.");
+        if (s_debugThisModule)
+        {
+            Serial.print("Could not open '");
+            Serial.print(Filename_get());
+            Serial.println("' when trying to write data.");
+        }
     }
+
+    APP_DATA_ResetStorageCount();
 }
+
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
 
 void APP_SD_Init(void)
@@ -105,17 +142,20 @@ void APP_SD_Setup(unsigned long msInterval)
     writeToSDCardTask.ResetTime();
 }
 
-void createNewFileForToday(void)
+void createAndOpenNewFileForToday(void)
 {
     char const * const pFilename = Filename_get();
 
-    Serial.print("Creating new file: ");
-    Serial.println(pFilename);
+    if (s_debugThisModule)
+    {
+        Serial.print("Creating new file: ");
+        Serial.println(pFilename);
+    }
 
     sprintf(s_filePath, "%s/%s", s_directory, pFilename);    
     s_fileHandle = s_sdCard->openFile(s_filePath, true);
 
-    if (s_fileHandle == INVALID_HANDLE)
+    if (s_fileHandle == INVALID_HANDLE && s_debugThisModule)
     {
         Serial.print("Failed to create ");
         Serial.println(pFilename);
@@ -129,7 +169,6 @@ void createNewFileForToday(void)
 
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
-    s_sdCard->closeFile(s_fileHandle);
 }
 
 void APP_SD_OpenDataFileForToday(void)
@@ -143,14 +182,16 @@ void APP_SD_OpenDataFileForToday(void)
     
     if (s_sdCard->fileExists(s_filePath))
     {
-        Serial.print("Opening existing file: ");
-        Serial.println(pFilename);
-
+        if (s_debugThisModule)
+        {
+            Serial.print("Opening existing file: ");
+            Serial.println(pFilename);
+        }
         s_fileHandle = s_sdCard->openFile(s_filePath, true);
     }
     else
     {
-        createNewFileForToday();
+        createAndOpenNewFileForToday();
     }
 }
 
@@ -204,107 +245,48 @@ void APP_SD_WriteEntryIDToOpenFile(void)
     }
 }*/
 
-void APP_SD_ReadSettings(void)
+void APP_SD_ReadGlobalSettings(char const * const filename)
 {
-    char lineBuffer[100];
-    
-    if (s_sdCard->fileExists(s_settingsFilename))
+    SETTINGS_READER_RESULT result = Settings_readGlobalFromFile(s_sdCard, filename);
+
+    if (result != ERR_READER_NONE)
     {
-        Serial.print("Reading settings from '");
-        Serial.print(s_settingsFilename);
-        Serial.println("'.");
-    }
-    else
-    {
-        Serial.print("Settings file '");
-        Serial.print(s_settingsFilename);
-        Serial.println("' not found.");
-        return;
+        APP_FatalError(Settings_getLastReaderResultText());
     }
 
-    uint8_t hndl = s_sdCard->openFile(s_settingsFilename, false);
-    while (!s_sdCard->endOfFile(hndl))
-    {
-        // Read from file into lineBuffer and strip CRLF endings
-        s_sdCard->readLine(hndl, lineBuffer, 50, true);
-        Serial.print("Reading setting line '");
-        Serial.print(lineBuffer);
-        Serial.println("'");
-        Settings_readFromString(lineBuffer);
-    }
-    s_sdCard->closeFile(hndl);
+    Settings_echoAllSet(localPrintFn);
 
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
+    if (!Settings_allRequiredSettingsRead())
     {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
+        char missingSettings[128];
+        Settings_getMissingNames(missingSettings, 128);
+        sprintf(s_errString, "Some or all required settings not found in '%s': %s",
+            filename, missingSettings);
+
+        APP_FatalError(s_errString);
     }
 
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
+    if (Settings_stringIsSet(DEBUG_MODULES))
     {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
+        APP_SetDebugModules(Settings_getString(DEBUG_MODULES));
     }
-
 }
 
-void APP_SD_ReadSettings(char * filename)
+void APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
 {
-    char lineBuffer[100];
-    if (s_sdCard->fileExists(filename))
+    if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
-        Serial.print("Reading settings from '");
-        Serial.print(filename);
-        Serial.println("'.");
+        APP_FatalError(Settings_getLastReaderResultText());
     }
-    else
-    {
-        Serial.print("Settings file '");
-        Serial.print(filename);
-        Serial.println("' not found.");
-        return;
-    }
+}
 
-    uint8_t hndl = s_sdCard->openFile(filename, false);
-    while (!s_sdCard->endOfFile(hndl))
-    {
-        // Read from file into lineBuffer and strip CRLF endings
-        s_sdCard->readLine(hndl, lineBuffer, 50, true);
-        Serial.print("Reading setting line '");
-        Serial.print(lineBuffer);
-        Serial.println("'");
-        Settings_readFromString(lineBuffer);
-    }
-    s_sdCard->closeFile(hndl);
-
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
-    }
-
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
-    }
+void APP_SD_EnableDebugging(void)
+{
+    s_debugThisModule = true;
+    s_sdCard->setEcho(true);
 }
 
 void APP_SD_Tick(void)
 {
-	//writeToSDCardTask.tick();
+	writeToSDCardTask.tick();
 }
