@@ -8,4 +8,3 @@
 *.stackdump
 
 libraries/Datalogger
-libraries/*.conf
