@@ -121,6 +121,19 @@ void NumericDataField::getConvDataAsString(char * buf, char const * const fmt, b
     sprintf(buf, fmt, data); // Write data point to buffer
 }
 
+
+void DataField::getConfigString(char * buffer)
+{
+    if (m_conversionData)
+    {
+
+    }
+    else
+    {
+        sprintf(buffer, "No conversion data");
+    }
+}
+
 #ifdef TEST
 void NumericDataField::printContents(void)
 {

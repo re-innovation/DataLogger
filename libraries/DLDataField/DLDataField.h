@@ -61,6 +61,8 @@ class NumericDataField : public DataField
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
+
+        void getConfigString(char * buffer);
         
     private:
         float * m_data;

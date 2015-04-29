@@ -169,7 +169,9 @@ void APP_DATA_Setup(
         Serial.print(channelNumbers[i]);
         Serial.print(" type is ");
         Serial.print(s_storageManager->getChannel(channelNumbers[i])->getTypeString());
-        Serial.println(".");
+        Serial.print(". (");
+        Serial.print(s_storageManager->getChannel(channelNumbers[i])->getConfigString())
+        Serial.println(")");
     }
 
     if (s_debugOut)
