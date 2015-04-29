@@ -87,6 +87,8 @@ float NumericDataField::getConvData(bool alsoRemove)
         case CURRENT:
             data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
             break;
+        case TEMPERATURE_C:
+            data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
         default:
             break;
         }

@@ -43,7 +43,7 @@
 SETTINGS_READER_RESULT Settings_readChannelsFromFile(
     DataFieldManager * pManager, LocalStorageInterface * pInterface, char const * const filename)
 {
-    char lineBuffer[100];
+    char lineBuffer[256];
 
     if (!pManager)
     {
@@ -64,7 +64,7 @@ SETTINGS_READER_RESULT Settings_readChannelsFromFile(
     while (!pInterface->endOfFile(hndl))
     {
         // Read from file into lineBuffer and strip CRLF endings
-        pInterface->readLine(hndl, lineBuffer, 100, true);
+        pInterface->readLine(hndl, lineBuffer, 256, true);
         (void)Settings_parseDataChannelSetting(lineBuffer);
     }
 

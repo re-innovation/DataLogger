@@ -68,7 +68,7 @@ static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 
 SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInterface, char const * const filename)
 {
-	char lineBuffer[100];
+	char lineBuffer[256];
 
 	if (!pInterface)
 	{
@@ -84,7 +84,7 @@ SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInte
     while (!pInterface->endOfFile(hndl))
     {
         // Read from file into lineBuffer and strip CRLF endings
-        pInterface->readLine(hndl, lineBuffer, 100, true);
+        pInterface->readLine(hndl, lineBuffer, 256, true);
         SETTINGS_READER_RESULT res = Settings_readFromString(lineBuffer);
         if (res != ERR_READER_NONE) { return res; }
     }

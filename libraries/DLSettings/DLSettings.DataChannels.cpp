@@ -275,6 +275,8 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
 
     bool success = true;
 
+    if (*setting == '#') { return noError(); } // Line is a comment
+
     // Split the string by '=' to get setting and name
     success &= splitAndStripWhiteSpace(lowercaseCopy, '=', &pSettingString, NULL, &pValueString, NULL);
     if (!success) { return noEqualsError(); }
