@@ -1,8 +1,8 @@
 #ifndef _APP_DATA_H_
 #define _APP_DATA_H_
 
-void APP_DATA_Setup(unsigned long msInterval, uint16_t averagerSize, 
-	uint16_t storageInterval, uint16_t uploadInterval, char const * const filename);
+void APP_DATA_Setup(unsigned long storageAveragingInterval, unsigned long uploadAveragingInterval,
+	uint16_t averagerSize, uint16_t storageInterval, uint16_t uploadInterval, char const * const filename);
 
 void APP_DATA_NewData(int32_t data, uint16_t field);
 

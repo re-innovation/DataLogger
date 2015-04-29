@@ -264,7 +264,6 @@ void remoteUploadTaskFn(void)
             Serial.print("Attempting upload to ");
             Serial.println(s_thingSpeakService->getURL());
         }
-
         updateUploadData();
         
         char created_at[30];
@@ -330,7 +329,8 @@ void setup()
  
     APP_SD_Init();
     
-    Settings_requireInt(DATA_AVERAGING_INTERVAL_SECS);
+    Settings_requireInt(UPLOAD_AVERAGING_INTERVAL_SECS);
+    Settings_requireInt(STORAGE_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
     Settings_requireInt(DATA_UPLOAD_INTERVAL_SECS);
     
@@ -342,14 +342,16 @@ void setup()
     
     APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
     
-    int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
+    int storage_averaging_interval = Settings_getInt(STORAGE_AVERAGING_INTERVAL_SECS);
+    int upload_averaging_interval = Settings_getInt(UPLOAD_AVERAGING_INTERVAL_SECS);
     int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);
     int upload_interval = Settings_getInt(DATA_UPLOAD_INTERVAL_SECS);
 
     APP_SD_Setup(storage_interval * 1000);
 
     APP_DATA_Setup(
-        averaging_interval, // Seconds to average readings over
+        storage_averaging_interval, // Seconds to average storage readings over
+        upload_averaging_interval,  // Seconds to average upload readings over
         ADC_READS_PER_SECOND, // Number of reads per second per field
         storage_interval, // Number of seconds between SD card writes
         upload_interval, // Number of seconds between uploads to thingspeak

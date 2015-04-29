@@ -110,30 +110,41 @@ static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
  */
 
 void APP_DATA_Setup(
-    unsigned long averagingInterval, uint16_t valuesPerSecond,
-    uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
+    unsigned long storageAveragingInterval, unsigned long uploadAveragingInterval,
+    uint16_t valuesPerSecond, uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
 {    
-    if (averagingInterval == 0) { APP_FatalError("Averaging interval is 0 seconds!"); }
+    if (storageAveragingInterval == 0) { APP_FatalError("Storage averaging interval is 0 seconds!"); }
+    if (uploadAveragingInterval == 0) { APP_FatalError("Upload averaging interval is 0 seconds!"); }
 
-    if (averagingInterval > storageInterval)
+    if (storageAveragingInterval > storageInterval)
     {
-        APP_FatalError("Averaging interval cannot be longer than storage interval.");
+        APP_FatalError("Storage averaging interval cannot be longer than storage interval.");
     }
 
-    if (averagingInterval > uploadInterval)
+    if (uploadAveragingInterval > uploadInterval)
     {
-        APP_FatalError("Averaging interval cannot be longer than upload interval.");
+        APP_FatalError("Upload averaging interval cannot be longer than upload interval.");
     }
 
-    uint32_t averagerSize = valuesPerSecond * averagingInterval;
-    s_numberOfAveragesToStore = calculateNumberOfAverages(storageInterval, averagingInterval);
-    s_numberOfAveragesToUpload = calculateNumberOfAverages(uploadInterval, averagingInterval);
+    uint32_t storageAveragerSize = valuesPerSecond * storageAveragingInterval;
+    uint32_t uploadAveragerSize = valuesPerSecond * uploadAveragingInterval;
+
+    s_numberOfAveragesToStore = calculateNumberOfAverages(storageInterval, storageAveragingInterval);
+    s_numberOfAveragesToUpload = calculateNumberOfAverages(uploadInterval, uploadAveragingInterval);
+
+    Serial.print("Storing ");
+    Serial.print(s_numberOfAveragesToStore);
+    Serial.println(" averages.");
+
+    Serial.print("Uploading ");
+    Serial.print(s_numberOfAveragesToUpload);
+    Serial.println(" averages.");
 
     // Create three data managers, one for storing data, one for uploading data and one for debugging
     
-    s_storageManager = new DataFieldManager(s_numberOfAveragesToStore, averagerSize);
-    s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, averagerSize);
-    s_dataDebugManager = new DataFieldManager(1, averagerSize);
+    s_storageManager = new DataFieldManager(s_numberOfAveragesToStore, storageAveragerSize);
+    s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
+    s_dataDebugManager = new DataFieldManager(1, 10);
 
     if (!s_storageManager) { APP_FatalError("Failed to create storage manager"); }
     if (!s_uploadManager) { APP_FatalError("Failed to create upload manager"); }
