@@ -69,13 +69,13 @@ char * Thingspeak::getURL(void)
 }
 
 uint16_t Thingspeak::createPostAPICall(
-    char * buffer, float * data, uint8_t nFields, uint16_t maxSize)
+    char * buffer, float * data, uint32_t * channels, uint8_t nFields, uint16_t maxSize)
 {
-    return createPostAPICall(buffer, data, nFields, maxSize, NULL);
+    return createPostAPICall(buffer, data, channels, nFields, maxSize, NULL);
 }
 
 uint16_t Thingspeak::createPostAPICall(
-    char * buffer, float * data, uint8_t nFields, uint16_t maxSize, char const * const pTime)
+    char * buffer, float * data,  uint32_t * channels, uint8_t nFields, uint16_t maxSize, char const * const pTime)
 {
     if (!buffer) { return 0; }
     if (!m_key) { return 0; }
@@ -95,7 +95,7 @@ uint16_t Thingspeak::createPostAPICall(
     for (field = 0; field < nFields; field++)
     {
         // Make the data string
-        index += sprintf(&m_body[index], "%d=%.5f", field+1, data[field]);
+        index += sprintf(&m_body[index], "%d=%.5f", channels[field], data[field]);
         if (!lastinloop(field, nFields))
         {
             m_body[index++] = '&';

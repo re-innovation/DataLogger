@@ -13,6 +13,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include <sys/stat.h>
 
 #include <iostream>
@@ -20,6 +21,8 @@
 
 #include "DLLocalStorage.h"
 #include "DLTest.Mock.LocalStorage.h"
+
+#include "DLUtility.Strings.h"
 
 static std::fstream s_file;
 
@@ -103,22 +106,31 @@ uint32_t TestStorageInterface::readBytes(FILE_HANDLE file, char * buffer, uint32
 uint32_t TestStorageInterface::readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool stripCRLF)
 {
     (void)file;
+
     if (!s_file.is_open()) { return 0; }
     if (!buffer) { return 0; }
-    s_file.getline(buffer, n);
 
-    uint32_t count = s_file.gcount();
+    std::string strBuffer;
+    std::getline(s_file, strBuffer);
 
-    if (stripCRLF)
+    strncpy_safe(buffer, strBuffer.c_str(), n);
+
+    int32_t count = strBuffer.length();
+
+    if (count && stripCRLF)
     {
-        count -= 2; // Skip back over NULL to last actual char read from line
-        while(buffer[count] == '\r' || buffer[count] == '\n')
+        count--; // Skip back to last char read
+        while((count >= 0) && (buffer[count] == '\r' || buffer[count] == '\n'))
         {
             buffer[count--] = '\0';
         }
-        count += 2; // Restore previous count (after NULL)
+        count+=2; // Undo skip and also include NULL terminator
     }
-
+    else
+    {
+        buffer[count++] = '\n'; // Append the \n that was removed by getline
+        buffer[count++] = '\0';
+    }
     return count;
 }
 

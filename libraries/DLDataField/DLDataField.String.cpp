@@ -33,7 +33,7 @@
 #include "DLDataField.h"
 #include "DLUtility.h"
 
-StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N) : DataField(type)
+StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     
     setSize(N);

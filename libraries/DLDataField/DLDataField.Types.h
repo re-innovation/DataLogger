@@ -44,4 +44,13 @@ struct currentchannel
 };
 typedef struct currentchannel CURRENTCHANNEL;
 
+struct thermistorchannel
+{
+    float R25;
+    float B;
+    float otherR;
+    float maxADC;
+}; 
+typedef struct thermistorchannel THERMISTORCHANNEL;
+
 #endif

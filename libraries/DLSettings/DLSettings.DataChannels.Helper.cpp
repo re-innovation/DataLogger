@@ -17,6 +17,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifdef TEST
+#include <iostream>
+#endif
+
 /*
  * Local Includes
  */
@@ -31,7 +35,8 @@
 
 static const char * s_channelTypes[] = {
     "voltage",
-    "current"
+    "current",
+    "temperature_c"
 };
 
 /*

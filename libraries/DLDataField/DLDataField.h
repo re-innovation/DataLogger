@@ -7,7 +7,7 @@
 class DataField
 {
     public:
-        DataField(FIELD_TYPE fieldType);
+        DataField(FIELD_TYPE fieldType, uint32_t channelNumber);
         ~DataField();
 
         void setSize(uint32_t length);
@@ -17,6 +17,8 @@ class DataField
         uint32_t length(void);
         bool hasData(void);
         void removeOldest(void);
+
+        uint32_t getChannelNumber(void);
 
     protected:
 
@@ -35,7 +37,7 @@ class DataField
         FIELD_TYPE m_fieldType;
         uint32_t m_index[2];
         uint32_t m_maxIndex;
-
+        uint32_t m_channelNumber;
         Averager<int32_t> * m_averager;
 };
 
@@ -45,7 +47,7 @@ class NumericDataField : public DataField
         /* type: VOLTAGE, CURRENT etc.
          * fieldData: Pointer to VOLTAGECHANNEL, CURRENTCHANNEL to match field type
          */
-        NumericDataField(FIELD_TYPE type, void * fieldData);
+        NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber);
         ~NumericDataField();
 
         void setDataSizes(uint32_t N, uint32_t averagerN);
@@ -73,7 +75,7 @@ class StringDataField : public DataField
     public:
         // len is length of each string
         // N is number of strings to store
-        StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N);
+        StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N, uint32_t channelNumber);
         ~StringDataField();
 
         void storeData(char const * data);
@@ -99,5 +101,6 @@ uint32_t DataField_writeStringDataToBuffer(
 // Conversion functions provided by DLDataField.Conversion.cpp
 float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData);
 float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData);
+float CONV_CelsiusFromRawThermistor(float raw, THERMISTORCHANNEL * conversionData);
 
 #endif

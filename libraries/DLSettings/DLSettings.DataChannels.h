@@ -3,6 +3,8 @@
 
 #define MAX_CHANNELS (32)
 
+typedef uint32_t CHANNELNUMBER;
+
 /*
  * List the possible errors that can result from parsing a string
  */
@@ -28,8 +30,8 @@ void Settings_InitDataChannels(void);
 
 DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting);
 
-FIELD_TYPE Settings_GetChannelType(uint8_t channel);
-bool Settings_ChannelSettingIsValid(uint8_t channel);
+FIELD_TYPE Settings_GetChannelType(CHANNELNUMBER channel);
+bool Settings_ChannelSettingIsValid(CHANNELNUMBER channel);
 
 void * Settings_GetData(uint8_t channel);
 VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel);

@@ -54,6 +54,25 @@ void fillArray(T * array, T value, uint16_t size)
     }
 }
 
+template <typename T>
+int32_t indexOf(T * array, T value, uint16_t size)
+{
+    int32_t foundIndex = -1;
+
+    uint16_t i;
+
+    for (i = 0; i < size; ++i)
+    {
+        if (array[i] == value)
+        {
+            foundIndex = i;
+            break;
+        }
+    }
+
+    return foundIndex;
+}
+
 // The getMaximum, getIndexOfMaximum, fillArray templates must be instantiated for all expected values
 template uint8_t getMaximum(uint8_t *, uint16_t);
 template int8_t getMaximum(int8_t *, uint16_t);
@@ -78,3 +97,11 @@ template void fillArray(int16_t * array, int16_t value, uint16_t size);
 template void fillArray(uint32_t * array, uint32_t value, uint16_t size);
 template void fillArray(int32_t * array, int32_t value, uint16_t size);
 template void fillArray(float * array, float value, uint16_t size);
+
+template int32_t indexOf(uint8_t * array, uint8_t value, uint16_t size);
+template int32_t indexOf(int8_t * array, int8_t value, uint16_t size);
+template int32_t indexOf(uint16_t * array, uint16_t value, uint16_t size);
+template int32_t indexOf(int16_t * array, int16_t value, uint16_t size);
+template int32_t indexOf(uint32_t * array, uint32_t value, uint16_t size);
+template int32_t indexOf(int32_t * array, int32_t value, uint16_t size);
+template int32_t indexOf(float * array, float value, uint16_t size);

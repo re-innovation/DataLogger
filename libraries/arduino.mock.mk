@@ -15,7 +15,7 @@ SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest
 SRC_FILES += DLTest/DLTest.Mock.Location.cpp DLTest/DLTest.Mock.Time.cpp DLTest/DLTest.Mock.GPS.cpp
 SRC_FILES += DLTest/DLTest.Mock.Network.cpp DLTest/DLTest.Mock.Sensor.LinkItONE.cpp TaskAction/TaskAction.cpp
 
-SYMBOLS = -g -DMOCK
+SYMBOLS = -g -DMOCK -DTEST
 
 -include $(DIR)/mock.mk
 
@@ -28,6 +28,7 @@ $(TARGET): $(OBJDEPS)
 	cat $(INO_FILE) >> $(MODIFIED_INO)
 	$(CC) $(CFLAGS) $(INC_DIRS) $(SYMBOLS) -c -x c++ $(MODIFIED_INO) -o $(MODIFIED_INO).o
 	$(CC) $(CFLAGS) $(INC_DIRS) $(SYMBOLS) $(OBJDEPS) $(MODIFIED_INO).o -o $(TARGET)
+	cp $(TARGET) $(TARGET).debug
 	$(TARGET)
 	rm $(MODIFIED_INO)
 

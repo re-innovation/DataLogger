@@ -1,6 +1,8 @@
 INC_DIRS += -IDLLocalStorage
 INC_DIRS += -IDLUtility
 
+SRC_FILES += DLUtility/DLUtility.Strings.cpp
+
 local_setup:
 	# Remove test directory
 	rm -rf ./DLTest/Test/NewDir

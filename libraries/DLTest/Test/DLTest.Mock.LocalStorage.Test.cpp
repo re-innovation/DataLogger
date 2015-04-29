@@ -104,11 +104,12 @@ void test_readLine_CanReadLineFromOpenFileWithCRLF(void)
     TEST_ASSERT_NOT_EQUAL(INVALID_HANDLE, s_handle);
 
     char actual[30];
-    char expected[] = "TEST FILE CONTENT\r";
+    char expected[] = "TEST FILE CONTENT\r\n";
 
     // Read length is length of expected plus NULL
-    TEST_ASSERT_EQUAL(strlen(expected) + 1, s_testInterface->readLine(s_handle, actual, 30, false));
+    uint32_t count = s_testInterface->readLine(s_handle, actual, 30, false);
     TEST_ASSERT_EQUAL_STRING(expected, actual);
+    TEST_ASSERT_EQUAL(strlen(expected) + 1, count);
 }
 
 void test_readLine_CanReadLineFromOpenFileWithoutCRLF(void)
@@ -119,8 +120,9 @@ void test_readLine_CanReadLineFromOpenFileWithoutCRLF(void)
     char actual[30];
     char expected[] = "TEST FILE CONTENT";
 
-    TEST_ASSERT_EQUAL(strlen(expected) + 1, s_testInterface->readLine(s_handle, actual, 30, true));
+    uint32_t count = s_testInterface->readLine(s_handle, actual, 30, true);
     TEST_ASSERT_EQUAL_STRING(expected, actual);
+    TEST_ASSERT_EQUAL(strlen(expected) + 1, count);
 }
 
 void test_eof_IsTrueAtEndOfFile(void)

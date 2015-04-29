@@ -18,6 +18,8 @@ uint16_t APP_DATA_GetNumberOfFields(void);
 
 void APP_DATA_Tick(void);
 
+uint32_t * APP_DATA_GetChannelNumbers(void);
+
 bool APP_DATA_StorageDataRemaining(void);
 bool APP_DATA_UploadDataRemaining(void);
 

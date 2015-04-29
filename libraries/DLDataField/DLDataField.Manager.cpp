@@ -34,6 +34,7 @@
 #include "DLDataField.Manager.h"
 #include "DLSettings.DataChannels.h"
 #include "DLUtility.h"
+#include "DLUtility.ArrayFunctions.h"
 
 DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 {
@@ -61,7 +62,10 @@ bool DataFieldManager::addField(NumericDataField * field)
 
     field->setDataSizes(m_dataSize, m_averagerSize);
 
-    m_fields[m_count++] = field;
+    m_fields[m_count] = field;
+    m_channelNumbers[m_count] = field->getChannelNumber();
+    m_count++;
+
     return true;
 }
 
@@ -71,9 +75,19 @@ bool DataFieldManager::addField(StringDataField * field)
 
     if (m_count == MAX_FIELDS) { return false; }
 
-    m_fields[m_count++] = field;
+    m_fields[m_count] = field;
+    m_channelNumbers[m_count] = field->getChannelNumber();
+
+    m_count++;
     return true;
 }
+
+DataField * DataFieldManager::getChannel(uint8_t channel)
+{
+    int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_count);
+    return actualIndex >= 0 ? m_fields[actualIndex] : NULL;
+}
+
 
 DataField * DataFieldManager::getField(uint8_t index)
 {
@@ -115,8 +129,7 @@ void DataFieldManager::setupAllValidChannels(void)
     void * data;
 
     uint32_t maxChannels = Settings_GetMaxChannels();
-
-    for (ch = 0; ch < maxChannels; ch++)
+    for (ch = 1; ch < maxChannels; ch++)
     {
         if (Settings_ChannelSettingIsValid(ch))
         {
@@ -127,7 +140,13 @@ void DataFieldManager::setupAllValidChannels(void)
             {
             case VOLTAGE:
             case CURRENT:
-                field = new NumericDataField(type, data);
+            case TEMPERATURE_C:
+            case TEMPERATURE_K:
+            case TEMPERATURE_F:
+                field = new NumericDataField(type, data, ch);
+                #ifdef TEST
+                std::cout << "Adding channel " << (int)ch << ", type " << field->getTypeString() << std::endl;
+                #endif
                 addField(field);
                 break;
             default:
@@ -146,4 +165,9 @@ bool DataFieldManager::hasData(void)
         atLeastOneFieldHasData |= m_fields[i]->hasData();
     }
     return atLeastOneFieldHasData;
+}
+
+uint32_t * DataFieldManager::getChannelNumbers(void)
+{
+    return m_channelNumbers;
 }

@@ -30,7 +30,6 @@
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
-#include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "DLSettings.h"
@@ -76,7 +75,6 @@ static void writeToSDCardTaskFn(void)
     
     uint16_t nFields = APP_DATA_GetNumberOfFields();
     uint16_t linesWritten = 0;
-    bool finished = false;
 
     if (s_debugThisModule)
     {       
@@ -90,16 +88,14 @@ static void writeToSDCardTaskFn(void)
     if (s_fileHandle != INVALID_HANDLE)
     {
         uint16_t i;
-        while (!finished)
+        while (APP_DATA_StorageDataRemaining())
         {
             APP_SD_WriteTimestampToOpenFile();
             APP_SD_WriteEntryIDToOpenFile();
-        
-            finished = true;
-            for (i = 0; i < nFields; --i)
+
+            for (i = 0; i < nFields; ++i)
             {
                 pField = APP_Data_GetStorageField(i);
-                bool fieldHasData = pField->hasData();
 
                 // Write from datafield to buffer then from buffer to SD file
                 pField->getConvDataAsString(buffer, "%.4f", true);
@@ -110,9 +106,6 @@ static void writeToSDCardTaskFn(void)
                 {
                     s_sdCard->write(s_fileHandle, ", ");
                 }
-
-                // Finished writing if all fields have exhuasted their data
-                finished &= !fieldHasData;
             }
             s_sdCard->write(s_fileHandle, "\r\n");
             linesWritten++;

@@ -59,7 +59,7 @@ void test_dataFieldCountStartsAtZero(void)
 
 void test_stringDataFieldCanBeAdded(void)
 {
-    StringDataField * field = new StringDataField(CARDINAL_DIRECTION, 10, 10);
+    StringDataField * field = new StringDataField(CARDINAL_DIRECTION, 10, 10, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
     TEST_ASSERT_EQUAL(1, s_manager->count());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
@@ -67,7 +67,7 @@ void test_stringDataFieldCanBeAdded(void)
 
 void test_numericDataFieldCanBeAdded(void)
 {
-    NumericDataField * field = new NumericDataField(VOLTAGE, &s_voltageChannelSettings);
+    NumericDataField * field = new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
     TEST_ASSERT_EQUAL(1, s_manager->count());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
@@ -80,7 +80,7 @@ void test_getFieldsReturnsPointerToArrayOfFields(void)
     uint8_t i;
     for (i = 0; i < 6; ++i)
     {
-        expected[i] = new NumericDataField(VOLTAGE, &s_voltageChannelSettings);
+        expected[i] = new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0);
         s_manager->addField(expected[i]);
     }
 
@@ -96,9 +96,9 @@ void test_getFieldsReturnsPointerToArrayOfFields(void)
 
 static void test_writeHeadersToBufferWritesCorrectFields(void)
 {
-    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
-    s_manager->addField( new NumericDataField(CURRENT, &s_currentChannelSettings) );
-    s_manager->addField( new StringDataField(CARDINAL_DIRECTION, 3, 1) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0) );
+    s_manager->addField( new NumericDataField(CURRENT, &s_currentChannelSettings, 0) );
+    s_manager->addField( new StringDataField(CARDINAL_DIRECTION, 3, 1, 0) );
 
     char buffer[100];
     s_manager->writeHeadersToBuffer(buffer, 100);
@@ -109,8 +109,8 @@ static void test_writeHeadersToBufferWritesCorrectFields(void)
 static void test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData(void)
 {
     TEST_ASSERT_FALSE(s_manager->hasData());
-    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
-    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0) );
     TEST_ASSERT_FALSE(s_manager->hasData());
 
     ((NumericDataField*)(s_manager->getField(0)))->storeData(0);
@@ -126,6 +126,18 @@ static void test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData(void)
     TEST_ASSERT_FALSE(s_manager->hasData());
 }
 
+void test_managerReturnsCorrectArrayOfChannelNumbers(void)
+{
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 1) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 3) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 7) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 12) );
+
+    uint32_t expected[] = {1, 3, 7, 12};
+
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expected, s_manager->getChannelNumbers(), 4);
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.Manager.Test.cpp");
@@ -136,7 +148,7 @@ int main(void)
     RUN_TEST(test_writeHeadersToBufferWritesCorrectFields);
 
     RUN_TEST(test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData);
-
+    RUN_TEST(test_managerReturnsCorrectArrayOfChannelNumbers);
     UnityEnd();
     return 0;
 }

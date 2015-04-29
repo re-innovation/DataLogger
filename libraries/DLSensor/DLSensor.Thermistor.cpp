@@ -55,10 +55,15 @@ float Thermistor::TemperatureFromResistance(float R)
 
 float Thermistor::TemperatureFromADCReading(float otherResistor, uint16_t reading, uint16_t maxReading)
 {
+	return TemperatureFromADCReading(otherResistor, (float)reading, maxReading);
+}
+
+float Thermistor::TemperatureFromADCReading(float otherResistor, float reading, uint16_t maxReading)
+{
 	float result  = 0;
 	
-	float myResistance = otherResistor * (float)reading;
-	myResistance /= ((float)maxReading - (float)reading);
+	float myResistance = otherResistor * reading;
+	myResistance /= ((float)maxReading - reading);
 
 	if (myResistance > 0)
 	{

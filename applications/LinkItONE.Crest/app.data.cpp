@@ -30,7 +30,6 @@
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
-#include "DLUtility.Time.h"
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "TaskAction.h"
@@ -84,23 +83,25 @@ static void debugTaskFn(void)
     uint8_t i;
     uint8_t fieldCount = s_dataDebugManager->count();
 
-    for (i = 0; i < fieldCount; i++)
+    while(s_dataDebugManager->hasData())
     {
-        float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(0);
-        float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(0);
-
-        Serial.print(toShow);
-        Serial.print("(");
-        Serial.print(average);
-        Serial.print(")");
-
-        if (!lastinloop(i, fieldCount))
+        for (i = 0; i < fieldCount; i++)
         {
-            Serial.print(", ");                
-        }
-    }
+            float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(false);
+            float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
 
-    Serial.println();
+            Serial.print(toShow);
+            Serial.print("(");
+            Serial.print(average);
+            Serial.print(")");
+
+            if (!lastinloop(i, fieldCount))
+            {
+                Serial.print(", ");                
+            }
+        }
+        Serial.println();
+    }
 }
 static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
 
@@ -145,16 +146,18 @@ void APP_DATA_Setup(
     uint32_t count = s_storageManager->count();
     Serial.print("Data Managers created with ");
     Serial.print(count);
-    Serial.println(" fields.");
+    Serial.println(count > 1 ? " channels." : " channel.");
     
     uint32_t i;
 
+    uint32_t * channelNumbers = s_storageManager->getChannelNumbers();
+
     for (i = 0; i < count; i++)
     {
-        Serial.print("Field ");
-        Serial.print(i);
+        Serial.print("Channel ");
+        Serial.print(channelNumbers[i]);
         Serial.print(" type is ");
-        Serial.print(s_storageManager->getField(i)->getTypeString());
+        Serial.print(s_storageManager->getChannel(channelNumbers[i])->getTypeString());
         Serial.println(".");
     }
 
@@ -166,31 +169,31 @@ void APP_DATA_Setup(
     s_setupValid = true;
 }
 
-void APP_DATA_NewData(int32_t data, uint16_t field)
+void APP_DATA_NewData(int32_t data, uint16_t channel)
 {
     char errBuffer[64];
     NumericDataField* pField;
 
-    pField =  (NumericDataField*)(s_storageManager->getField(field));
+    pField =  (NumericDataField*)(s_storageManager->getChannel(channel));
     if (!pField)
     {
-        sprintf(errBuffer, "Attempt to add data to non-existent field %d", field);
+        sprintf(errBuffer, "Attempt to add data to non-existent channel %d", channel);
         APP_FatalError(errBuffer);
     }
     pField->storeData( data );
     
-    pField =  (NumericDataField*)(s_uploadManager->getField(field));
+    pField =  (NumericDataField*)(s_uploadManager->getChannel(channel));
     if (!pField)
     {
-        sprintf(errBuffer, "Attempt to add data to non-existent field %d", field);
+        sprintf(errBuffer, "Attempt to add data to non-existent channel %d", channel);
         APP_FatalError(errBuffer);
     }
     pField->storeData( data );
 
-    pField = (NumericDataField*)(s_dataDebugManager->getField(field));
+    pField = (NumericDataField*)(s_dataDebugManager->getChannel(channel));
     if (!pField)
     {
-        sprintf(errBuffer, "Attempt to add data to non-existent debug field %d", field);
+        sprintf(errBuffer, "Attempt to add data to non-existent debug field %d", channel);
         APP_FatalError(errBuffer);
     }
     pField->storeData( data );
@@ -214,6 +217,11 @@ bool APP_DATA_UploadDataRemaining(void)
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
 {
     (void)s_storageManager->writeHeadersToBuffer(buffer, bufferLength);
+}
+
+uint32_t * APP_DATA_GetChannelNumbers(void)
+{
+    return s_storageManager->getChannelNumbers();
 }
 
 uint32_t APP_DATA_GetNumberOfAveragesForStorage(void) { return s_numberOfAveragesToStore; }

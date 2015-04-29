@@ -33,7 +33,7 @@
 #include "DLDataField.h"
 #include "DLUtility.h"
 
-NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData) : DataField(type)
+NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     m_conversionData = fieldData;
 }

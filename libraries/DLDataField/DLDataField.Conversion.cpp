@@ -25,6 +25,7 @@
  */
 
 #include "DLUtility.Averager.h"
+#include "DLSensor.Thermistor.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 
@@ -125,4 +126,16 @@ float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData)
 	}
 }
 
-
+/* 
+ * CONV_CelsiusFromRawThermistor
+ *
+ * Convert a raw ADC reading into a temperature, assuming the thermistor
+ * is described by data in a THERMISTORCHANNEL
+ * raw: Raw ADC reading
+ * conversionData : Pointer to conversion data to use
+ */
+float CONV_CelsiusFromRawThermistor(float raw, THERMISTORCHANNEL * conversionData)
+{
+    Thermistor thermistor = Thermistor(conversionData->B, conversionData->R25);
+    return thermistor.TemperatureFromADCReading(conversionData->otherR, raw, conversionData->maxADC);
+}

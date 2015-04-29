@@ -68,16 +68,17 @@ static void fillWithTestStringData(DataField * pDataField)
 
 static void test_CreateDataFieldWithCorrectType_ReturnsCorrectTypeAndDefaultValue(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 12);
 	dataField.setDataSizes(1,1);
 
 	TEST_ASSERT_EQUAL(VOLTAGE, dataField.getType());
 	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(0));
+	TEST_ASSERT_EQUAL(12, dataField.getChannelNumber());
 }
 
 static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 {
-	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	static NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(1,1);
 
 	static char buffer[20];
@@ -89,7 +90,7 @@ static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 
 static void test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue(void)
 {
-	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1, 0);
 	static char buffer[20];
 	dataField.copy(buffer, 0);
 	TEST_ASSERT_EQUAL(0, strlen(buffer));
@@ -97,7 +98,7 @@ static void test_DatafieldStoreAsString_ReturnsZeroLengthStringAsDefaultValue(vo
 
 static void test_DatafieldStoreAsStringThenSet_ReturnsSameString(void)
 {
-	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1, 0);
 	static char buffer[20];
 	dataField.storeData((char *)"TESTSTRING");
 	dataField.copy(buffer, 0);
@@ -106,7 +107,7 @@ static void test_DatafieldStoreAsStringThenSet_ReturnsSameString(void)
 
 static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void)
 {
-	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1);
+	static StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 20, 1, 0);
 	static char buffer[21] = "01234567890123456789";
 	static char expectedStr[21];
 	static char testStr[] = "THIS IS A REALLY LONG STRING THAT SHOULD BE CLIPPED!";
@@ -119,7 +120,7 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 10);
 	
 	fillWithTestIntData(&dataField);
@@ -131,7 +132,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(void)
 {
-	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	voltsDataField.setDataSizes(10, 10);
 	
 	fillWithTestIntData(&voltsDataField);
@@ -139,7 +140,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(v
 	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, voltsDataField.getRawData(0));
 	TEST_ASSERT_EQUAL_FLOAT(expectedConverted, voltsDataField.getConvData(0));
 
-	NumericDataField ampsDataField = NumericDataField(CURRENT, (void*)&s_currentChannelSettings);
+	NumericDataField ampsDataField = NumericDataField(CURRENT, (void*)&s_currentChannelSettings, 0);
 	ampsDataField.setDataSizes(10 ,10);
 	
 	fillWithTestIntData(&ampsDataField);
@@ -151,7 +152,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(v
 
 static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 
 	// If data is pushed three times, it should be popped three times
@@ -185,7 +186,7 @@ static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 
 static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
 {
-	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5, 0);
 	fillWithTestStringData(&dataField);
 
 	int16_t i;
@@ -197,7 +198,7 @@ static void test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings(void)
 
 static void test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer(void)
 {
-	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
+	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5, 0);
 	fillWithTestStringData(&dataField);
 
 	dataField.storeData((char*)"SW");
@@ -219,16 +220,16 @@ static void test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer(void)
 
 static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(void)
 {
-	StringDataField dataField = StringDataField(DEGREES_DIRECTION, 3, 5);
+	StringDataField dataField = StringDataField(DEGREES_DIRECTION, 3, 5, 0);
 	TEST_ASSERT_EQUAL_STRING("Wind Direction", dataField.getTypeString());
 
-	StringDataField invalidDataField = StringDataField((FIELD_TYPE)(DEGREES_DIRECTION+1), 3, 5);
+	StringDataField invalidDataField = StringDataField((FIELD_TYPE)(DEGREES_DIRECTION+1), 3, 5, 0);
 	TEST_ASSERT_EQUAL_STRING("", invalidDataField.getTypeString());
 }
 
 static void test_DatafieldReturnsCorrectLength(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 	
 	TEST_ASSERT_EQUAL(0, dataField.length());
@@ -248,7 +249,7 @@ static void test_DatafieldReturnsCorrectLength(void)
 
 static void test_DatafieldRemoveReducesLengthByOneDownToZero(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 
 	TEST_ASSERT_EQUAL(0, dataField.length());
@@ -263,7 +264,7 @@ static void test_DatafieldRemoveReducesLengthByOneDownToZero(void)
 
 static void test_DatafieldRemoveReturnsCorrectLengthAfterFilling(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 
 	fillWithTestIntData(&dataField);
@@ -294,7 +295,7 @@ static void test_DatafieldRemoveReturnsCorrectLengthAfterFilling(void)
 
 static void test_DatafieldCanBeCorrectlyReferencedAfterRemove(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 
 	fillWithTestIntData(&dataField);
@@ -332,7 +333,7 @@ static void test_DatafieldCanBeCorrectlyReferencedAfterRemove(void)
 
 static void test_DatafieldReturnsCorrectBooleanForHasData(void)
 {
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
 
 	TEST_ASSERT_FALSE(dataField.hasData());

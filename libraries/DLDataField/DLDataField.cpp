@@ -69,12 +69,13 @@ static char const * _getTypeString(FIELD_TYPE type)
  * DataField Class Functions 
  */
 
-DataField::DataField(FIELD_TYPE fieldType)
+DataField::DataField(FIELD_TYPE fieldType, uint32_t channelNumber)
 {
  	m_fieldType = fieldType;
  	m_index[T] = 0;
     m_index[H] = 0;
     m_maxIndex = 0;
+    m_channelNumber = channelNumber;
 }
 
 DataField::~DataField() {}
@@ -165,6 +166,11 @@ void DataField::removeOldest(void)
 bool DataField::hasData(void)
 {
 	return length() > 0;
+}
+
+uint32_t DataField::getChannelNumber(void)
+{
+	return m_channelNumber;
 }
 
 /* In-progress functions

@@ -33,3 +33,5 @@ SRC_FILES += DLHTTP/DLHTTP.cpp
 SRC_FILES += DLHTTP/DLHTTP.Header.cpp
 SRC_FILES += DLHTTP/DLHTTP.RequestBuilder.cpp
 SRC_FILES += DLHTTP/DLHTTP.ResponseParser.cpp
+
+SRC_FILES += DLSensor/DLSensor.Thermistor.cpp

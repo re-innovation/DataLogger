@@ -88,6 +88,9 @@ static char * s_requestBuffer;
 static uint32_t s_uploadBufferSize;
 static float * s_uploadData;
 
+static bool s_debugUpload = false;
+static bool s_debugGPS = false;
+
 static ADS1115 s_ADCs[] = {
     ADS1115(0x48),
     ADS1115(0x49),
@@ -138,21 +141,37 @@ void APP_SetDebugModules(char const * const modules)
 {
     if (strstr(modules, "LocalStorage"))
     {
-        Serial.println("Turning debugging on for LocalStorage module.");
+        Serial.println("Turning debugging on for local storage functionality.");
         APP_SD_EnableDebugging();
     }
+
+    if (strstr(modules, "Upload"))
+    {
+        Serial.println("Turning debugging on for remote upload functionality.");
+        s_debugUpload = true;
+    }
+    
+    if (strstr(modules, "GPS"))
+    {
+        Serial.println("Turning debugging on for GPS functionality.");
+        s_debugGPS = true;
+    }
 }
+
+void APP_UPLOAD_EnableDebugging();
 
 static void tryConnection(void)
 {
     // Try to connect to GPRS network
-    Serial.print("Attempting to attach to ");
-    Serial.print(Settings_getString(GPRS_APN));
-    Serial.print(" with username/pwd ");
-    Serial.print(Settings_getString(GPRS_USERNAME));
-    Serial.print("/");
-    Serial.println(Settings_getString(GPRS_PASSWORD));
-    
+    if (s_debugUpload)
+    {
+        Serial.print("Attempting to attach to ");
+        Serial.print(Settings_getString(GPRS_APN));
+        Serial.print(" with username/pwd ");
+        Serial.print(Settings_getString(GPRS_USERNAME));
+        Serial.print("/");
+        Serial.println(Settings_getString(GPRS_PASSWORD));
+    }
     s_gprsConnection->tryConnection(10);
 }
 
@@ -193,23 +212,33 @@ void readFromADCsTaskFn(void)
 {
     uint8_t adc = 0;
     uint8_t ch = 0;
-    uint8_t field = 0;
+    uint8_t dataChannel = 0;
 
     // Read the ADC1x1x ICs for fields 1 - 12
     for (adc = 0; adc < 3; adc++)
     {
         for (ch = 0; ch < 4; ch++)
         {
-            field = (adc*4)+ch;
-            if (Settings_ChannelSettingIsValid(field))
+            dataChannel = (adc*4)+ch+1;
+            if (Settings_ChannelSettingIsValid(dataChannel))
             {
                 uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
-                APP_DATA_NewData(data, field);
+                APP_DATA_NewData(data, dataChannel);
             }
         }
     }
-}
 
+    // Read the internal ADCs for fields 13-15
+    for (adc = 0; adc < 3; adc++)
+    {
+        dataChannel = adc + 13;
+        if (Settings_ChannelSettingIsValid(dataChannel))
+        {
+            uint16_t data = s_internalADCs[adc].read();
+            APP_DATA_NewData(data, dataChannel);
+        }
+    }
+}
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 
 void remoteUploadTaskFn(void)
@@ -221,19 +250,21 @@ void remoteUploadTaskFn(void)
     
     if (!s_gprsConnection->isConnected())
     {
-        Serial.println("GPRS not connected. Attempting new connection.");
+        if (s_debugUpload) { Serial.println("GPRS not connected. Attempting new connection."); }
         tryConnection();
     }
 
     // Try to upload to ThingSpeak
-    Serial.print("Attempting upload to ");
-    Serial.print(s_thingSpeakService->getURL());
-    Serial.print("...");
     char response_buffer[200] = "";
-
-    bool finished = false;
-    while(!finished)
+    while(APP_DATA_UploadDataRemaining())
     {    
+
+        if (s_debugUpload)
+        {
+            Serial.print("Attempting upload to ");
+            Serial.println(s_thingSpeakService->getURL());
+        }
+
         updateUploadData();
         
         char created_at[30];
@@ -241,20 +272,28 @@ void remoteUploadTaskFn(void)
         Time_GetTime(&createTime, TIME_PLATFORM);
         CSV_writeTimestampToBuffer(&createTime, created_at);
         s_thingSpeakService->createPostAPICall(
-            s_requestBuffer, s_uploadData, nFields, s_uploadBufferSize, NULL);
+            s_requestBuffer, s_uploadData, APP_DATA_GetChannelNumbers(), nFields, s_uploadBufferSize, NULL);
+
+        if (s_debugUpload)
+        {
+            Serial.print("Request: '");
+            Serial.print(s_requestBuffer);
+            Serial.println("'");
+        }
 
         if (s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), s_requestBuffer, response_buffer))
         {
-            Serial.println(" upload complete!");
+            if (s_debugUpload) { Serial.println("Upload complete!"); }
         }
         else
         {
-            Serial.print(" could not connect to ");
-            Serial.print(s_thingSpeakService->getURL());
-            Serial.println("!");
+            if (s_debugUpload)
+            {
+                Serial.print("Could not connect to ");
+                Serial.print(s_thingSpeakService->getURL());
+                Serial.println("!");
+            }
         }
-
-        finished = APP_DATA_UploadDataRemaining();
     }
     
     digitalWrite(LED1_PIN, LOW);
@@ -268,14 +307,14 @@ void gpsTaskFn(void)
 
     if (success)
     {
-        Serial.println("Updating RTC time from GPS.");
+        if (s_debugGPS) { Serial.println("Updating RTC time from GPS."); }
         TM gpsTime;
         Time_GetTime(&gpsTime, TIME_GPS);
         Time_SetPlatformTime(&gpsTime);
     }
     else
     {
-        Serial.println("No valid GPS info.");
+        if (s_debugGPS) { Serial.println("No valid GPS info."); }
     }
 }
 TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS);
@@ -316,6 +355,11 @@ void setup()
         upload_interval, // Number of seconds between uploads to thingspeak
         "Datalogger.channels.conf" // Filename to read channel settings from
         );
+
+    if (APP_DATA_GetNumberOfFields() == 0)
+    {
+        APP_FatalError("No valid channel configurations read!");
+    }
 
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);

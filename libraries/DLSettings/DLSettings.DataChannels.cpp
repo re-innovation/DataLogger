@@ -18,6 +18,10 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#ifdef TEST
+#include <iostream>
+#endif
+ 
 /*
  * Local Includes
  */
@@ -109,7 +113,10 @@ static void setupChannel(uint8_t ch, FIELD_TYPE type)
         break;
     case CURRENT:
         s_channels[ch] = new CURRENTCHANNEL();
-        
+    case TEMPERATURE_C:
+    case TEMPERATURE_F:
+    case TEMPERATURE_K:
+        s_channels[ch] = new THERMISTORCHANNEL();
         break;
     default:
     case INVALID_TYPE:
@@ -125,6 +132,11 @@ static bool voltageChannelIsValid(uint8_t channel)
 static bool currentChannelIsValid(uint8_t channel)
 {
     return s_valuesSetBitFields[channel] == 0x07; // Current needs three values set   
+}
+
+static bool thermistorChannelIsValid(uint8_t channel)
+{
+    return s_valuesSetBitFields[channel] == 0x0F; // Thermistor needs four values set   
 }
 
 static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName, char * pValueString)
@@ -169,7 +181,7 @@ static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName
     if (0 == strncmp(pSettingName, "mvperbit", 8))
     {
         if (!settingParsedAsFloat) { return invalidSettingError(); }
-        ((VOLTAGECHANNEL*)s_channels[ch])->mvPerBit = setting;
+        ((CURRENTCHANNEL*)s_channels[ch])->mvPerBit = setting;
         s_valuesSetBitFields[ch] |= 0x01;
         return noError();
     }
@@ -187,6 +199,47 @@ static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName
         if (!settingParsedAsFloat) { return invalidSettingError(); }
         ((CURRENTCHANNEL*)s_channels[ch])->mvPerAmp = setting;
         s_valuesSetBitFields[ch] |= 0x04;
+        return noError();
+    }
+
+    return unknownSettingError();
+}
+
+static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingName, char * pValueString)
+{
+    float setting;
+    
+    bool settingParsedAsFloat = Setting_parseSettingAsFloat(&setting, pValueString);
+    
+    if (0 == strncmp(pSettingName, "maxadc", 6))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((THERMISTORCHANNEL*)s_channels[ch])->maxADC = setting;
+        s_valuesSetBitFields[ch] |= 0x01;
+        return noError();
+    }
+    
+    if (0 == strncmp(pSettingName, "b", 1))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((THERMISTORCHANNEL*)s_channels[ch])->B = setting;
+        s_valuesSetBitFields[ch] |= 0x02;
+        return noError();
+    }
+
+    if (0 == strncmp(pSettingName, "r25", 3))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((THERMISTORCHANNEL*)s_channels[ch])->R25 = setting;
+        s_valuesSetBitFields[ch] |= 0x04;
+        return noError();
+    }
+
+    if (0 == strncmp(pSettingName, "otherr", 6))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((THERMISTORCHANNEL*)s_channels[ch])->otherR = setting;
+        s_valuesSetBitFields[ch] |= 0x08;
         return noError();
     }
 
@@ -251,6 +304,11 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
         return tryParseAsVoltageSetting(ch, pChannelSettingString, pValueString);
     case CURRENT:
         return tryParseAsCurrentSetting(ch, pChannelSettingString, pValueString);
+    case TEMPERATURE_C:
+    case TEMPERATURE_F:
+    case TEMPERATURE_K:
+        return tryParseAsThermistorSetting(ch, pChannelSettingString, pValueString);
+
     case INVALID_TYPE:
     default:
         // If the channel type is not set prior to any other settings, this is an error.
@@ -258,13 +316,18 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     }
 }
 
-FIELD_TYPE Settings_GetChannelType(uint8_t channel)
+FIELD_TYPE Settings_GetChannelType(CHANNELNUMBER channel)
 {
-    return (channel < MAX_CHANNELS) ? s_fieldTypes[channel] : INVALID_TYPE;
+    if (channel > MAX_CHANNELS || channel == 0) { return INVALID_TYPE; }
+    return s_fieldTypes[channel-1];
 }
 
-bool Settings_ChannelSettingIsValid(uint8_t channel)
+bool Settings_ChannelSettingIsValid(CHANNELNUMBER channel)
 {
+    if (channel > MAX_CHANNELS || channel == 0) { return false; }
+
+    channel--; // Switch from one- to zero-indexing
+
     if (s_fieldTypes[channel] == INVALID_TYPE) { return false; }
 
     switch(s_fieldTypes[channel])
@@ -273,6 +336,10 @@ bool Settings_ChannelSettingIsValid(uint8_t channel)
         return voltageChannelIsValid(channel);
     case CURRENT:
         return currentChannelIsValid(channel);
+    case TEMPERATURE_C:
+    case TEMPERATURE_F:
+    case TEMPERATURE_K:
+        return thermistorChannelIsValid(channel);
     default:
         return false;
     }

@@ -16,9 +16,9 @@ class Thingspeak : public ServiceInterface
         char *  getURL(void);
 
         uint16_t createPostAPICall(
-            char * buffer, float * data, uint8_t nFields, uint16_t maxSize);
+            char * buffer, float * data, uint32_t * channels, uint8_t nFields, uint16_t maxSize);
         uint16_t createPostAPICall(
-            char * buffer, float * data, uint8_t nFields, uint16_t maxSize, char const * const time);
+            char * buffer, float * data, uint32_t * channels, uint8_t nFields, uint16_t maxSize, char const * const time);
 
         void createBulkUploadCall(char * buffer, uint16_t maxSize, const char * csvData, const char * filename, uint8_t nFields);
 
