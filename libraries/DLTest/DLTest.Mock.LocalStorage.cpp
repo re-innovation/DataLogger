@@ -62,7 +62,7 @@ FILE_HANDLE TestStorageInterface::openFile(char const * const filename, bool for
 
     if (!filename) { return INVALID_HANDLE; }
 
-    s_file.open(filename, forWrite ? std::ios::out : std::ios::in);
+    s_file.open(filename, forWrite ? std::ios::app : std::ios::in);
 
     return 0;
 }
@@ -74,6 +74,11 @@ void TestStorageInterface::write(FILE_HANDLE file, char const * const toWrite)
     if (!toWrite) { return; }
 
     s_file << toWrite;
+
+    if (m_echo)
+    {
+        std::cout << toWrite;
+    }
 }
 
 uint32_t TestStorageInterface::readBytes(FILE_HANDLE file, char * buffer, uint32_t n)
@@ -121,7 +126,7 @@ bool TestStorageInterface::endOfFile(FILE_HANDLE file)
 
 void TestStorageInterface::setEcho(bool set)
 {
-    (void)set;
+    m_echo = set;
 }
 
 void TestStorageInterface::removeFile(char const * const dirPath)

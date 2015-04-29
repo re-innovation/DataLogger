@@ -56,7 +56,7 @@ void Filename_setFromDate(uint8_t day, uint8_t month, uint8_t year, uint16_t ind
 
     year = TWO_DIGIT_YEAR(year); // Ensure year is from 0 to 99
     
-    char c = 0;
+    uint8_t c = 0;
     s_buffer[c++] = 'D';
     s_buffer[c++] = (year / 10) + '0';
     s_buffer[c++] = (year % 10) + '0';
@@ -88,7 +88,7 @@ void Filename_setFromDate(uint8_t day, uint8_t month, uint8_t year, uint16_t ind
     s_buffer[c++] = '\0';
 }
 
-char const * const Filename_get(void)
+char const * Filename_get(void)
 {
     return s_buffer;
 }

@@ -24,7 +24,7 @@
  */
 
 #include "DLUtility.h"
-#include "DLSettings.h"
+#include "DLSettings.Global.h"
 #include "DLService.h"
 #include "DLService.thingspeak.h"
 

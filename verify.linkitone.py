@@ -33,17 +33,19 @@ def generateINOList(rootDir):
 
     return inoFiles
 
-def verify(f):
-
-    command_list = ["arduino", "--verify", "--board", "arduino:mtk:linkit_one", f]
+def verify(ide, f):
+    command_list = [ide, "--verify", "--board", "arduino:mtk:linkit_one", f]
 
     if (subprocess.call(command_list) != 0):
         print("Verify failed for {0}".format(os.path.basename(f)))
 
 def verifyAll(rootDir):
 
+    ide = os.environ['LINKITONEIDE']
+    print("Using arduino exe at {0}".format(ide))
+    
     for f in generateINOList(rootDir):
-        verify(f)
+        verify(ide, f)
 
 
 if __name__ == "__main__":

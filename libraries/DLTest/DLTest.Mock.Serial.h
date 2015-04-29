@@ -11,6 +11,8 @@ class _Serial
 
         template <typename T>
         void println(T);
+
+        void println(void);
 };
 
 #endif

@@ -15,27 +15,41 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 
-#include <iostream>
+/*
+ * Standard Library Includes
+ */
+
+#include <arduino.h>
 
 /*
  * Local Includes
  */
 
+#include "DLLocalStorage.h"
 #include "DLSettings.h"
+#include "DLSettings.Global.h"
 #include "DLSettings.Reader.h"
+#include "DLSettings.Reader.Errors.h"
+#include "DLSettings.Global.Reader.h"
+#include "DLUtility.h"
+
+static bool s_intSettingIsRequired[INT_SETTINGS_COUNT];
+static bool s_stringSettingIsRequired[STRING_SETTINGS_COUNT];
 
 /*
  * Private Functions
  */
 
-bool addIntSettingFromString(INTSETTING i, char const * const pValue)
+static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 {
 	// strtol will set endOfConversion to > pValue if conversion succeeded
 	// or == pValue if it failed
 	char * endOfConversion = NULL;
 
-	int value = (int)strtol(pValue, &endOfConversion, 10);
+	int32_t value = (int32_t)strtol(pValue, &endOfConversion, 10);
 
 	if (endOfConversion == pValue)
 	{
@@ -47,22 +61,64 @@ bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 	return true;
 }
 
+
 /*
  * Public Functions
  */
 
-bool Settings_ReadFromString(char const * const string)
+SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInterface, char const * const filename)
 {
-	if (!string) { return false; }
+	char lineBuffer[100];
+
+	if (!pInterface)
+	{
+		return noInterfaceError();
+	}
+
+    if (!pInterface->fileExists(filename))
+    {
+        return noFile(filename);
+    }
+    
+    uint8_t hndl = pInterface->openFile(filename, false);
+    while (!pInterface->endOfFile(hndl))
+    {
+        // Read from file into lineBuffer and strip CRLF endings
+        pInterface->readLine(hndl, lineBuffer, 100, true);
+        SETTINGS_READER_RESULT res = Settings_readFromString(lineBuffer);
+        if (res != ERR_READER_NONE) { return res; }
+    }
+
+    pInterface->closeFile(hndl);
+    return noError();
+}
+
+SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
+{
+	char settingNameCopy[64];
+	char settingValueCopy[64];
+
+	if (!string) { return noStringError(); }
+
+	// If line is blank, fail early
+    if (stringIsWhitespace(string)) { return noError(); }
+
+	// If line is a comment, skip immediately
+	if (*string == '#') { return noError(); }
 
 	// Find the equals sign (separates name from value)
-	char const * const pEquals = strchr((char*)string, '=');
+	char * pEndOfName;
+	char * pStartOfSetting;
 
-	// If there is no equals sign, fail early
-    if (!pEquals) {return false; }
+	if (!splitAndStripWhiteSpace((char*)string, '=', NULL, &pEndOfName, &pStartOfSetting, NULL))
+	{
+		return noEqualsError();
+	}
 
 	// The length of the setting name is the difference between the two pointers
-	int settingNameLength = pEquals - string;
+	int settingNameLength = pEndOfName - string + 1;
+	strncpy_safe(settingNameCopy, string, settingNameLength+1);
+	strncpy_safe(settingValueCopy, pStartOfSetting, 64);
 
 	// Try to find int setting
 	char const * pSettingName;
@@ -70,26 +126,93 @@ bool Settings_ReadFromString(char const * const string)
 	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
 	{
 		pSettingName = Settings_getIntName((INTSETTING)i);
-		if (0 == strncmp(pSettingName, string, settingNameLength))
+		if (0 == strcmp(pSettingName, settingNameCopy))
 		{
-			// As soo as the setting name has been found, try parsing the int and return
-			return addIntSettingFromString((INTSETTING)i, pEquals+1);
+			// As soon as the setting name has been found, try parsing the int and return.
+			bool result = addIntSettingFromString((INTSETTING)i, settingValueCopy);
+			if (!result)
+			{
+				return invalidIntError(settingNameCopy, settingValueCopy);
+			}
+			return noError();
 		}
 	}
-
 
 	// Searching for ints didn't work, try to find string setting
 	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
 	{
 		pSettingName = Settings_getStringName((STRINGSETTING)i);
-		if (0 == strncmp(pSettingName, string, settingNameLength))
+		if (0 == strcmp(pSettingName, settingNameCopy))
 		{
 			// As soon as the setting name has been found, set the setting and return
-			Settings_setString((STRINGSETTING)i, pEquals+1);
-			return true;
+			Settings_setString((STRINGSETTING)i, settingValueCopy);
+			return noError();
 		}
 	}
 
 	// If execution got this far, the setting name wasn't found.
-	return false;
+	return noNameError(settingNameCopy);
+}
+
+
+void Settings_InitReader(void) {}
+
+void Settings_requireInt(INTSETTING setting)
+{
+	if (setting < INT_SETTINGS_COUNT) { s_intSettingIsRequired[setting] = true; }
+}
+
+void Settings_requireString(STRINGSETTING setting)
+{
+	if (setting < STRING_SETTINGS_COUNT) { s_stringSettingIsRequired[setting] = true; }
+}
+
+bool Settings_allRequiredSettingsRead(void)
+{
+	bool allRequiredSettingsRead = true;
+	uint8_t i;
+
+	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+	{
+		if (s_intSettingIsRequired[i])
+		{
+			allRequiredSettingsRead &= Settings_intIsSet((INTSETTING)i);
+		}
+	}
+
+	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+	{
+		if (s_stringSettingIsRequired[i])
+		{
+			allRequiredSettingsRead &= Settings_stringIsSet((STRINGSETTING)i);
+		}
+	}
+
+	return allRequiredSettingsRead;
+}
+
+void Settings_getMissingNames(char * buffer, uint32_t size)
+{
+	uint8_t i;
+	FixedLengthAccumulator accum(buffer, size);
+
+	for (i = 0; i < INT_SETTINGS_COUNT; ++i)
+	{
+		if (s_intSettingIsRequired[i] & !Settings_intIsSet((INTSETTING)i))
+		{
+			accum.writeString(Settings_getIntName((INTSETTING)(i)));
+			accum.writeString(", "); 
+		}
+	}
+
+	for (i = 0; i < STRING_SETTINGS_COUNT; ++i)
+	{
+		if (s_stringSettingIsRequired[i] & !Settings_stringIsSet((STRINGSETTING)i))
+		{
+			accum.writeString(Settings_getStringName((STRINGSETTING)(i)));
+			accum.writeString(", "); 
+		}
+	}
+
+	accum.remove(2); // Remove last ", "
 }

@@ -49,6 +49,12 @@ uint16_t Averager<T>::size(void)
 }
 
 template <typename T>
+bool Averager<T>::full(void)
+{
+	return m_full;
+}
+
+template <typename T>
 void Averager<T>::reset(T * value)
 {
 	/* The value is passed as a pointer so that NULL can
@@ -69,7 +75,31 @@ void Averager<T>::reset(T * value)
 template <typename T>
 uint16_t Averager<T>::N(void)
 {
-	return m_full ? m_maxIndex : m_write - 1;
+	return m_full ? m_maxIndex : m_write;
+}
+
+template <typename T>
+float Averager<T>::getFloatAverage(void)
+{
+	float sum = 0;
+	uint16_t count = 0;
+
+	if (m_write || m_full)
+	{
+		uint16_t n = 0;
+		count = m_full ? m_maxIndex : m_write - 1;
+		for (n = 0; n <= count; n++)
+		{
+			sum += m_data[n];
+		}
+	}
+	else
+	{
+		sum = 0;
+	}
+
+	sum = sum / (float)(count+1.0f);
+	return sum;
 }
 
 template <typename T>

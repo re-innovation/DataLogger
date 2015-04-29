@@ -12,10 +12,12 @@ class Averager
 		Averager(uint16_t size);
 		void reset(T * value);
 		uint16_t size(void);
+		float getFloatAverage(void);
 		T getAverage(void);
 		void newData(T NewData);
 		uint16_t N(void);
-
+		bool full(void);
+		
 		#ifdef TEST
 		void fillFromArray(T * array, uint16_t size);
 		#endif

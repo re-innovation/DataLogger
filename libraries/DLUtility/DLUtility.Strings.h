@@ -4,8 +4,12 @@
 #define CRLF "\r\n"
 
 void toLowerStr(char * pStr);
+char * skipSpacesRev(const char * line);
 char * skipSpaces(const char * line);
 uint32_t strncpy_safe(char * dst, char const * src, uint32_t max);
+bool splitAndStripWhiteSpace(char * toSplit, char splitChar, char ** pStartOnLeft, char ** pEndOnLeft, char ** pStartOnRight, char ** pEndOnRight);
+
+bool stringIsWhitespace(char const * str);
 
 /*
  * FixedLengthAccumulator
@@ -22,7 +26,9 @@ class FixedLengthAccumulator
         bool writeChar(char c);
         bool writeString(const char * s);
         bool writeLine(const char * s);
-        
+    
+        void remove(uint32_t chars);
+                
         void reset(void);
         char * c_str(void);
         

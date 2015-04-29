@@ -13,18 +13,28 @@
  */
 
 #include <string.h>
-
+#include <stdint.h>
+ 
 /*
  * Local Application Includes
  */
 
-#include "../DLSettings.h"
+#include "DLLocalStorage.h"
+#include "DLUtility.Averager.h"
+#include "DLDataField.Types.h"
+#include "DLSettings.h"
+#include "DLSettings.Global.h"
 
 /*
  * Unity Test Framework
  */
 
 #include "unity.h"
+
+void setUp(void)
+{
+	Settings_Init();
+}
 
 static void test_GetString_ReturnsNULLIfNotSet(void)
 {
@@ -34,6 +44,17 @@ static void test_GetString_ReturnsNULLIfNotSet(void)
 static void test_GetInt_ReturnsZeroIfNotSet(void)
 {
 	TEST_ASSERT_EQUAL(0, Settings_getInt((INTSETTING)0));
+}
+
+static void test_isSetReturnsCorrectValue(void)
+{
+	TEST_ASSERT_FALSE(Settings_intIsSet((INTSETTING)0));
+	Settings_setInt((INTSETTING)0, 10);
+	TEST_ASSERT_TRUE(Settings_intIsSet((INTSETTING)0));
+
+	TEST_ASSERT_FALSE(Settings_stringIsSet((STRINGSETTING)0));
+	Settings_setString((STRINGSETTING)0, "TESTSETTING");
+	TEST_ASSERT_TRUE(Settings_stringIsSet((STRINGSETTING)0));
 }
 
 static void test_GetString_ReturnsCorrectStringWhenSet(void)
@@ -52,14 +73,17 @@ static void test_GetInt_ReturnsCorrectIntWhenSet(void)
 
 static void test_SettingsCanOnlyBeSetOnce(void)
 {
+	Settings_setString((STRINGSETTING)0, "TESTSETTING");
+	
 	char newStringSetting[] = "THIS SHOULDN'T WORK";
 	char expected[] = "TESTSETTING";
 	Settings_setString((STRINGSETTING)0, newStringSetting);
 	char * returned = Settings_getString((STRINGSETTING)0);
 	TEST_ASSERT_EQUAL_STRING(expected, returned);
 
+	Settings_setInt((INTSETTING)0, 100);
 	Settings_setInt((INTSETTING)0, 10000);
-	TEST_ASSERT_EQUAL(10, Settings_getInt((INTSETTING)0));
+	TEST_ASSERT_EQUAL(100, Settings_getInt((INTSETTING)0));
 }
 
 static void test_AttemptToAccessStringSettingOutsideRange_ReturnsNULL(void)
@@ -82,7 +106,7 @@ static void test_GetStringSettingName_ReturnsCorrectName(void)
 
 static void test_GetIntSettingName_ReturnsCorrectName(void)
 {
-	TEST_ASSERT_EQUAL_STRING("THINGSPEAK_UPLOAD_INTERVAL", Settings_getIntName(THINGSPEAK_UPLOAD_INTERVAL));
+	TEST_ASSERT_EQUAL_STRING("DATA_UPLOAD_INTERVAL_SECS", Settings_getIntName(DATA_UPLOAD_INTERVAL_SECS));
 }
 
 int main(void)
@@ -91,6 +115,7 @@ int main(void)
 
   	RUN_TEST(test_GetString_ReturnsNULLIfNotSet);
   	RUN_TEST(test_GetInt_ReturnsZeroIfNotSet);
+  	RUN_TEST(test_isSetReturnsCorrectValue);
   	RUN_TEST(test_GetString_ReturnsCorrectStringWhenSet);
   	RUN_TEST(test_GetInt_ReturnsCorrectIntWhenSet);
   	RUN_TEST(test_SettingsCanOnlyBeSetOnce);

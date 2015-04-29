@@ -47,6 +47,11 @@ void _Serial::println<int8_t>(int8_t toPrint)
     std::cout << (int)toPrint << std::endl;
 }
 
+void _Serial::println(void)
+{
+    std::cout << std::endl;
+}
+
 template void _Serial::print<char *>(char * toPrint);
 template void _Serial::println<char *>(char * toPrint);
 
@@ -64,4 +69,8 @@ template void _Serial::println<uint32_t>(uint32_t toPrint);
 
 template void _Serial::print<int32_t>(int32_t toPrint);
 template void _Serial::println<int32_t>(int32_t toPrint);
+
+template void _Serial::print<float>(float toPrint);
+template void _Serial::println<float>(float toPrint);
+
 _Serial Serial;

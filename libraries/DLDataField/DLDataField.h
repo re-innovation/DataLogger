@@ -1,63 +1,67 @@
 #ifndef _DATA_FIELD_H_
 #define _DATA_FIELD_H_
 
-enum field_type
-{
-    // Electrical values
-    VOLTAGE,
-    CURRENT,
-
-    // Temperature values
-    TEMPERATURE_C,
-    TEMPERATURE_F,
-    TEMPERATURE_K,
-    
-    // Solar values
-    IRRADIANCE_WpM2,
-
-    // Wind values
-    CARDINAL_DIRECTION, //N, NE, E, etc.
-    DEGREES_DIRECTION
-
-};
-typedef enum field_type FIELD_TYPE;
+// A datafield should return this value if data is requested when none exists
+#define DATAFIELD_NO_DATA_VALUE (float)(0xFFFFFFFF)
 
 class DataField
 {
     public:
-        DataField(FIELD_TYPE fieldType, uint32_t length);
+        DataField(FIELD_TYPE fieldType);
         ~DataField();
+
+        void setSize(uint32_t length);
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
 
+        uint32_t length(void);
+        void removeOldest(void);
+
     protected:
 
-        void incrementIndexes(void);
-        uint32_t getRealReadIndex(uint32_t requestedIndex);
+        //void incrementIndexes(void);
+        void pop(void);
+        void prePush(void);
+        void postPush(void);
+        bool full(void);
 
+        uint32_t getTailIndex(void);
+
+        //uint32_t getRealReadIndex(uint32_t requestedIndex);
+
+        uint32_t getWriteIndex(void);
+        
         FIELD_TYPE m_fieldType;
-        bool m_full; // Set to true when buffer is first filled
         uint32_t m_index[2];
         uint32_t m_maxIndex;
 
+        Averager<int32_t> * m_averager;
 };
 
-template <typename T>
 class NumericDataField : public DataField
 {
     public:
-        NumericDataField(FIELD_TYPE type, uint32_t N); // N is length of storage buffer
+        /* type: VOLTAGE, CURRENT etc.
+         * fieldData: Pointer to VOLTAGECHANNEL, CURRENTCHANNEL to match field type
+         */
+        NumericDataField(FIELD_TYPE type, void * fieldData);
         ~NumericDataField();
 
-        void storeData(T data);
-        T getData(uint32_t index);
-        void getDataAsString(char * buf, char const * const fmt, uint8_t index);
+        void setDataSizes(uint32_t N, uint32_t averagerN);
+
+        void storeData(int32_t data);
+
+        float getRawData(bool alsoRemove);
+        float getConvData(bool alsoRemove);
+        void getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove);
+        void getConvDataAsString(char * buf, char const * const fmt, bool alsoRemove);
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
         
     private:
-        T * m_data;
+        float * m_data;
+        void * m_conversionData;
         #ifdef TEST
         void printContents(void);
         #endif
@@ -72,8 +76,8 @@ class StringDataField : public DataField
         ~StringDataField();
 
         void storeData(char const * data);
-        char * getData(uint32_t index);
-        void copy(char * buf, uint32_t index);
+        char * getData(bool alsoRemove);
+        void copy(char * buf, bool alsoRemove);
 
         bool isString(void) { return true; }
         bool isNumeric(void) { return false; }
@@ -83,19 +87,16 @@ class StringDataField : public DataField
         uint8_t m_maxLength;
 };
 
-uint32_t DataField_writeHeadersToBuffer(
-    char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
-
-template <typename T>
-uint32_t DataField_writeHeadersToBuffer(
-    char * buffer, NumericDataField<T> ** datafields, uint8_t arrayLength, uint8_t bufferLength);
-
 /* These functions are in-progress and don't really do the job they say they do quite right.
-template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
-    char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+    char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 
 uint32_t DataField_writeStringDataToBuffer(
     char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 */
+
+// Conversion functions provided by DLDataField.Conversion.cpp
+float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData);
+float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData);
+
 #endif

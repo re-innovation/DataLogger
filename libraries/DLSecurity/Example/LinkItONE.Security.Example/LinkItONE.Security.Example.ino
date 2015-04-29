@@ -33,6 +33,7 @@
  * DataLogger Includes
  */
 
+#include "DLDataField.h"
 #include "DLUtility.h"
 #include "DLSettings.h"
 #include "DLLocation.h"

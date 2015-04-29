@@ -1,10 +1,10 @@
 CC = g++
 
-CFLAGS=-Wall -Wextra -Werror
+CFLAGS=-Wall -Wextra -Werror -g
 
 SRC_FILES=$(UNITY_PATH)/unity.c
-INC_DIRS=-I$(UNITY_PATH) -IDLTest
-SYMBOLS=-DTEST -DDL_PATH=\".\"
+INC_DIRS=-I$(UNITY_PATH) -IDLTest -I$(TEST_MODULE)
+SYMBOLS=-DTEST -DDL_PATH="."
 
 ifdef TEST_MODULE
 ifdef TEST_SUBMODULE
@@ -12,7 +12,6 @@ SRC_FILES += ./$(TEST_MODULE)/Test/$(TEST_MODULE).$(TEST_SUBMODULE).Test.cpp
 SRC_FILES += ./$(TEST_MODULE)/$(TEST_MODULE).$(TEST_SUBMODULE).cpp
 TARGET = ./$(TEST_MODULE)/Test/$(TEST_MODULE).$(TEST_SUBMODULE).Test
 TEST_MAKEFILE = ./$(TEST_MODULE)/Test/$(TEST_MODULE).$(TEST_SUBMODULE).Test.mk
--include ./$(TEST_MODULE)/Test/$(TEST_MODULE).$(TEST_SUBMODULE).Test.mk
 else
 SRC_FILES += ./$(TEST_MODULE)/Test/$(TEST_MODULE).Test.cpp
 SRC_FILES += ./$(TEST_MODULE)/$(TEST_MODULE).cpp
@@ -23,7 +22,7 @@ else
 $(error TEST_MODULE is not set)
 endif
 
--include TEST_MAKEFILE
+-include $(TEST_MAKEFILE)
 
 all:
 	make -s -f $(TEST_MAKEFILE) local_setup

@@ -171,7 +171,7 @@ void LinkItOneSD::closeFile(FILE_HANDLE file)
     s_fileIsOpenForRead = false;
 }
 
-void LinkItOneSD::remove(char const * const dirPath)
+void LinkItOneSD::removeFile(char const * const dirPath)
 {
-    LSD.remove(dirPath);
+    LSD.remove((char*)dirPath);
 }

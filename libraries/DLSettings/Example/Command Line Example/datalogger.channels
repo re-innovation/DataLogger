@@ -1,0 +1,59 @@
+Channel1.Type = VOLTAGE
+Channel1.mvPerBit = 0.125
+Channel1.R1 = 200000
+Channel1.R2 = 10000
+
+Channel2.Type = VOLTAGE
+Channel2.mvPerBit = 0.125
+Channel2.R1 = 200000
+Channel2.R2 = 10000
+
+Channel3.Type = VOLTAGE
+Channel3.mvPerBit = 0.125
+Channel3.R1 = 200000
+Channel3.R2 = 10000
+
+Channel4.Type = VOLTAGE
+Channel4.mvPerBit = 0.125
+Channel4.R1 = 200000
+Channel4.R2 = 10000
+
+Channel5.Type = CURRENT
+Channel5.mvPerBit = 0.125
+Channel5.offset = 59
+Channel5.mvPerAmp = 594
+
+Channel6.Type = CURRENT
+Channel6.mvPerBit = 0.125
+Channel6.offset = 59
+Channel6.mvPerAmp = 592
+
+Channel7.Type = CURRENT
+Channel7.mvPerBit = 0.125
+Channel7.offset = 59
+Channel7.mvPerAmp = 591
+
+Channel8.Type = CURRENT
+Channel8.mvPerBit = 0.125
+Channel8.offset = 60
+Channel8.mvPerAmp = 596
+
+Channel9.Type = CURRENT
+Channel9.mvPerBit = 0.125
+Channel9.offset = 59
+Channel9.mvPerAmp = 592
+
+Channel10.Type = CURRENT
+Channel10.mvPerBit = 0.125
+Channel10.offset = 59
+Channel10.mvPerAmp = 592
+
+Channel11.Type = CURRENT
+Channel11.mvPerBit = 0.125
+Channel11.offset = 60
+Channel11.mvPerAmp = 600
+
+Channel12.Type = CURRENT
+Channel12.mvPerBit = 0.125
+Channel12.offset = 60
+Channel12.mvPerAmp = 600

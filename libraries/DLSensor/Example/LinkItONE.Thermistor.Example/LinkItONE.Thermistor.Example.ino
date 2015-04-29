@@ -35,6 +35,7 @@
 #include "DLSettings.h"
 #include "DLSensor.LinkItONE.h"
 #include "DLSensor.Thermistor.h"
+#include "DLDataField.h"
 
 static LinkItONEADC s_adcs[] = {
     LinkItONEADC(A0),

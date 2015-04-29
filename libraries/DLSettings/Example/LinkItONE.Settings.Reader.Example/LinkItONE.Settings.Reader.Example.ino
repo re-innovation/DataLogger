@@ -1,5 +1,5 @@
 /*
- * LinkITtONE.Settings.Reader.Example.ino
+ * LinkItONE.Settings.Reader.Example.ino
  *
  * Settings file reader example
  *
@@ -33,7 +33,7 @@
  */
 
 #include "DLSettings.h"
-#include "DLSettings.Reader.h"
+#include "DLDataField.h"
 #include "DLUtility.h"
 #include "DLLocalStorage.h"
 
@@ -41,18 +41,23 @@ static char s_settingsFilename[] = "Datalogger.Settings";
 static LocalStorageInterface * s_sdCard;
 static char lineBuffer[100];
 
+static void localPrintFn(char const * const toPrint)
+{
+    Serial.print(toPrint);
+}
+
 void setup()
 {
     // setup Serial port
     Serial.begin(115200);
 
     delay(10000);
-    
+
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
 
     Serial.println("*** Settings reader example ***");
+
     if (s_sdCard->fileExists(s_settingsFilename))
-    //if (LSD.exists(s_settingsFilename))
     {
         Serial.print("Reading settings from '");
         Serial.print(s_settingsFilename);
@@ -74,31 +79,21 @@ void setup()
         Serial.print("Reading setting line '");
         Serial.print(lineBuffer);
         Serial.println("'");
-        Settings_ReadFromString(lineBuffer);
+        if (ERR_READER_NONE != Settings_readFromString(lineBuffer))
+        {
+            Serial.print("Error: ");
+            Serial.println(Settings_getLastReaderResultText());
+        }
     }
     s_sdCard->closeFile(hndl);
 
-    // Echo out integer settings
-    Serial.println("Integer Settings:");
-    int i;
-    for (i = 0; i < INT_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getIntName((INTSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getInt((INTSETTING)i));
-    }
-
-    // Echo out string settings
-    Serial.println("String Settings:");
-    for (i = 0; i < STRING_SETTINGS_COUNT; i++)
-    {
-        Serial.print(Settings_getStringName((STRINGSETTING)i));
-        Serial.print(": ");
-        Serial.println(Settings_getString((STRINGSETTING)i));
-    }
+    Serial.print("Successfully read ");
+    Serial.print(Settings_getCount());
+    Serial.print(" settings."); 
+    Settings_echoAllSet(localPrintFn);
 }
 
 void loop()
 {
-    
+        
 }

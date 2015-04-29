@@ -53,6 +53,23 @@ void toLowerStr(char * pStr)
 }
 
 /*
+ * skipSpacesRev
+ *
+ * Decrements provided pointer until no longer a space char
+ * as defined by isspace() library function, and returns
+ * the new pointer
+ */
+
+char * skipSpacesRev(const char * line)
+{
+    if (!line) { return NULL; }
+    
+    while( *line && isspace(*line) ) { --line; }
+    
+    return (char*)line;
+}
+
+/*
  * skipSpaces
  *
  * Increments provided pointer until no longer a space char
@@ -104,7 +121,49 @@ uint32_t strncpy_safe(char * dst, char const * src, uint32_t max)
     return count;
 }
 
+bool stringIsWhitespace(char const * str)
+{
+    if (!str) return false;
+    str = skipSpaces(str);
+    return *str == '\0';
+}
 
+bool splitAndStripWhiteSpace(char * toSplit, char splitChar, char ** pStartOnLeft, char ** pEndOnLeft, char ** pStartOnRight, char ** pEndOnRight)
+{
+    if (!toSplit) { return false; }
+
+    // Find the separator (separates L from R)
+    char * pSeparator = strchr((char*)toSplit, splitChar);   
+    char * _pEndOnLeft = pSeparator - 1;
+    char * _pStartOnRight = pSeparator + 1;
+
+    // If there is no separator, fail early
+    if (!pSeparator) { return false; }
+
+    // Skip over any whitespace to find real start of lefthandside
+    char * _pStartOnLeft = toSplit;
+    _pStartOnLeft = skipSpaces(_pStartOnLeft);
+
+    // Backtrack over any whitespace to find real end of lefthand side
+    _pEndOnLeft = skipSpacesRev(_pEndOnLeft);
+
+    // Skip over any whitespace to find real start of righthand side
+    _pStartOnRight = skipSpaces(_pStartOnRight);
+
+    // Backtrack over any whitespace to find real end of righthand side
+    char * _pEndOnRight = toSplit + strlen(toSplit) - 1;
+    _pEndOnRight = skipSpacesRev(_pEndOnRight);
+
+    if (_pStartOnLeft > _pEndOnLeft) { return false;} // No text on left
+    if (_pStartOnRight > _pEndOnRight) { return false;} // No text on right
+
+    if (pStartOnLeft) { *pStartOnLeft = _pStartOnLeft; }
+    if (pEndOnLeft) { *pEndOnLeft = _pEndOnLeft; }
+    if (pStartOnRight) { *pStartOnRight = _pStartOnRight; }
+    if (pEndOnRight) { *pEndOnRight = _pEndOnRight; }
+
+    return true;
+}
 
 /* FixedLengthAccumulator class */
 
@@ -254,3 +313,24 @@ uint16_t FixedLengthAccumulator::length(void)
 {
     return m_writeIndex;
 }
+
+/*
+ * FixedLengthAccumulator::remove
+ *
+ * Removes chars from the end of the buffer by placing a '\0' in the appropriate position
+ */
+
+void FixedLengthAccumulator::remove(uint32_t chars)
+{
+    if (chars > m_writeIndex)
+    {
+        m_writeIndex = 0;
+    }
+    else
+    {
+        m_writeIndex -= chars;
+    }
+
+    m_buffer[m_writeIndex] = '\0';
+}
+        

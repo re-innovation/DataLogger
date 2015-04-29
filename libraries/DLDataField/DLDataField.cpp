@@ -28,6 +28,8 @@
  * Local Application Includes
  */
 
+#include "DLUtility.Averager.h"
+#include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLUtility.h"
 
@@ -35,9 +37,9 @@
  * Defines and Typedefs
  */
 
-// The read/write indexes for data arrays are stored in a two-value array.
-#define R 0 // First entry is the read index
-#define W 1 // Second entry is the write index
+// The had/tail indexes for data arrays are stored in a two-value array.
+#define H 0 // First entry is the head of the list
+#define T 1 // Second entry is the tail
 
 /*
  * Private Functions 
@@ -60,217 +62,109 @@ static char const * _getTypeString(FIELD_TYPE type)
     	"Wind Direction" // DEGREES_DIRECTION		
 	};
 
-	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";
-	
+	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";	
 }
 
 /*
  * DataField Class Functions 
  */
 
-DataField::DataField(FIELD_TYPE fieldType, uint32_t length)
+DataField::DataField(FIELD_TYPE fieldType)
 {
  	m_fieldType = fieldType;
- 	m_full = false;
- 	m_maxIndex = length - 1;
+ 	m_index[T] = 0;
+    m_index[H] = 0;
+    m_maxIndex = 0;
 }
 
 DataField::~DataField() {}
+
+void DataField::setSize(uint32_t length)
+{
+ 	m_maxIndex = length - 1;
+}
 
 FIELD_TYPE DataField::getType(void)
 {
 	return m_fieldType;
 }
 
-void DataField::incrementIndexes(void)
+void DataField::pop(void)
 {
-	incrementwithrollover(m_index[W], m_maxIndex);
-	if (m_index[W] == 0) { m_full = true; } // Write index has rolled over, so buffer is full
-
-	if (m_full)
+	if (length())
 	{
-		// When full, the write index points to the oldest value (where data should be read from)
-		m_index[R] = m_index[W];
+		m_index[T]++;
 	}
 }
 
-uint32_t DataField::getRealReadIndex(uint32_t requestedIndex)
+void DataField::prePush(void)
 {
-	/* Translate request for index based on 0 being oldest stored value
-	into index based on circular array storage */
-	requestedIndex += m_index[R];
+	if (full()) { removeOldest(); }
+}
+
+void DataField::postPush(void)
+{
+	m_index[H]++;
+}
+
+bool DataField::full(void)
+{
+	return (m_index[H] - m_index[T]) >= (m_maxIndex + 1);
+}
+
+/*void DataField::incrementIndexes(void)
+{
+	incrementwithrollover(m_index[H], m_maxIndex);
+	if (m_index[H] == 0) { full() = true; } // Write index has rolled over, so buffer is full
+
+	if (full())
+	{
+		// When full, the write index points to the oldest value (where data should be read from)
+		m_index[T] = m_index[H];
+	}
+}*/
+
+uint32_t DataField::getWriteIndex(void)
+{
+	return m_index[H] % (m_maxIndex + 1);
+}
+
+uint32_t DataField::getTailIndex(void)
+{
+	return m_index[T] % (m_maxIndex + 1);
+}
+
+/*uint32_t DataField::getRealReadIndex(uint32_t requestedIndex)
+{
+	//Translate request for index based on 0 being oldest stored value
+	//into index based on circular array storage
+	requestedIndex += m_index[T];
 	requestedIndex %= (m_maxIndex + 1);
 	return requestedIndex;
-}
+}*/
 
 char const * DataField::getTypeString(void)
 {
 	return _getTypeString(m_fieldType);
 }
 
-template <typename T>
-NumericDataField<T>::NumericDataField(FIELD_TYPE type, uint32_t N) : DataField(type, N)
+uint32_t DataField::length(void)
 {
-	m_data = new T[N];
-	
-	if (m_data)
+		return min((m_index[H] - m_index[T]), m_maxIndex + 1);
+}
+
+void DataField::removeOldest(void)
+{
+	// Move the read index on one, effectively ignoring the oldest value.
+	if (length() > 0)
 	{
-		fillArray(m_data, (T)0, N);
+		m_index[T]++;
 	}
-
-	m_index[R] = 0;
-	m_index[W] = 0;
 }
-
-template <typename T>
-NumericDataField<T>::~NumericDataField()
-{
-	delete[] m_data;
-}
-
-template <typename T>
-T NumericDataField<T>::getData(uint32_t index)
-{
-	index = getRealReadIndex(index);
-	return m_data[index];
-}
-
-template <typename T>
-void NumericDataField<T>::storeData(T data)
-{
-	m_data[m_index[W]] = (float)data;
-	incrementIndexes();
-}
-
-template <typename T>
-void NumericDataField<T>::getDataAsString(char * buf, char const * const fmt, uint8_t index)
-{
-	sprintf(buf, fmt, m_data[index]); // Write data point to buffer
-}
-
-#ifdef TEST
-template <typename T>
-void NumericDataField<T>::printContents(void)
-{
-	uint8_t i;
-	for (i = 0; i <= m_maxIndex; ++i)
-	{
-		std::cout << m_data[i] << ",";
-	}
-	std::cout << std::endl;
-}
-#endif
-
-StringDataField::StringDataField(FIELD_TYPE type, uint8_t len, uint32_t N) : DataField(type, N)
-{
-	m_data = new char*[N];
-	
-	if (m_data)
-	{
-		uint8_t i = 0;
-		for (i = 0; i < N; i++)
-		{
-			m_data[i] = new char[len];
-		}
-	}
-
-	m_index[R] = 0;
-	m_index[W] = 0;
-	m_maxLength = len;
-}
-
-StringDataField::~StringDataField()
-{
-	uint8_t i = 0;
-	for (i = 0; i < m_maxIndex; i++)
-	{
-		delete[] m_data[i];
-	}
-
-	delete[] m_data;
-}
-
-void StringDataField::storeData(char const * data)
-{
-	strncpy_safe(m_data[m_index[W]], data, m_maxLength);
-	incrementIndexes();
-}
-
-char * StringDataField::getData(uint32_t index)
-{
-	index = getRealReadIndex(index);
-	return m_data[index];
-}
-
-void StringDataField::copy(char * buf, uint32_t index)
-{
-	index = getRealReadIndex(index);
-	strncpy_safe(buf, m_data[index], m_maxLength);
-}
-
-uint32_t DataField_writeHeadersToBuffer(
-	char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength)
-{
-	if (!buffer) { return 0; }
-
-	uint8_t i;
-	
-	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
-
-	for (i = 0; i < arrayLength; ++i)
-	{
-		headerAccumulator.writeString(datafields[i].getTypeString());
-		if (!lastinloop(i, arrayLength))
-		{
-			headerAccumulator.writeString(", ");
-		}
-	}
-
-	headerAccumulator.writeString("\r\n");
-
-	return headerAccumulator.length();
-}
-
-template <typename T>
-uint32_t DataField_writeHeadersToBuffer(
-		char * buffer, NumericDataField<T> ** datafields, uint8_t arrayLength, uint8_t bufferLength)
-{
-	if (!buffer) { return 0; }
-
-	uint8_t i;
-	
-	FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
-
-	for (i = 0; i < arrayLength; ++i)
-	{
-		headerAccumulator.writeString(datafields[i]->getTypeString());
-		if (!lastinloop(i, arrayLength))
-		{
-			headerAccumulator.writeString(", ");
-		}
-	}
-
-	headerAccumulator.writeString("\n");
-
-	return headerAccumulator.length();
-}
-
-// Explictly instantiate templates for NumericDataField
-template class NumericDataField<uint8_t>;
-template class NumericDataField<int8_t>;
-template class NumericDataField<uint16_t>;
-template class NumericDataField<int16_t>;
-template class NumericDataField<uint32_t>;
-template class NumericDataField<int32_t>;
-template class NumericDataField<float>;
-
-template uint32_t DataField_writeHeadersToBuffer<float>(
-	char * buffer, NumericDataField<float> **datafields, uint8_t arrayLength, uint8_t bufferLength);
 
 /* In-progress functions
-template <typename T>
 uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<T> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
+	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)
 {
 	if (!buffer) { return 0; }
 
@@ -315,17 +209,5 @@ if (!buffer) { return 0; }
 
 /* In-progress functions 
 template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<float> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int8_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int16_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<uint32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
-template uint32_t DataField_writeNumericDataToBuffer(
-	char * buffer, NumericDataField<int32_t> datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
+	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 */

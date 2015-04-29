@@ -17,8 +17,8 @@ typedef enum time_type_enum TIME_TYPE;
  * Public Function Prototypes
  */
 
-bool Time_GetTime(TM * tm, TIME_TYPE type);
+bool Time_GetTime(TM *, TIME_TYPE type);
 
-void Time_SetPlatformTime(TM * tm);
+void Time_SetPlatformTime(TM *);
 
 #endif

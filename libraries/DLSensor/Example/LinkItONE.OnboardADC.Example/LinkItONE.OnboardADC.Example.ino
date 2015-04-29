@@ -34,6 +34,7 @@
 #include "DLUtility.h"
 #include "DLSettings.h"
 #include "DLSensor.LinkItONE.h"
+#include "DLDataField.h"
 
 static LinkItONEADC s_adcs[] = {
     LinkItONEADC(A0),

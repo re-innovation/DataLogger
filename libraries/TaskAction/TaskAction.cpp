@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include "TaskAction.h"
 
 TaskAction::TaskAction(void (*function)(), unsigned long interval, unsigned int ticks)
