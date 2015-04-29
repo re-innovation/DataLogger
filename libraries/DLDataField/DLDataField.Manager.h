@@ -17,6 +17,8 @@ class DataFieldManager
         
         void setupAllValidChannels(void);
 
+        bool hasData(void);
+        
     private:
         DataField * m_fields[MAX_FIELDS];
         uint8_t m_count;

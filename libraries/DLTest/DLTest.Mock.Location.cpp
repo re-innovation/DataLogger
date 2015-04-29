@@ -11,3 +11,8 @@ bool Location_Setup(uint32_t updatePeriod)
 {
     (void)updatePeriod; return true;
 }
+
+void Location_UpdateNow(void)
+{
+
+}

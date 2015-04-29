@@ -226,16 +226,6 @@ static void test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise(
 	TEST_ASSERT_EQUAL_STRING("", invalidDataField.getTypeString());
 }
 
-static void test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength(void)
-{
-	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
-	dataField.setDataSizes(10, 1);
-	
-	fillWithTestIntData(&dataField);
-
-	TEST_ASSERT_EQUAL_FLOAT(-3, dataField.getRawData(98357952));
-}
-
 static void test_DatafieldReturnsCorrectLength(void)
 {
 	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
@@ -309,43 +299,50 @@ static void test_DatafieldCanBeCorrectlyReferencedAfterRemove(void)
 
 	fillWithTestIntData(&dataField);
 	
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(-4, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(-3, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(-2, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(-1, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(0, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(20, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(40, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(60, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(80, dataField.getRawData(0));
 
-	dataField.removeOldest(); std::cout << dataField.length() << ", ";
+	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(0));
 }
 
-static void test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength(void)
+static void test_DatafieldReturnsCorrectBooleanForHasData(void)
 {
-	StringDataField dataField = StringDataField(CARDINAL_DIRECTION, 3, 5);
-	fillWithTestStringData(&dataField);
+	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings);
+	dataField.setDataSizes(10, 1);
 
-	TEST_ASSERT_EQUAL_STRING("E", dataField.getData(98357957));
+	TEST_ASSERT_FALSE(dataField.hasData());
+
+	dataField.storeData(0);
+	TEST_ASSERT_TRUE(dataField.hasData());
+
+	dataField.removeOldest();
+
+	TEST_ASSERT_FALSE(dataField.hasData());
 }
 
 /*static void test_writeNumericDataFieldsToBuffer_WritesCorrectValues(void)
@@ -397,18 +394,16 @@ int main(void)
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager);
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
-    RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyHandlesIndexesGreaterThanLength);
     
     RUN_TEST(test_DatafieldReturnsCorrectLength);
     RUN_TEST(test_DatafieldRemoveReducesLengthByOneDownToZero);
     RUN_TEST(test_DatafieldRemoveReturnsCorrectLengthAfterFilling);
 
     RUN_TEST(test_DatafieldCanBeCorrectlyReferencedAfterRemove);
-    //RUN_TEST(test_DatafieldReturnsCorrectBooleanForHasData);
+    RUN_TEST(test_DatafieldReturnsCorrectBooleanForHasData);
     
     RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
     RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);
-	RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyHandlesIndexesGreaterThanLength);
     
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
 

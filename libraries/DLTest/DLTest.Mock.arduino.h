@@ -15,6 +15,10 @@
 #define INPUT (1)
 #define INPUT_PULLUP (2)
 
+#define A0 (0)
+#define A1 (1)
+#define A2 (2)
+
 void pinMode(uint8_t pin, uint8_t mode);
 void digitalWrite(uint8_t pin, uint8_t value); 
 unsigned long millis(void);

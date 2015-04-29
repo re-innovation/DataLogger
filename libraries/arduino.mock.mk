@@ -12,7 +12,8 @@ TARGET = $(INO_FILE).mocked
 
 SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DLTest/DLTest.Mock.delay.cpp
 SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest/DLTest.Mock.Sensor.ADS1x1x.cpp
-SRC_FILES += DLTest/DLTest.Mock.Location.cpp DLTest/DLTest.Mock.Time.cpp TaskAction/TaskAction.cpp
+SRC_FILES += DLTest/DLTest.Mock.Location.cpp DLTest/DLTest.Mock.Time.cpp DLTest/DLTest.Mock.GPS.cpp
+SRC_FILES += DLTest/DLTest.Mock.Network.cpp DLTest/DLTest.Mock.Sensor.LinkItONE.cpp TaskAction/TaskAction.cpp
 
 SYMBOLS = -g -DMOCK
 

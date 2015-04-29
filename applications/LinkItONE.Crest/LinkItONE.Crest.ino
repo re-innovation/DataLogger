@@ -156,13 +156,13 @@ static void tryConnection(void)
     s_gprsConnection->tryConnection(10);
 }
 
-static void updateUploadData(uint16_t dataIndex)
+static void updateUploadData(void)
 {
     uint16_t i;
     uint16_t nFields = APP_DATA_GetNumberOfFields();
     for(i = 0; i < nFields; ++i)
     {
-        s_uploadData[i] = APP_Data_GetUploadField(i)->getConvData(dataIndex);
+        s_uploadData[i] = APP_Data_GetUploadField(i)->getConvData(true);
     }
 }
 
@@ -212,7 +212,6 @@ void readFromADCsTaskFn(void)
 
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 
-TaskAction remoteUploadTask(remoteUploadTaskFn, 0, INFINITE_TICKS);
 void remoteUploadTaskFn(void)
 {
 
@@ -232,11 +231,10 @@ void remoteUploadTaskFn(void)
     Serial.print("...");
     char response_buffer[200] = "";
 
-    uint16_t toUpload = APP_DATA_GetToUploadCount();
-    int32_t i;
-    for (i = toUpload-1; i >= 0; --i)
+    bool finished = false;
+    while(!finished)
     {    
-        updateUploadData(i);
+        updateUploadData();
         
         char created_at[30];
         TM createTime;
@@ -255,14 +253,14 @@ void remoteUploadTaskFn(void)
             Serial.print(s_thingSpeakService->getURL());
             Serial.println("!");
         }
+
+        finished = APP_DATA_UploadDataRemaining();
     }
     
-    APP_DATA_ResetUploadCount();
-
     digitalWrite(LED1_PIN, LOW);
 }
+TaskAction remoteUploadTask(remoteUploadTaskFn, 0, INFINITE_TICKS);
 
-TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS);
 void gpsTaskFn(void)
 {
     Location_UpdateNow();
@@ -280,6 +278,7 @@ void gpsTaskFn(void)
         Serial.println("No valid GPS info.");
     }
 }
+TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS);
 
 void setup()
 {   
@@ -298,7 +297,7 @@ void setup()
     
     Settings_requireString(GPRS_APN);
     Settings_requireString(GPRS_USERNAME);
-    Settings_requireString(GPRS_PASSWORD);
+
     Settings_requireString(THINGSPEAK_URL);
     Settings_requireString(THINGSPEAK_API_KEY);
     

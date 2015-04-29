@@ -55,9 +55,6 @@ static DataFieldManager * s_dataDebugManager = NULL;
 static uint32_t s_numberOfAveragesToStore= 0;
 static uint32_t s_numberOfAveragesToUpload = 0;
 
-static uint16_t s_uploadBufferCount = 0;
-static uint16_t s_storageBufferCount = 0;
-
 static bool s_debugOut = true;
 
 static bool s_setupValid = false;
@@ -202,6 +199,16 @@ void APP_DATA_NewData(int32_t data, uint16_t field)
 uint16_t APP_DATA_GetNumberOfFields(void)
 {
     return s_storageManager->count();
+}
+
+bool APP_DATA_StorageDataRemaining(void)
+{
+    return s_storageManager->hasData();
+}
+
+bool APP_DATA_UploadDataRemaining(void)
+{
+    return s_uploadManager->hasData();
 }
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)

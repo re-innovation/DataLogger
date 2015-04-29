@@ -48,7 +48,7 @@ static CURRENTCHANNEL s_currentChannelSettings = {
 
 void setUp(void)
 {
-    s_manager = new DataFieldManager(10, 10);
+    s_manager = new DataFieldManager(10, 1);
 }
 
 void test_dataFieldCountStartsAtZero(void)
@@ -106,6 +106,26 @@ static void test_writeHeadersToBufferWritesCorrectFields(void)
     TEST_ASSERT_EQUAL_STRING("Voltage (V), Current (A), Wind Direction\r\n", buffer);
 }
 
+static void test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData(void)
+{
+    TEST_ASSERT_FALSE(s_manager->hasData());
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings) );
+    TEST_ASSERT_FALSE(s_manager->hasData());
+
+    ((NumericDataField*)(s_manager->getField(0)))->storeData(0);
+    TEST_ASSERT_TRUE(s_manager->hasData());
+
+    ((NumericDataField*)(s_manager->getField(1)))->storeData(0);
+    TEST_ASSERT_TRUE(s_manager->hasData());
+
+    ((NumericDataField*)(s_manager->getField(0)))->getRawData(true);
+    TEST_ASSERT_TRUE(s_manager->hasData());
+
+    ((NumericDataField*)(s_manager->getField(1)))->getRawData(true);
+    TEST_ASSERT_FALSE(s_manager->hasData());
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.Manager.Test.cpp");
@@ -114,6 +134,8 @@ int main(void)
     RUN_TEST(test_stringDataFieldCanBeAdded);
     RUN_TEST(test_numericDataFieldCanBeAdded);
     RUN_TEST(test_writeHeadersToBufferWritesCorrectFields);
+
+    RUN_TEST(test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData);
 
     UnityEnd();
     return 0;

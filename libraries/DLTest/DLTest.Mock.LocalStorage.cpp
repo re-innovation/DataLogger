@@ -1,4 +1,14 @@
 /*
+ * DLTest.Mock.LocalStorage.cpp
+ * 
+ * Mock object for filesystem access
+ *
+ * Author: James Fowkes
+ *
+ * www.re-innovation.co.uk
+ */
+
+/*
  * C++ Library Includes
  */
 

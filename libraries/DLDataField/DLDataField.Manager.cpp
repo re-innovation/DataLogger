@@ -136,3 +136,14 @@ void DataFieldManager::setupAllValidChannels(void)
         }
     }
 }
+
+bool DataFieldManager::hasData(void)
+{
+    uint8_t i = 0;
+    bool atLeastOneFieldHasData = false;
+    for (i = 0; i < m_count; i++)
+    {
+        atLeastOneFieldHasData |= m_fields[i]->hasData();
+    }
+    return atLeastOneFieldHasData;
+}

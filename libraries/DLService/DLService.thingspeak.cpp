@@ -7,9 +7,9 @@
  * www.re-innovation.co.uk
  */
  
-#ifdef ARDUINO
 #include <Arduino.h>
-#else
+
+#ifndef ARDUINO
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>

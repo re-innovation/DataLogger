@@ -15,6 +15,7 @@ class DataField
         char const * getTypeString(void);
 
         uint32_t length(void);
+        bool hasData(void);
         void removeOldest(void);
 
     protected:

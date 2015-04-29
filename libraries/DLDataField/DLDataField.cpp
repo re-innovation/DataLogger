@@ -162,6 +162,11 @@ void DataField::removeOldest(void)
 	}
 }
 
+bool DataField::hasData(void)
+{
+	return length() > 0;
+}
+
 /* In-progress functions
 uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)

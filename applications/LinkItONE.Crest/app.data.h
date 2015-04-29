@@ -18,12 +18,7 @@ uint16_t APP_DATA_GetNumberOfFields(void);
 
 void APP_DATA_Tick(void);
 
-void APP_DATA_IncrementCounts(void);
-
-void APP_DATA_ResetUploadCount(void);
-void APP_DATA_ResetStorageCount(void);
-
-uint16_t APP_DATA_GetToUploadCount(void);
-uint16_t APP_DATA_GetToStoreCount(void);
+bool APP_DATA_StorageDataRemaining(void);
+bool APP_DATA_UploadDataRemaining(void);
 
 #endif
