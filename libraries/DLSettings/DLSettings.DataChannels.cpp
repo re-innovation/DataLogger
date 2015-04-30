@@ -347,20 +347,24 @@ bool Settings_ChannelSettingIsValid(CHANNELNUMBER channel)
     }
 }
 
-void * Settings_GetData(uint8_t channel)
+void * Settings_GetData(CHANNELNUMBER channel)
 {
+    if (channel > MAX_CHANNELS || channel == 0) { return NULL; }
+    channel--; // Switch from one- to zero-indexing
     return s_channels[channel];
 }
 
-VOLTAGECHANNEL * Settings_GetDataAsVoltage(uint8_t channel)
+VOLTAGECHANNEL * Settings_GetDataAsVoltage(CHANNELNUMBER channel)
 {
-    if (s_fieldTypes[channel] != VOLTAGE) { return NULL; }
+    if (channel > MAX_CHANNELS || channel == 0) { return NULL; }
+    channel--; // Switch from one- to zero-indexing
     return (VOLTAGECHANNEL*)s_channels[channel];
 }
 
-CURRENTCHANNEL * Settings_GetDataAsCurrent(uint8_t channel)
+CURRENTCHANNEL * Settings_GetDataAsCurrent(CHANNELNUMBER channel)
 {
-    if (s_fieldTypes[channel] != CURRENT) { return NULL; }
+    if (channel > MAX_CHANNELS || channel == 0) { return NULL; }
+    channel--; // Switch from one- to zero-indexing
     return (CURRENTCHANNEL*)s_channels[channel];
 }
 

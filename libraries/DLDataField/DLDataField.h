@@ -13,6 +13,7 @@ class DataField
         void setSize(uint32_t length);
         FIELD_TYPE getType(void);    
         char const * getTypeString(void);
+        virtual void getConfigString(char * buffer);
 
         uint32_t length(void);
         bool hasData(void);
@@ -58,11 +59,10 @@ class NumericDataField : public DataField
         float getConvData(bool alsoRemove);
         void getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove);
         void getConvDataAsString(char * buf, char const * const fmt, bool alsoRemove);
+        void getConfigString(char * buffer);
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
-
-        void getConfigString(char * buffer);
         
     private:
         float * m_data;

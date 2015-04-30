@@ -173,6 +173,11 @@ uint32_t DataField::getChannelNumber(void)
 	return m_channelNumber;
 }
 
+void DataField::getConfigString(char * buffer)
+{
+	sprintf(buffer, "Base datafield object!");
+}
+
 /* In-progress functions
 uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength)

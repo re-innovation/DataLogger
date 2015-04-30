@@ -33,6 +33,30 @@
 #include "DLDataField.h"
 #include "DLUtility.h"
 
+/*
+ * Static file functions
+ */
+
+static void printVoltageData(char * buffer, VOLTAGECHANNEL * data)
+{
+    sprintf(buffer, "R1 = %.1f, R2 = %.1f, mVPerBit = %.4f",
+        data->R1, data->R2, data->mvPerBit);
+}
+
+static void printCurrentData(char * buffer, CURRENTCHANNEL * data)
+{
+    sprintf(buffer, "Offset = %.1f, mvPerAmp = %.1f, mVPerBit = %.4f",
+        data->offset, data->mvPerAmp, data->mvPerBit);
+}
+
+static void printThermistorData(char * buffer, THERMISTORCHANNEL * data)
+{
+    sprintf(buffer, "Other R = %.1f, R25 = %.1f, B = %.1f, maxADC = %d",
+        data->otherR, data->R25, data->B, (int)data->maxADC);
+}
+/*
+ * Public class Functions
+ */
 NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     m_conversionData = fieldData;
@@ -122,11 +146,25 @@ void NumericDataField::getConvDataAsString(char * buf, char const * const fmt, b
 }
 
 
-void DataField::getConfigString(char * buffer)
+void NumericDataField::getConfigString(char * buffer)
 {
+    if (!buffer) { return; }
+
     if (m_conversionData)
     {
-
+        switch (m_fieldType)
+        {
+        case VOLTAGE:
+            printVoltageData(buffer, (VOLTAGECHANNEL*)m_conversionData);
+            break;
+        case CURRENT:
+            printCurrentData(buffer, (CURRENTCHANNEL*)m_conversionData);
+            break;
+        case TEMPERATURE_C:
+            printThermistorData(buffer, (THERMISTORCHANNEL*)m_conversionData);
+        default:
+            break;
+        }
     }
     else
     {

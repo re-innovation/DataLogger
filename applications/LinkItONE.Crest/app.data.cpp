@@ -162,15 +162,17 @@ void APP_DATA_Setup(
     uint32_t i;
 
     uint32_t * channelNumbers = s_storageManager->getChannelNumbers();
+    char configString[100];
 
     for (i = 0; i < count; i++)
     {
+        s_storageManager->getChannel(channelNumbers[i])->getConfigString(configString);
         Serial.print("Channel ");
         Serial.print(channelNumbers[i]);
         Serial.print(" type is ");
         Serial.print(s_storageManager->getChannel(channelNumbers[i])->getTypeString());
         Serial.print(". (");
-        Serial.print(s_storageManager->getChannel(channelNumbers[i])->getConfigString())
+        Serial.print(configString);
         Serial.println(")");
     }
 

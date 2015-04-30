@@ -370,9 +370,22 @@ void setup()
     
     // Allocate space for CSV data and HTTP request building.
     // Allow 10 chars per field, plus 20 for timestamp.
-    // Then allocate twice as much as that estimate.
+    // Then allocate twice as much as that estimate (minimum 512)
 
     s_uploadBufferSize = ((10 * nFields) + 20) * APP_DATA_GetNumberOfAveragesForUpload() * 2;
+    Serial.print("Upload buffer size: ");
+    Serial.print(s_uploadBufferSize);
+    
+    if (s_uploadBufferSize < 512)
+    {
+      Serial.println(" * increasing to 512 *");
+      s_uploadBufferSize = 512;
+    }
+    else
+    {
+      Serial.println("");
+    }
+
     s_requestBuffer = new char [s_uploadBufferSize];
 
     // Allocate space for floats to pass to upload module
