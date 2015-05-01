@@ -50,6 +50,7 @@ struct thermistorchannel
     float B;
     float otherR;
     float maxADC;
+    bool highside;
 }; 
 typedef struct thermistorchannel THERMISTORCHANNEL;
 

@@ -51,8 +51,8 @@ static void printCurrentData(char * buffer, CURRENTCHANNEL * data)
 
 static void printThermistorData(char * buffer, THERMISTORCHANNEL * data)
 {
-    sprintf(buffer, "Other R = %.1f, R25 = %.1f, B = %.1f, maxADC = %d",
-        data->otherR, data->R25, data->B, (int)data->maxADC);
+    sprintf(buffer, "Other R = %.1f, R25 = %.1f, B = %.1f, maxADC = %d, %s",
+        data->otherR, data->R25, data->B, (int)data->maxADC, data->highside ? "highside" : "lowside");
 }
 /*
  * Public class Functions

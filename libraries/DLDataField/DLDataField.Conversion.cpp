@@ -136,6 +136,6 @@ float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData)
  */
 float CONV_CelsiusFromRawThermistor(float raw, THERMISTORCHANNEL * conversionData)
 {
-    Thermistor thermistor = Thermistor(conversionData->B, conversionData->R25);
+    Thermistor thermistor = Thermistor(conversionData->B, conversionData->R25, conversionData->highside);
     return thermistor.TemperatureFromADCReading(conversionData->otherR, raw, conversionData->maxADC);
 }

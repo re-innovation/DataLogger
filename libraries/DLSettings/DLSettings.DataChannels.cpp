@@ -136,7 +136,7 @@ static bool currentChannelIsValid(uint8_t channel)
 
 static bool thermistorChannelIsValid(uint8_t channel)
 {
-    return s_valuesSetBitFields[channel] == 0x0F; // Thermistor needs four values set   
+    return s_valuesSetBitFields[channel] == 0x1F; // Thermistor needs five values set   
 }
 
 static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName, char * pValueString)
@@ -240,6 +240,14 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
         if (!settingParsedAsFloat) { return invalidSettingError(); }
         ((THERMISTORCHANNEL*)s_channels[ch])->otherR = setting;
         s_valuesSetBitFields[ch] |= 0x08;
+        return noError();
+    }
+
+    if (0 == strncmp(pSettingName, "highside", 8))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        ((THERMISTORCHANNEL*)s_channels[ch])->highside = (setting > 0.0f);
+        s_valuesSetBitFields[ch] |= 0x10;
         return noError();
     }
 
