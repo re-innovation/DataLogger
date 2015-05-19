@@ -322,7 +322,6 @@ uint8_t ADS1x1x::getAddress()
     return m_i2cAddress;
 }
 
-
 /**************************************************************************/
 /*!
 @brief  Gets a single-ended ADC reading from the specified channel

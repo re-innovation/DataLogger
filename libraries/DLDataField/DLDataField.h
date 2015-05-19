@@ -100,9 +100,4 @@ uint32_t DataField_writeStringDataToBuffer(
     char * buffer, StringDataField datafields[], uint8_t arrayLength, uint8_t bufferLength);
 */
 
-// Conversion functions provided by DLDataField.Conversion.cpp
-float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData);
-float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData);
-float CONV_CelsiusFromRawThermistor(float raw, THERMISTORCHANNEL * conversionData);
-
 #endif

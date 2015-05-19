@@ -89,7 +89,7 @@ static void debugTaskFn(void)
         {
             float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(false);
             float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
-
+            int nReadings = ((NumericDataField *)s_dataDebugManager->getField(i))->getN();
             Serial.print(toShow);
             Serial.print("(");
             Serial.print(average);
