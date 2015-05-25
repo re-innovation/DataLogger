@@ -96,7 +96,7 @@ class ADS1113 : public ADS1x1x
         uint8_t getMaxChannels(void) { return 2; }
         uint8_t getResolution(void) { return 16; };
         uint8_t getBitShift(void) { return 0; }
-        uint8_t getConversionTime(void) { return 8; }
+        uint8_t getConversionTime(void) { return 12; }
 };
 
 class ADS1114 : public ADS1x1x
@@ -108,7 +108,7 @@ class ADS1114 : public ADS1x1x
         uint8_t getMaxChannels(void) { return 2; }
         uint8_t getResolution(void) { return 16; };
         uint8_t getBitShift(void) { return 0; }
-        uint8_t getConversionTime(void) { return 8; }
+        uint8_t getConversionTime(void) { return 12; }
 };
 
 class ADS1115 : public ADS1x1x
@@ -121,6 +121,6 @@ class ADS1115 : public ADS1x1x
         uint8_t getMaxChannels(void) { return 4; }
         uint8_t getResolution(void) { return 16; };
         uint8_t getBitShift(void) { return 0; }
-        uint8_t getConversionTime(void) { return 8; }
+        uint8_t getConversionTime(void) { return 12; }
 };
 #endif

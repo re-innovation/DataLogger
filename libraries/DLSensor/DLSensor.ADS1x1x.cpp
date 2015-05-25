@@ -329,6 +329,8 @@ uint8_t ADS1x1x::getAddress()
 /**************************************************************************/
 int16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
 {
+    static int8_t lastChannel = -1;
+
     if (channel >= getMaxChannels())
     {
         return 0;
@@ -346,12 +348,11 @@ int16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
     // Set 'start single-conversion' bit
     config |= ADS1x1x_REG_CONFIG_OS_SINGLE;
 
-    // Write config register to the ADC
+    // Write config register to the ADC and wait for conversion complete
+    //
     writeRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONFIG, config);
-
-    // Wait for the conversion to complete
     delay(getConversionTime());
-
+    
     // Read the conversion results
     // Shift 12-bit results right 4 bits for the ADS1x15
     return readConversionRegister(m_i2cAddress) >> getBitShift();
