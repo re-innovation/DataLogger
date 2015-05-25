@@ -223,6 +223,7 @@ void readFromADCsTaskFn(void)
             if (Settings_ChannelSettingIsValid(dataChannel))
             {
                 uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
+                if (adc == 0 && ch == 3) { Serial.println(data); }
                 APP_DATA_NewData(data, dataChannel);
             }
         }
@@ -329,6 +330,9 @@ void setup()
  
     APP_SD_Init();
     
+    /* Tell the settings modules which settings are 
+    required. If these settings are missing, the application
+    will not start (APP_FatalError will be called) */
     Settings_requireInt(UPLOAD_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(STORAGE_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
@@ -342,11 +346,14 @@ void setup()
     
     APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
     
+    /* If exectution proceeds this far, all required settings were read.
+    Start configuring the application */
     int storage_averaging_interval = Settings_getInt(STORAGE_AVERAGING_INTERVAL_SECS);
     int upload_averaging_interval = Settings_getInt(UPLOAD_AVERAGING_INTERVAL_SECS);
     int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);
     int upload_interval = Settings_getInt(DATA_UPLOAD_INTERVAL_SECS);
 
+    // The SD card module needs to know how often writes occur
     APP_SD_Setup(storage_interval * 1000);
 
     APP_DATA_Setup(
@@ -363,29 +370,23 @@ void setup()
         APP_FatalError("No valid channel configurations read!");
     }
 
+    /* If execution got this far, the application data storage functionality
+    was set up successfully. */
+
+    uint16_t nFields = APP_DATA_GetNumberOfFields();
+
+    /* Get pointers to the GPRS data and online storage services */
     s_thingSpeakService = Service_GetService(SERVICE_THINGSPEAK);
     s_gprsConnection = Network_GetNetwork(NETWORK_INTERFACE_LINKITONE_GPRS);
 
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
-    
     // Allocate space for CSV data and HTTP request building.
     // Allow 10 chars per field, plus 20 for timestamp.
     // Then allocate twice as much as that estimate (minimum 512)
 
-    s_uploadBufferSize = ((10 * nFields) + 20) * APP_DATA_GetNumberOfAveragesForUpload() * 2;
+    s_uploadBufferSize = APP_DATA_GetUploadBufferSize();
     Serial.print("Upload buffer size: ");
-    Serial.print(s_uploadBufferSize);
+    Serial.println(s_uploadBufferSize);
     
-    if (s_uploadBufferSize < 512)
-    {
-      Serial.println(" * increasing to 512 *");
-      s_uploadBufferSize = 512;
-    }
-    else
-    {
-      Serial.println("");
-    }
-
     s_requestBuffer = new char [s_uploadBufferSize];
 
     // Allocate space for floats to pass to upload module
