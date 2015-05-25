@@ -89,7 +89,6 @@ static void debugTaskFn(void)
         {
             float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(false);
             float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
-            int nReadings = ((NumericDataField *)s_dataDebugManager->getField(i))->getN();
             Serial.print(toShow);
             Serial.print("(");
             Serial.print(average);
@@ -241,6 +240,17 @@ uint32_t * APP_DATA_GetChannelNumbers(void)
 
 uint32_t APP_DATA_GetNumberOfAveragesForStorage(void) { return s_numberOfAveragesToStore; }
 uint32_t APP_DATA_GetNumberOfAveragesForUpload(void) { return s_numberOfAveragesToUpload; }
+
+uint32_t APP_DATA_GetUploadBufferSize(void)
+{
+    uint32_t uploadBufferSize = 0;
+    uploadBufferSize = 10 * APP_DATA_GetNumberOfFields(); // Allow 10 bytes per field
+    uploadBufferSize += 20; // Allow 20 extra chars per data line
+    uploadBufferSize *= APP_DATA_GetNumberOfAveragesForUpload(); // Each line needs recording
+    uploadBufferSize *= 2; // For safety, allocate twice the requirement
+    uploadBufferSize = max(uploadBufferSize, 512); // Ensure a minimum size for the buffer
+    return uploadBufferSize;
+}
 
 NumericDataField * APP_Data_GetUploadField(uint8_t i)
 {

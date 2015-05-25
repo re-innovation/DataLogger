@@ -13,6 +13,7 @@ NumericDataField * APP_Data_GetStorageField(uint8_t i);
 
 uint32_t APP_DATA_GetNumberOfAveragesForStorage(void);
 uint32_t APP_DATA_GetNumberOfAveragesForUpload(void);
+uint32_t APP_DATA_GetUploadBufferSize(void);
 
 uint16_t APP_DATA_GetNumberOfFields(void);
 
