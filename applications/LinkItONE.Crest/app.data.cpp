@@ -133,17 +133,29 @@ void APP_DATA_Setup(
 
     Serial.print("Storing ");
     Serial.print(s_numberOfAveragesToStore);
-    Serial.println(" averages.");
+    Serial.print(" averages of ");
+    Serial.print(storageAveragerSize);
+    Serial.print(" values (");
+    Serial.print(valuesPerSecond);
+    Serial.print(" values per second * ");
+    Serial.print(storageAveragingInterval);
+    Serial.println(" seconds).");
 
     Serial.print("Uploading ");
     Serial.print(s_numberOfAveragesToUpload);
-    Serial.println(" averages.");
+    Serial.print(" averages of ");
+    Serial.print(uploadAveragerSize);
+    Serial.print(" values (");
+    Serial.print(valuesPerSecond);
+    Serial.print(" values per second * ");
+    Serial.print(uploadAveragingInterval);
+    Serial.println(" seconds).");
 
     // Create three data managers, one for storing data, one for uploading data and one for debugging
     
     s_storageManager = new DataFieldManager(s_numberOfAveragesToStore, storageAveragerSize);
     s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
-    s_dataDebugManager = new DataFieldManager(1, 10);
+    s_dataDebugManager = new DataFieldManager(1, valuesPerSecond);
 
     if (!s_storageManager) { APP_FatalError("Failed to create storage manager"); }
     if (!s_uploadManager) { APP_FatalError("Failed to create upload manager"); }
