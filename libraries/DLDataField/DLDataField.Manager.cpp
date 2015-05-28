@@ -49,7 +49,7 @@ DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
     }
 }
 
-uint8_t DataFieldManager::count()
+uint8_t DataFieldManager::fieldCount()
 {
     return m_count;
 }

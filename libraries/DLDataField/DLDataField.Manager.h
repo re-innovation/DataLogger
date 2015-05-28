@@ -7,7 +7,7 @@ class DataFieldManager
 {
     public:
         DataFieldManager(uint32_t dataSize, uint32_t averagerSize);
-        uint8_t count();
+        uint8_t fieldCount();
         bool addField(NumericDataField * field);
         bool addField(StringDataField * field);
         DataField * getField(uint8_t index);

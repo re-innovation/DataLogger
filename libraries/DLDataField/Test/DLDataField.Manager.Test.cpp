@@ -53,7 +53,7 @@ void setUp(void)
 
 void test_dataFieldCountStartsAtZero(void)
 {
-    TEST_ASSERT_EQUAL(0, s_manager->count());
+    TEST_ASSERT_EQUAL(0, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(NULL, s_manager->getField(0));
 }
 
@@ -61,7 +61,7 @@ void test_stringDataFieldCanBeAdded(void)
 {
     StringDataField * field = new StringDataField(CARDINAL_DIRECTION, 10, 10, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
-    TEST_ASSERT_EQUAL(1, s_manager->count());
+    TEST_ASSERT_EQUAL(1, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
@@ -69,7 +69,7 @@ void test_numericDataFieldCanBeAdded(void)
 {
     NumericDataField * field = new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
-    TEST_ASSERT_EQUAL(1, s_manager->count());
+    TEST_ASSERT_EQUAL(1, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
@@ -84,7 +84,7 @@ void test_getFieldsReturnsPointerToArrayOfFields(void)
         s_manager->addField(expected[i]);
     }
 
-    TEST_ASSERT_EQUAL(6, s_manager->count());
+    TEST_ASSERT_EQUAL(6, s_manager->fieldCount());
 
     DataField ** dataFields = s_manager->getFields(); 
 
