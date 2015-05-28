@@ -103,8 +103,8 @@ static LinkItONEADC s_internalADCs[] = {
     LinkItONEADC(A2)
 };
 
-#define LED1_PIN (4)
-#define LED2_PIN (5)
+#define DATA_LED_PIN (5)
+#define STATUS_LED_PIN (4)
 
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
@@ -122,9 +122,9 @@ void APP_FatalError(char const * const err)
     #ifdef ARDUINO
     while (1)
     {
-        digitalWrite(LED2_PIN, HIGH);
+        digitalWrite(STATUS_LED_PIN, HIGH);
         delay(200);
-        digitalWrite(LED2_PIN, LOW);
+        digitalWrite(STATUS_LED_PIN, LOW);
         delay(200);
     }
     #else
@@ -203,7 +203,7 @@ static void delayStart(uint8_t seconds)
 void heartbeatTaskFn(void)
 {
     static bool ledState = false;
-    digitalWrite(LED2_PIN, ledState ? HIGH : LOW);
+    digitalWrite(STATUS_LED_PIN, ledState ? HIGH : LOW);
     ledState = !ledState;
 }
 TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
@@ -245,8 +245,7 @@ TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS)
 void remoteUploadTaskFn(void)
 {
 
-    digitalWrite(LED1_PIN, HIGH);
-    
+    digitalWrite(DATA_LED_PIN, HIGH);
     uint16_t nFields = APP_DATA_GetNumberOfFields();
     
     if (!s_gprsConnection->isConnected())
@@ -296,7 +295,7 @@ void remoteUploadTaskFn(void)
         }
     }
     
-    digitalWrite(LED1_PIN, LOW);
+    digitalWrite(DATA_LED_PIN, LOW);
 }
 TaskAction remoteUploadTask(remoteUploadTaskFn, 0, INFINITE_TICKS);
 
@@ -325,6 +324,9 @@ void setup()
     Serial.begin(115200);
 
     delayStart(10);
+
+    pinMode(DATA_LED_PIN, OUTPUT);
+    pinMode(STATUS_LED_PIN, OUTPUT);
 
     Location_Setup(0);
  
@@ -391,9 +393,6 @@ void setup()
 
     // Allocate space for floats to pass to upload module
     s_uploadData = new float[nFields];
-
-    pinMode(LED1_PIN, OUTPUT);
-    pinMode(LED2_PIN, OUTPUT);
 
     uint8_t i = 0;
     for (i = 0; i < 3; i++)
