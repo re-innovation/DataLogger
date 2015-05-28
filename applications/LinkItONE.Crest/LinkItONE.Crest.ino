@@ -106,7 +106,7 @@ static LinkItONEADC s_internalADCs[] = {
 #define LED1_PIN (4)
 #define LED2_PIN (5)
 
-#define ADC_READS_PER_SECOND (10)
+#define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
 
 /*
