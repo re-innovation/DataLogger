@@ -177,12 +177,7 @@ static void tryConnection(void)
 
 static void updateUploadData(void)
 {
-    uint16_t i;
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
-    for(i = 0; i < nFields; ++i)
-    {
-        s_uploadData[i] = APP_Data_GetUploadField(i)->getConvData(true);
-    }
+    APP_DATA_GetUploadData(s_uploadData);
 }
 
 static void delayStart(uint8_t seconds)
@@ -213,6 +208,7 @@ void readFromADCsTaskFn(void)
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t dataChannel = 0;
+    int32_t allData[15];
 
     // Read the ADC1x1x ICs for fields 1 - 12
     for (adc = 0; adc < 3; adc++)
@@ -222,9 +218,11 @@ void readFromADCsTaskFn(void)
             dataChannel = (adc*4)+ch+1;
             if (Settings_ChannelSettingIsValid(dataChannel))
             {
-                uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
-                if (adc == 0 && ch == 3) { Serial.println(data); }
-                APP_DATA_NewData(data, dataChannel);
+                allData[dataChannel] = s_ADCs[adc].readADC_SingleEnded(ch);
+            }
+            else
+            {
+                allData[dataChannel] = 0;
             }
         }
     }
@@ -235,15 +233,23 @@ void readFromADCsTaskFn(void)
         dataChannel = adc + 13;
         if (Settings_ChannelSettingIsValid(dataChannel))
         {
-            uint16_t data = s_internalADCs[adc].read();
-            APP_DATA_NewData(data, dataChannel);
+            allData[dataChannel] = s_internalADCs[adc].read();
+        }
+        else
+        {
+            allData[dataChannel] = 0;
         }
     }
+    
+    APP_DATA_NewDataArray(allData);
 }
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS);
 
 void remoteUploadTaskFn(void)
 {
+
+    /* Check if an upload is required - if not exit early */
+    if (!APP_DATA_UploadIsPending()) { return; }
 
     digitalWrite(DATA_LED_PIN, HIGH);
     uint16_t nFields = APP_DATA_GetNumberOfFields();
@@ -264,6 +270,7 @@ void remoteUploadTaskFn(void)
             Serial.print("Attempting upload to ");
             Serial.println(s_thingSpeakService->getURL());
         }
+        
         updateUploadData();
         
         char created_at[30];
@@ -297,7 +304,7 @@ void remoteUploadTaskFn(void)
     
     digitalWrite(DATA_LED_PIN, LOW);
 }
-TaskAction remoteUploadTask(remoteUploadTaskFn, 0, INFINITE_TICKS);
+TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS);
 
 void gpsTaskFn(void)
 {
@@ -410,7 +417,6 @@ void setup()
     }
 
     readFromADCsTask.ResetTime();
-    remoteUploadTask.SetInterval(upload_interval * 1000);
     remoteUploadTask.ResetTime();
     gpsTask.ResetTime();
 }

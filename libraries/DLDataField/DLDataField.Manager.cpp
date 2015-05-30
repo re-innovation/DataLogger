@@ -40,6 +40,7 @@ DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 {
     m_dataSize = dataSize;
     m_averagerSize = averagerSize;
+    m_fieldCount = 0;
     m_count = 0;
 
     uint8_t i = 0;
@@ -51,20 +52,20 @@ DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 
 uint8_t DataFieldManager::fieldCount()
 {
-    return m_count;
+    return m_fieldCount;
 }
 
 bool DataFieldManager::addField(NumericDataField * field)
 {
     if (!field) { return false; }
 
-    if (m_count == MAX_FIELDS) { return false; }
+    if (m_fieldCount == MAX_FIELDS) { return false; }
 
     field->setDataSizes(m_dataSize, m_averagerSize);
 
-    m_fields[m_count] = field;
-    m_channelNumbers[m_count] = field->getChannelNumber();
-    m_count++;
+    m_fields[m_fieldCount] = field;
+    m_channelNumbers[m_fieldCount] = field->getChannelNumber();
+    m_fieldCount++;
 
     return true;
 }
@@ -73,18 +74,41 @@ bool DataFieldManager::addField(StringDataField * field)
 {
     if (!field) { return false; }
 
-    if (m_count == MAX_FIELDS) { return false; }
+    if (m_fieldCount == MAX_FIELDS) { return false; }
 
-    m_fields[m_count] = field;
-    m_channelNumbers[m_count] = field->getChannelNumber();
+    m_fields[m_fieldCount] = field;
+    m_channelNumbers[m_fieldCount] = field->getChannelNumber();
 
-    m_count++;
+    m_fieldCount++;
     return true;
+}
+
+void DataFieldManager::storeDataArray(int32_t * data)
+{
+    uint8_t field = 0;
+    for (field = 0; field < m_fieldCount; field++)
+    {
+        NumericDataField* pField;
+
+        pField =  (NumericDataField*)(getChannel(field));
+        pField->storeData( data[field] );
+    }
+    m_count++;
+}
+
+void DataFieldManager::getConvDataArray(float * buffer, bool alsoRemove)
+{
+    uint16_t i;
+    for(i = 0; i < m_fieldCount; ++i)
+    {
+        buffer[i] = ((NumericDataField*)getChannel(i))->getConvData(alsoRemove);
+    }
+    if (alsoRemove) { m_count--; }
 }
 
 DataField * DataFieldManager::getChannel(uint8_t channel)
 {
-    int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_count);
+    int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_fieldCount);
     return actualIndex >= 0 ? m_fields[actualIndex] : NULL;
 }
 
@@ -107,10 +131,10 @@ uint32_t DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLen
     
     FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
 
-    for (i = 0; i < m_count; ++i)
+    for (i = 0; i < m_fieldCount; ++i)
     {
         headerAccumulator.writeString(m_fields[i]->getTypeString());
-        if (!lastinloop(i, m_count))
+        if (!lastinloop(i, m_fieldCount))
         {
             headerAccumulator.writeString(", ");
         }
@@ -160,11 +184,16 @@ bool DataFieldManager::hasData(void)
 {
     uint8_t i = 0;
     bool atLeastOneFieldHasData = false;
-    for (i = 0; i < m_count; i++)
+    for (i = 0; i < m_fieldCount; i++)
     {
         atLeastOneFieldHasData |= m_fields[i]->hasData();
     }
     return atLeastOneFieldHasData;
+}
+
+uint32_t DataFieldManager::count(void)
+{
+    return m_count;
 }
 
 uint32_t * DataFieldManager::getChannelNumbers(void)

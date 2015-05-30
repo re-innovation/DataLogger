@@ -53,6 +53,7 @@ static DataFieldManager * s_dataDebugManager = NULL;
 
 static uint32_t s_numberOfAveragesToStore= 0;
 static uint32_t s_numberOfAveragesToUpload = 0;
+static uint8_t s_fieldCount;
 
 static bool s_debugOut = true;
 
@@ -81,7 +82,7 @@ static uint16_t calculateNumberOfAverages(uint16_t interval, uint16_t averagingI
 static void debugTaskFn(void)
 {
     uint8_t i;
-    uint8_t fieldCount = s_dataDebugManager->count();
+    uint8_t fieldCount = s_dataDebugManager->fieldCount();
 
     while(s_dataDebugManager->hasData())
     {
@@ -161,21 +162,29 @@ void APP_DATA_Setup(
     if (!s_uploadManager) { APP_FatalError("Failed to create upload manager"); }
     if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager"); }
 
-    APP_SD_ReadDataChannelSettings(s_storageManager, filename);    
-    APP_SD_ReadDataChannelSettings(s_uploadManager, filename);
-    APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
+    uint8_t storageFieldCount = APP_SD_ReadDataChannelSettings(s_storageManager, filename);    
+    uint8_t uploadFieldCount = APP_SD_ReadDataChannelSettings(s_uploadManager, filename);
+    uint8_t debugFieldCount = APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
 
-    uint32_t count = s_storageManager->count();
+    if ((storageFieldCount != uploadFieldCount) || (uploadFieldCount != debugFieldCount) || (debugFieldCount != storageFieldCount))
+    {
+        APP_FatalError("Field counts for data managers do not match!");
+    }
+    else
+    {
+        s_fieldCount = storageFieldCount;
+    }
+
     Serial.print("Data Managers created with ");
-    Serial.print(count);
-    Serial.println(count > 1 ? " channels." : " channel.");
+    Serial.print(s_fieldCount);
+    Serial.println(s_fieldCount > 1 ? " channels." : " channel.");
     
     uint32_t i;
 
     uint32_t * channelNumbers = s_storageManager->getChannelNumbers();
     char configString[100];
 
-    for (i = 0; i < count; i++)
+    for (i = 0; i < s_fieldCount; i++)
     {
         s_storageManager->getChannel(channelNumbers[i])->getConfigString(configString);
         Serial.print("Channel ");
@@ -195,39 +204,21 @@ void APP_DATA_Setup(
     s_setupValid = true;
 }
 
-void APP_DATA_NewData(int32_t data, uint16_t channel)
+void APP_DATA_NewDataArray(int32_t * data)
 {
-    char errBuffer[64];
-    NumericDataField* pField;
+    s_storageManager->storeDataArray(data);
+    s_uploadManager->storeDataArray(data);
+    s_dataDebugManager->storeDataArray(data);
+}
 
-    pField =  (NumericDataField*)(s_storageManager->getChannel(channel));
-    if (!pField)
-    {
-        sprintf(errBuffer, "Attempt to add data to non-existent channel %d", channel);
-        APP_FatalError(errBuffer);
-    }
-    pField->storeData( data );
-    
-    pField =  (NumericDataField*)(s_uploadManager->getChannel(channel));
-    if (!pField)
-    {
-        sprintf(errBuffer, "Attempt to add data to non-existent channel %d", channel);
-        APP_FatalError(errBuffer);
-    }
-    pField->storeData( data );
-
-    pField = (NumericDataField*)(s_dataDebugManager->getChannel(channel));
-    if (!pField)
-    {
-        sprintf(errBuffer, "Attempt to add data to non-existent debug field %d", channel);
-        APP_FatalError(errBuffer);
-    }
-    pField->storeData( data );
+void APP_DATA_GetUploadData(float * buffer)
+{
+    s_uploadManager->getConvDataArray(buffer, true);
 }
 
 uint16_t APP_DATA_GetNumberOfFields(void)
 {
-    return s_storageManager->count();
+    return s_fieldCount;
 }
 
 bool APP_DATA_StorageDataRemaining(void)
@@ -238,6 +229,11 @@ bool APP_DATA_StorageDataRemaining(void)
 bool APP_DATA_UploadDataRemaining(void)
 {
     return s_uploadManager->hasData();
+}
+
+bool APP_DATA_UploadIsPending(void)
+{
+    return s_uploadManager->count() >= s_fieldCount;
 }
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
@@ -264,12 +260,12 @@ uint32_t APP_DATA_GetUploadBufferSize(void)
     return uploadBufferSize;
 }
 
-NumericDataField * APP_Data_GetUploadField(uint8_t i)
+NumericDataField * APP_DATA_GetUploadField(uint8_t i)
 {
     return (NumericDataField *)s_uploadManager->getField(i);
 }
 
-NumericDataField * APP_Data_GetStorageField(uint8_t i)
+NumericDataField * APP_DATA_GetStorageField(uint8_t i)
 {
     return (NumericDataField *)s_storageManager->getField(i);
 }

@@ -95,7 +95,7 @@ static void writeToSDCardTaskFn(void)
 
             for (i = 0; i < nFields; ++i)
             {
-                pField = APP_Data_GetStorageField(i);
+                pField = APP_DATA_GetStorageField(i);
 
                 // Write from datafield to buffer then from buffer to SD file
                 pField->getConvDataAsString(buffer, "%.4f", true);
@@ -275,12 +275,14 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
     }
 }
 
-void APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
+uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
 {
     if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
         APP_FatalError(Settings_getLastReaderResultText());
+        return 0;
     }
+    return pManager->fieldCount();
 }
 
 void APP_SD_EnableDebugging(void)
