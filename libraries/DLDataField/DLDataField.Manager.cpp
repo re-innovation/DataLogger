@@ -41,7 +41,7 @@ DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
     m_dataSize = dataSize;
     m_averagerSize = averagerSize;
     m_fieldCount = 0;
-    m_count = 0;
+    m_dataCount = 0;
 
     uint8_t i = 0;
     for (i = 0; i < MAX_FIELDS; i++)
@@ -55,6 +55,13 @@ uint8_t DataFieldManager::fieldCount()
     return m_fieldCount;
 }
 
+/*
+ * addField
+ *
+ * Add a field to the manager.
+ * Stores field pointer in next free location in m_fields.
+ * Channel number is stored in m_channelNumbers.
+ */
 bool DataFieldManager::addField(NumericDataField * field)
 {
     if (!field) { return false; }
@@ -85,25 +92,36 @@ bool DataFieldManager::addField(StringDataField * field)
 
 void DataFieldManager::storeDataArray(int32_t * data)
 {
-    uint8_t field = 0;
+    uint16_t field = 0;
+    bool newAverageStored = false;
     for (field = 0; field < m_fieldCount; field++)
     {
-        NumericDataField* pField;
+        NumericDataField* pField = (NumericDataField*)m_fields[field];
 
-        pField =  (NumericDataField*)(getChannel(field));
-        pField->storeData( data[field] );
+        if (pField)
+        {
+            newAverageStored |= pField->storeData( data[field] );
+        }
     }
-    m_count++;
+
+    if (newAverageStored) { m_dataCount++; }
 }
 
-void DataFieldManager::getConvDataArray(float * buffer, bool alsoRemove)
+void DataFieldManager::getDataArray(float * buffer, bool converted, bool alsoRemove)
 {
-    uint16_t i;
-    for(i = 0; i < m_fieldCount; ++i)
+    uint16_t field;
+    for(field = 0; field < m_fieldCount; ++field)
     {
-        buffer[i] = ((NumericDataField*)getChannel(i))->getConvData(alsoRemove);
+        if (converted)
+        {
+            buffer[field] = ((NumericDataField*)m_fields[field])->getConvData(alsoRemove);
+        }
+        else
+        {
+            buffer[field] = ((NumericDataField*)m_fields[field])->getRawData(alsoRemove);
+        }
     }
-    if (alsoRemove) { m_count--; }
+    if (alsoRemove) { m_dataCount--; }
 }
 
 DataField * DataFieldManager::getChannel(uint8_t channel)
@@ -111,7 +129,6 @@ DataField * DataFieldManager::getChannel(uint8_t channel)
     int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_fieldCount);
     return actualIndex >= 0 ? m_fields[actualIndex] : NULL;
 }
-
 
 DataField * DataFieldManager::getField(uint8_t index)
 {
@@ -193,7 +210,7 @@ bool DataFieldManager::hasData(void)
 
 uint32_t DataFieldManager::count(void)
 {
-    return m_count;
+    return m_dataCount;
 }
 
 uint32_t * DataFieldManager::getChannelNumbers(void)

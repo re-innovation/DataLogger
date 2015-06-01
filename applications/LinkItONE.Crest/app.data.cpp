@@ -33,7 +33,7 @@
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "TaskAction.h"
- 
+
 /*
  * Application Includes
  */
@@ -41,7 +41,7 @@
 #include "app.h"
 #include "app.data.h"
 #include "app.sd_storage.h"
-
+#include "app.sms.h"
 
 /*
  * Applications Data
@@ -50,6 +50,8 @@
 static DataFieldManager * s_storageManager = NULL;
 static DataFieldManager * s_uploadManager = NULL;
 static DataFieldManager * s_dataDebugManager = NULL;
+
+static bool s_uploadPending = false;
 
 static uint32_t s_numberOfAveragesToStore= 0;
 static uint32_t s_numberOfAveragesToUpload = 0;
@@ -175,6 +177,11 @@ void APP_DATA_Setup(
         s_fieldCount = storageFieldCount;
     }
 
+    if (s_fieldCount == 0)
+    {
+        APP_FatalError("No valid channel configurations read!");
+    }
+
     Serial.print("Data Managers created with ");
     Serial.print(s_fieldCount);
     Serial.println(s_fieldCount > 1 ? " channels." : " channel.");
@@ -206,14 +213,14 @@ void APP_DATA_Setup(
 
 void APP_DATA_NewDataArray(int32_t * data)
 {
-    s_storageManager->storeDataArray(data);
+    //s_storageManager->storeDataArray(data);
     s_uploadManager->storeDataArray(data);
-    s_dataDebugManager->storeDataArray(data);
+    //s_dataDebugManager->storeDataArray(data);
 }
 
 void APP_DATA_GetUploadData(float * buffer)
 {
-    s_uploadManager->getConvDataArray(buffer, true);
+    s_uploadManager->getDataArray(buffer, true, true);
 }
 
 uint16_t APP_DATA_GetNumberOfFields(void)
@@ -226,14 +233,14 @@ bool APP_DATA_StorageDataRemaining(void)
     return s_storageManager->hasData();
 }
 
-bool APP_DATA_UploadDataRemaining(void)
-{
-    return s_uploadManager->hasData();
-}
-
 bool APP_DATA_UploadIsPending(void)
 {
-    return s_uploadManager->count() >= s_fieldCount;
+    return s_uploadPending;
+}
+
+bool APP_DATA_UploadDataRemaining(void)
+{
+    return s_uploadManager->count() > 0;
 }
 
 void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
@@ -268,6 +275,11 @@ NumericDataField * APP_DATA_GetUploadField(uint8_t i)
 NumericDataField * APP_DATA_GetStorageField(uint8_t i)
 {
     return (NumericDataField *)s_storageManager->getField(i);
+}
+
+void APP_DATA_SetUploadPending(bool pending)
+{
+    s_uploadPending = pending;
 }
 
 void APP_DATA_Tick(void)

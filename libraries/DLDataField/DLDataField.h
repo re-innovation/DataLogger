@@ -53,7 +53,7 @@ class NumericDataField : public DataField
 
         void setDataSizes(uint32_t N, uint32_t averagerN);
 
-        void storeData(int32_t data);
+        bool storeData(int32_t data);
 
         float getRawData(bool alsoRemove);
         float getConvData(bool alsoRemove);

@@ -122,8 +122,9 @@ float NumericDataField::getConvData(bool alsoRemove)
     return data;
 }
 
-void NumericDataField::storeData(int32_t data)
+bool NumericDataField::storeData(int32_t data)
 {
+    bool dataStored = false;
     m_averager->newData(data);
     if (m_averager->full())
     {
@@ -131,7 +132,9 @@ void NumericDataField::storeData(int32_t data)
         m_data[getWriteIndex()] = (float)m_averager->getFloatAverage();
         postPush();
         m_averager->reset(NULL);
+        dataStored = true;
     }
+    return dataStored;
 }
 
 void NumericDataField::getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove)

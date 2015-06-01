@@ -26,6 +26,7 @@ uint32_t * APP_DATA_GetChannelNumbers(void);
 bool APP_DATA_StorageDataRemaining(void);
 bool APP_DATA_UploadDataRemaining(void);
 
+void APP_DATA_SetUploadPending(bool pending);
 bool APP_DATA_UploadIsPending(void);
 
 #endif
