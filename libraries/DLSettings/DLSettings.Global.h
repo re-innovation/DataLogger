@@ -17,7 +17,11 @@
     STRING(GPRS_USERNAME) \
     STRING(GPRS_PASSWORD) \
     STRING(THINGSPEAK_URL) \
-    STRING(THINGSPEAK_API_KEY)
+    STRING(THINGSPEAK_API_KEY) \
+    STRING(PHONE_NUMBER_1) \
+    STRING(PHONE_NUMBER_2) \
+    STRING(PHONE_NUMBER_3) \
+    STRING(PHONE_NUMBER_4)
 
 /* Define each int setting for the application */
 
@@ -27,7 +31,8 @@
     INT(STORAGE_AVERAGING_INTERVAL_SECS) \
     INT(DATA_STORAGE_INTERVAL_SECS) \
     INT(SERIAL_DATA_INTERVAL_SECS) \
-
+    INT(BATTERY_WARN_LEVEL)
+    
 #define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
 #define GENERATE_STRING(STRING) #STRING, // This turns each setting into a string in an array
 
