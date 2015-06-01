@@ -2,7 +2,7 @@
 
 #include "TaskAction.h"
 
-TaskAction::TaskAction(void (*function)(), unsigned long interval, unsigned int ticks)
+TaskAction::TaskAction(void (*function)(), unsigned long interval, unsigned int ticks, char const * name)
 {
     m_function = function;
     m_interval = interval;
@@ -10,6 +10,8 @@ TaskAction::TaskAction(void (*function)(), unsigned long interval, unsigned int 
     m_tick = ticks;
     m_CurrentTick = 0;
     m_LastTime = 0;
+    m_name = name;
+    m_debug = false;
 }
 
 void TaskAction::ResetTime()
@@ -42,11 +44,22 @@ bool TaskAction::tick(unsigned long millisec /* = NULL */)
 
         // If m_function != NULL then call that function
         if (m_function != NULL)
+        {
+            if (m_debug && m_name)
+            {
+                Serial.println(m_name);
+            }
             m_function();
+        }
 
         // Return true.
         return true;
     }
 
     return false;
+}
+
+void TaskAction::SetDebug(bool on)
+{
+    m_debug = on;
 }
