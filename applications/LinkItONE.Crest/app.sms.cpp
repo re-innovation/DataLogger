@@ -35,34 +35,57 @@
 #include "app.sms.h"
 
 static SMSInterface * s_linkitoneSMSInterface;
+static bool s_debugSMS = false;
+
+static void sendMessage(STRINGSETTING numberID, char * message)
+{
+	char * number;
+	bool success;
+	if (Settings_stringIsSet(numberID))
+	{
+		number = Settings_getString(numberID);
+		if (s_debugSMS) {Serial.print("Sending to "); Serial.print(number);}
+		success = s_linkitoneSMSInterface->send(number, message);
+		if (s_debugSMS) {Serial.print(success ? " succeeded" : " failed");}
+	}
+}
+
+static void printNumber(STRINGSETTING numberID)
+{
+	if (Settings_stringIsSet(numberID))
+	{
+		Serial.println(Settings_getString(numberID));
+	}
+}
 
 bool APP_SMS_Setup(void)
 {
 	s_linkitoneSMSInterface = SMS_GetInterface(SMS_INTERFACE_LINKITONE);
+
+	/* There can be up to 4 generaly and 4 maintenance phone numbers set in settings */
+	Serial.println("General SMS numbers:");
+	printNumber(GENERAL_PHONE_NUMBER_1);
+	printNumber(GENERAL_PHONE_NUMBER_2);
+	printNumber(GENERAL_PHONE_NUMBER_3);
+	printNumber(GENERAL_PHONE_NUMBER_4);
+	Serial.println("Maintenance SMS numbers:");
+	printNumber(MAINTENANCE_PHONE_NUMBER_1);
+	printNumber(MAINTENANCE_PHONE_NUMBER_2);
+	printNumber(MAINTENANCE_PHONE_NUMBER_3);
+	printNumber(MAINTENANCE_PHONE_NUMBER_4);
 }
 
-void APP_SMS_SendMessage(char * message)
+void APP_SMS_SetDebug(bool on)
+{
+	s_debugSMS = on;
+}
+
+void APP_SMS_SendMessageToMaintenance(char * message)
 {
 	if (!message) { return; }
 
-	/* There can be up to 4 phone numbers set in settings */
-	if (Settings_stringIsSet(PHONE_NUMBER_1))
-	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_1), message);
-	}
-	
-	if (Settings_stringIsSet(PHONE_NUMBER_2))
-	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_2), message);
-	}
-	
-	if (Settings_stringIsSet(PHONE_NUMBER_3))
-	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_3), message);
-	}
-
-	if (Settings_stringIsSet(PHONE_NUMBER_4))
-	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_4), message);
-	}	
+	sendMessage(MAINTENANCE_PHONE_NUMBER_1, message);
+	sendMessage(MAINTENANCE_PHONE_NUMBER_2, message);
+	sendMessage(MAINTENANCE_PHONE_NUMBER_3, message);
+	sendMessage(MAINTENANCE_PHONE_NUMBER_4, message);
 }

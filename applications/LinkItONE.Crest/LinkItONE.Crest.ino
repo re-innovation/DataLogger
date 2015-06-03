@@ -175,6 +175,13 @@ void APP_SetDebugModules(char const * const modules)
         Serial.println("Turning debugging on for battery functionality.");
         s_debugBattery = true;
     }
+
+    if (strstr(modules, "SMS"))
+    {
+        Serial.println("Turning debugging on for SMS functionality.");
+        APP_SMS_SetDebug(true);
+    }
+
 }
 
 static void tryConnection(void)
@@ -217,7 +224,8 @@ TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
 
 void batteryCheckTaskFn(void)
 {
-    int batteryLevel = LBattery.level();
+    //!int batteryLevel = LBattery.level();
+    static int batteryLevel = 100;
     bool charging = LBattery.isCharging();
 
     if (s_debugBattery)
@@ -241,10 +249,11 @@ void batteryCheckTaskFn(void)
         {
             sprintf(sms, "Low Battery Warning: %d (not charging)", batteryLevel);
         }
-        APP_SMS_SendMessage(sms);
+        APP_SMS_SendMessageToMaintenance(sms);
     }
+    batteryLevel--;
 }
-TaskAction batteryCheckTask(batteryCheckTaskFn, 30000, INFINITE_TICKS);
+TaskAction batteryCheckTask(batteryCheckTaskFn, 5000, INFINITE_TICKS);
 
 void readFromADCsTaskFn(void)
 {
@@ -421,20 +430,14 @@ void setupADCs(void)
     }
 }
 
-void setup()
-{   
-    // setup Serial port
-    Serial.begin(115200);
-
-    delayStart(10);
-
+void setupPins(void)
+{
     pinMode(DATA_LED_PIN, OUTPUT);
     pinMode(STATUS_LED_PIN, OUTPUT);
+}
 
-    Location_Setup(0);
- 
-    APP_SD_Init(); // This just initialises the SD card module so settings can be read
-    
+void readSettings(void)
+{
     /* Tell the settings modules which settings are 
     required. If these settings are missing, the application
     will not start (APP_FatalError will be called) */
@@ -450,6 +453,39 @@ void setup()
     Settings_requireString(THINGSPEAK_API_KEY);
     
     APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
+}
+
+void setupTime(void)
+{
+    Time_GetTime(&s_rtcTime, TIME_PLATFORM);
+    Serial.print("RTC datetime: ");
+    Time_PrintTime(&s_rtcTime);
+    Serial.print(" ");
+    Time_PrintDate(&s_rtcTime, true);
+}
+
+void setupBattery(void)
+{
+    s_batteryWarnLevel = Settings_getInt(BATTERY_WARN_LEVEL);
+    Serial.print("Sending battery warning at ");
+    Serial.print(s_batteryWarnLevel);
+    Serial.println('%');
+}
+
+void setup()
+{   
+    // setup Serial port
+    Serial.begin(115200);
+
+    delayStart(10);
+
+    setupPins();
+    
+    Location_Setup(0);
+ 
+    APP_SD_Init(); // This just initialises the SD card module so settings can be read
+    
+    readSettings();
     
     /* If exectution proceeds this far, all required settings were read.
     Start configuring the application */
@@ -476,14 +512,10 @@ void setup()
 
     APP_SMS_Setup();
 
-    s_batteryWarnLevel = Settings_getInt(BATTERY_WARN_LEVEL);
+    setupBattery();
 
-    Time_GetTime(&s_rtcTime, TIME_PLATFORM);
-    Serial.print("RTC datetime: ");
-    Time_PrintTime(&s_rtcTime);
-    Serial.print(" ");
-    Time_PrintDate(&s_rtcTime, true);
-
+    setupTime();
+    
     setupUploadVars();
     
     setupADCs();
