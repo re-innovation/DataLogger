@@ -213,9 +213,9 @@ void APP_DATA_Setup(
 
 void APP_DATA_NewDataArray(int32_t * data)
 {
-    //s_storageManager->storeDataArray(data);
+    s_storageManager->storeDataArray(data);
     s_uploadManager->storeDataArray(data);
-    //s_dataDebugManager->storeDataArray(data);
+    s_dataDebugManager->storeDataArray(data);
 }
 
 void APP_DATA_GetUploadData(float * buffer)
