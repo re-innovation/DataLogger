@@ -24,6 +24,7 @@
 #include "DLUtility.Averager.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
+#include "DLDataField.Conversion.h"
 
 /*
  * Unity Test Framework

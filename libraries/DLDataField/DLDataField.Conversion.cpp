@@ -95,8 +95,8 @@ float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData)
 {
 	if (conversionData)
 	{
-		float mv = adcTomV(raw, conversionData->mvPerBit);
-    	return potentialDividerConversion(mv, conversionData->R1, conversionData->R2);
+		float volts = adcTomV(raw, conversionData->mvPerBit) / 1000;
+    	return potentialDividerConversion(volts, conversionData->R1, conversionData->R2);
     }
     else
     {
