@@ -41,28 +41,54 @@ bool APP_SMS_Setup(void)
 	s_linkitoneSMSInterface = SMS_GetInterface(SMS_INTERFACE_LINKITONE);
 }
 
-void APP_SMS_SendMessage(char * message)
+void APP_SMS_SendGeneralMessage(char * message)
 {
 	if (!message) { return; }
 
 	/* There can be up to 4 phone numbers set in settings */
-	if (Settings_stringIsSet(PHONE_NUMBER_1))
+	if (Settings_stringIsSet(GENERAL_PHONE_NUMBER_1))
 	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_1), message);
+		s_linkitoneSMSInterface->send(Settings_getString(GENERAL_PHONE_NUMBER_1), message);
 	}
 	
-	if (Settings_stringIsSet(PHONE_NUMBER_2))
+	if (Settings_stringIsSet(GENERAL_PHONE_NUMBER_2))
 	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_2), message);
+		s_linkitoneSMSInterface->send(Settings_getString(GENERAL_PHONE_NUMBER_2), message);
 	}
 	
-	if (Settings_stringIsSet(PHONE_NUMBER_3))
+	if (Settings_stringIsSet(GENERAL_PHONE_NUMBER_3))
 	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_3), message);
+		s_linkitoneSMSInterface->send(Settings_getString(GENERAL_PHONE_NUMBER_3), message);
 	}
 
-	if (Settings_stringIsSet(PHONE_NUMBER_4))
+	if (Settings_stringIsSet(GENERAL_PHONE_NUMBER_4))
 	{
-		s_linkitoneSMSInterface->send(Settings_getString(PHONE_NUMBER_4), message);
+		s_linkitoneSMSInterface->send(Settings_getString(GENERAL_PHONE_NUMBER_4), message);
+	}	
+}
+
+void APP_SMS_SendMaintenanceMessage(char * message)
+{
+	if (!message) { return; }
+
+	/* There can be up to 4 phone numbers set in settings */
+	if (Settings_stringIsSet(MAINTENANCE_PHONE_NUMBER_1))
+	{
+		s_linkitoneSMSInterface->send(Settings_getString(MAINTENANCE_PHONE_NUMBER_1), message);
+	}
+	
+	if (Settings_stringIsSet(MAINTENANCE_PHONE_NUMBER_2))
+	{
+		s_linkitoneSMSInterface->send(Settings_getString(MAINTENANCE_PHONE_NUMBER_2), message);
+	}
+	
+	if (Settings_stringIsSet(MAINTENANCE_PHONE_NUMBER_3))
+	{
+		s_linkitoneSMSInterface->send(Settings_getString(MAINTENANCE_PHONE_NUMBER_3), message);
+	}
+
+	if (Settings_stringIsSet(MAINTENANCE_PHONE_NUMBER_4))
+	{
+		s_linkitoneSMSInterface->send(Settings_getString(MAINTENANCE_PHONE_NUMBER_4), message);
 	}	
 }

@@ -231,20 +231,20 @@ void batteryCheckTaskFn(void)
 
     char sms[140];
 
-    if (batteryLevel < s_batteryWarnLevel)
+    if (batteryLevel <= s_batteryWarnLevel)
     {
         if (charging)
         {
-            sprintf(sms, "Low Battery Warning: %d (charging)", batteryLevel);
+            sprintf(sms, "Low Battery Warning: %d%% (charging)", batteryLevel);
         }
         else
         {
-            sprintf(sms, "Low Battery Warning: %d (not charging)", batteryLevel);
+            sprintf(sms, "Low Battery Warning: %d%% (not charging)", batteryLevel);
         }
-        APP_SMS_SendMessage(sms);
+        APP_SMS_SendMaintenanceMessage(sms);
     }
 }
-TaskAction batteryCheckTask(batteryCheckTaskFn, 30000, INFINITE_TICKS);
+TaskAction batteryCheckTask(batteryCheckTaskFn, 60*60*1000, INFINITE_TICKS);
 
 void readFromADCsTaskFn(void)
 {
@@ -421,6 +421,44 @@ void setupADCs(void)
     }
 }
 
+void setupTime(void)
+{
+    Time_GetTime(&s_rtcTime, TIME_PLATFORM);
+    Serial.print("RTC datetime: ");
+    Time_PrintTime(&s_rtcTime);
+    Serial.print(" ");
+    Time_PrintDate(&s_rtcTime, true);
+}
+
+void setupBattery(void)
+{
+    if (Settings_intIsSet(BATTERY_WARN_LEVEL))
+    {
+        s_batteryWarnLevel = Settings_getInt(BATTERY_WARN_LEVEL);
+        unsigned long intervalInMinutes = 60;  // Default to 1 hour
+        
+        if (Settings_intIsSet(BATTERY_WARN_INTERVAL_MINUTES))
+        {
+            unsigned long intervalInMinutes = Settings_getInt(BATTERY_WARN_INTERVAL_MINUTES);
+        }    
+        
+        batteryCheckTask.SetInterval(intervalInMinutes * 60 * 1000);   
+        
+        Serial.print("Setting battery warning to ");
+        Serial.print(s_batteryWarnLevel);
+        Serial.print(" and checking every ");
+        Serial.print(intervalInMinutes);
+        Serial.println(" minutes.");
+
+        // Call the check task right away in case the battery is below level now
+        batteryCheckTaskFn();
+    }
+    else
+    {
+        s_batteryWarnLevel = 101; // Set 101% so warning is never issued
+    }
+}
+
 void setup()
 {   
     // setup Serial port
@@ -476,13 +514,9 @@ void setup()
 
     APP_SMS_Setup();
 
-    s_batteryWarnLevel = Settings_getInt(BATTERY_WARN_LEVEL);
+    setupBattery();
 
-    Time_GetTime(&s_rtcTime, TIME_PLATFORM);
-    Serial.print("RTC datetime: ");
-    Time_PrintTime(&s_rtcTime);
-    Serial.print(" ");
-    Time_PrintDate(&s_rtcTime, true);
+    setupTime();
 
     setupUploadVars();
     
