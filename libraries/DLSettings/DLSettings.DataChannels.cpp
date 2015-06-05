@@ -245,8 +245,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
 
     if (0 == strncmp(pSettingName, "highside", 8))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
-        ((THERMISTORCHANNEL*)s_channels[ch])->highside = (setting > 0.0f);
+        ((THERMISTORCHANNEL*)s_channels[ch])->highside = (*pValueString != '0');
         s_valuesSetBitFields[ch] |= 0x10;
         return noError();
     }
