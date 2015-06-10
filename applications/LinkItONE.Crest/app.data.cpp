@@ -27,9 +27,14 @@
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
+
+#include "DLSettings.h"
+#include "DLSettings.Global.h"
+
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
+
 #include "DLTime.h"
 #include "DLCSV.h"
 #include "TaskAction.h"
@@ -58,6 +63,7 @@ static uint32_t s_numberOfAveragesToUpload = 0;
 static uint8_t s_fieldCount;
 
 static bool s_debugOut = true;
+static bool * s_debugFieldFlags;
 
 static bool s_setupValid = false;
 
@@ -92,14 +98,13 @@ static void debugTaskFn(void)
         {
             float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(false);
             float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
-            Serial.print(toShow);
-            Serial.print("(");
-            Serial.print(average);
-            Serial.print(")");
-
-            if (!lastinloop(i, fieldCount))
-            {
-                Serial.print(", ");                
+             
+            if (s_debugFieldFlags[i])
+            {   Serial.print(toShow);
+                Serial.print("(");
+                Serial.print(average);
+                Serial.print(")");
+                Serial.print(", ");
             }
         }
         Serial.println();
@@ -205,6 +210,34 @@ void APP_DATA_Setup(
 
     if (s_debugOut)
     {
+        /* Set the fields to debug based on settings */
+        s_debugFieldFlags = new bool[s_fieldCount];
+
+        // Assume all fields should be debugged
+        fillArray(s_debugFieldFlags, (bool)true, s_fieldCount);
+
+        if (Settings_stringIsSet(DEBUG_FIELDS))
+        {
+            Serial.print("Debugging fields: ");
+            char const * const debugFields = Settings_getString(DEBUG_FIELDS);
+            for (i = 0; i < s_fieldCount; i++)
+            {
+                char expected[3];
+                sprintf(expected, "%02d", i+1); // Fields must be 01, 02 (not 1, 2)
+                s_debugFieldFlags[i] = strstr(debugFields, expected);
+                if (s_debugFieldFlags[i])
+                {
+                    Serial.print(i+1);
+                    Serial.print(", ");
+                }
+            }
+            Serial.println("");
+
+        }
+        else
+        {
+            Serial.println("Debugging all fields.");
+        }
         debugTask.ResetTime();
     }
 

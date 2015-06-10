@@ -97,6 +97,7 @@ template void fillArray(int16_t * array, int16_t value, uint16_t size);
 template void fillArray(uint32_t * array, uint32_t value, uint16_t size);
 template void fillArray(int32_t * array, int32_t value, uint16_t size);
 template void fillArray(float * array, float value, uint16_t size);
+template void fillArray(bool * array, bool value, uint16_t size);
 
 template int32_t indexOf(uint8_t * array, uint8_t value, uint16_t size);
 template int32_t indexOf(int8_t * array, int8_t value, uint16_t size);

@@ -273,7 +273,7 @@ void readFromADCsTaskFn(void)
     // Read the internal ADCs for fields 13-15
     for (adc = 0; adc < 3; adc++)
     {
-        field = adc + 13;
+        field = adc + 12;
         if (Settings_ChannelSettingIsValid(field+1))
         {
             allData[field] = s_internalADCs[adc].read();
