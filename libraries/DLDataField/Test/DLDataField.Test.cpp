@@ -1,6 +1,6 @@
 /*
  * DLDataField.Test.cpp
- * 
+ *
  * Tests the DataField class
  *
  * Author: James Fowkes
@@ -49,6 +49,11 @@ static CURRENTCHANNEL s_currentChannelSettings = {
 	.mvPerAmp = 600.0f,
 };
 
+static float sampleConversionFunction(float in)
+{
+	return in * 2;
+}
+
 static void fillWithTestIntData(DataField * pDataField)
 {
 	uint8_t i;
@@ -84,7 +89,7 @@ static void test_DatafieldStoreInts_CorrectlyFormattedAsStrings(void)
 
 	static char buffer[20];
 	dataField.storeData(100);
-	
+
 	dataField.getRawDataAsString(buffer, "%.0f", true);
 	TEST_ASSERT_EQUAL_STRING("100", buffer);
 }
@@ -116,14 +121,14 @@ static void test_DatafieldStoreAsString_ClipsStringsLongerThanMaximumLength(void
 	dataField.copy(buffer, 0);
 	strncpy(expectedStr, testStr, 19);
 	TEST_ASSERT_EQUAL(19, strlen(buffer));
-	TEST_ASSERT_EQUAL_STRING(expectedStr, buffer);	
+	TEST_ASSERT_EQUAL_STRING(expectedStr, buffer);
 }
 
 static void test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager(void)
 {
 	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 10);
-	
+
 	fillWithTestIntData(&dataField);
 	// The oldest value should have the average of the int array
 	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, dataField.getRawData(true));
@@ -135,7 +140,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(v
 {
 	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	voltsDataField.setDataSizes(10, 10);
-	
+
 	fillWithTestIntData(&voltsDataField);
 	float expectedConverted = CONV_VoltsFromRaw(s_expectedAverage, &s_voltageChannelSettings);
 	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, voltsDataField.getRawData(0));
@@ -143,7 +148,7 @@ static void test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData(v
 
 	NumericDataField ampsDataField = NumericDataField(CURRENT, (void*)&s_currentChannelSettings, 0);
 	ampsDataField.setDataSizes(10 ,10);
-	
+
 	fillWithTestIntData(&ampsDataField);
 	expectedConverted = CONV_AmpsFromRaw(s_expectedAverage, &s_currentChannelSettings);
 	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage, ampsDataField.getRawData(0));
@@ -160,18 +165,18 @@ static void test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer(void)
 	dataField.storeData(0);
 	dataField.storeData(1);
 	dataField.storeData(2);
-	
+
 	TEST_ASSERT_EQUAL_FLOAT(0, dataField.getRawData(true));
 	TEST_ASSERT_EQUAL_FLOAT(1, dataField.getRawData(true));
 	TEST_ASSERT_EQUAL_FLOAT(2, dataField.getRawData(true));
-	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(true));	
-	
+	TEST_ASSERT_EQUAL_FLOAT(DATAFIELD_NO_DATA_VALUE, dataField.getRawData(true));
+
 	// If data overflows buffer, oldest entries should be overwritten
 	fillWithTestIntData(&dataField);
 	dataField.storeData(5);
 	dataField.storeData(6);
 	dataField.storeData(7);
-	
+
 	int16_t i;
 	// Datafield should have stored last 7 points in data array
 	for (i = 0; i < 7; ++i)
@@ -232,7 +237,7 @@ static void test_DatafieldReturnsCorrectLength(void)
 {
 	NumericDataField dataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	dataField.setDataSizes(10, 1);
-	
+
 	TEST_ASSERT_EQUAL(0, dataField.length());
 
 	dataField.storeData(0);
@@ -300,7 +305,7 @@ static void test_DatafieldCanBeCorrectlyReferencedAfterRemove(void)
 	dataField.setDataSizes(10, 1);
 
 	fillWithTestIntData(&dataField);
-	
+
 	dataField.removeOldest();
 	TEST_ASSERT_EQUAL_FLOAT(-4, dataField.getRawData(0));
 
@@ -345,6 +350,19 @@ static void test_DatafieldReturnsCorrectBooleanForHasData(void)
 	dataField.removeOldest();
 
 	TEST_ASSERT_FALSE(dataField.hasData());
+}
+
+static void test_DatafieldUsesExtraConversionFunction(void)
+{
+	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
+	voltsDataField.setDataSizes(10, 10);
+	voltsDataField.setExtraConversion(sampleConversionFunction);
+
+	fillWithTestIntData(&voltsDataField);
+	float expectedConverted = CONV_VoltsFromRaw(s_expectedAverage, &s_voltageChannelSettings);
+
+
+	TEST_ASSERT_EQUAL_FLOAT(expectedConverted * 2, voltsDataField.getConvData(0));
 }
 
 /*static void test_writeNumericDataFieldsToBuffer_WritesCorrectValues(void)
@@ -396,18 +414,20 @@ int main(void)
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyStoresIntsInAverager);
     RUN_TEST(test_DatafieldStoreArrayOfInts_CorrectlyReturnsRawAndConvertedData);
     RUN_TEST(test_DatafieldStoreArrayOfInts_BehavesAsCircularBuffer);
-    
+
     RUN_TEST(test_DatafieldReturnsCorrectLength);
     RUN_TEST(test_DatafieldRemoveReducesLengthByOneDownToZero);
     RUN_TEST(test_DatafieldRemoveReturnsCorrectLengthAfterFilling);
 
     RUN_TEST(test_DatafieldCanBeCorrectlyReferencedAfterRemove);
     RUN_TEST(test_DatafieldReturnsCorrectBooleanForHasData);
-    
+
     RUN_TEST(test_DatafieldStoreArrayOfStrings_CorrectlyStoresStrings);
     RUN_TEST(test_DatafieldStoreArrayOfStrings_BehavesAsCircularBuffer);
-    
+
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
+
+    RUN_TEST(test_DatafieldUsesExtraConversionFunction);
 
     //RUN_TEST(test_writeNumericDataFieldsToBuffer_WritesCorrectValues);
     //RUN_TEST(test_writeStringDataFieldsToBuffer_WritesCorrectValues);

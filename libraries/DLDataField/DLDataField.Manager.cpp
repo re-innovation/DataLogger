@@ -1,6 +1,6 @@
 /*
  * DLDataField.Manager.cpp
- * 
+ *
  * Provides management of datafields for applications
  *
  * Author: James Fowkes
@@ -14,7 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#else 
+#else
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -145,7 +145,7 @@ uint32_t DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLen
     if (!buffer) { return 0; }
 
     uint8_t i;
-    
+
     FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
 
     for (i = 0; i < m_fieldCount; ++i)

@@ -17,7 +17,7 @@ class DataFieldManager
         void storeDataArray(int32_t * data);
         void getDataArray(float * buffer, bool converted, bool alsoRemove);
         uint32_t writeHeadersToBuffer(char * buffer, uint8_t bufferLength);
-        
+
         void setupAllValidChannels(void);
         uint32_t * getChannelNumbers(void);
         bool hasData(void);

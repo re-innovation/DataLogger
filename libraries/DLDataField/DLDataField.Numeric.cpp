@@ -1,6 +1,6 @@
 /*
  * DLDataField.String.cpp
- * 
+ *
  * Stores single item of string data and provides get/set functionality
  *
  * Author: James Fowkes
@@ -14,7 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#else 
+#else
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -61,6 +61,7 @@ static void printThermistorData(char * buffer, THERMISTORCHANNEL * data)
 NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     m_conversionData = fieldData;
+    m_extraConversionFn = NULL;
 }
 
 NumericDataField::~NumericDataField()
@@ -73,15 +74,20 @@ void NumericDataField::setDataSizes(uint32_t N, uint32_t averagerN)
     if (N == 0 || averagerN == 0) { return; }
 
     setSize(N);
-    
+
     m_data = new float[N];
-    
+
     if (m_data)
     {
         fillArray(m_data, 0.0f, N);
     }
 
     m_averager = new Averager<int32_t>(averagerN);
+}
+
+void NumericDataField::setExtraConversion(APP_CONVERSION_FN * extraConversionFn)
+{
+    m_extraConversionFn = extraConversionFn;
 }
 
 float NumericDataField::getRawData(bool alsoRemove)
@@ -116,6 +122,11 @@ float NumericDataField::getConvData(bool alsoRemove)
             data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
         default:
             break;
+        }
+
+        if (m_extraConversionFn)
+        {
+            data = m_extraConversionFn(data);
         }
     }
 
