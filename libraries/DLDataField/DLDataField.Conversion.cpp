@@ -25,6 +25,7 @@
  */
 
 #include "DLUtility.Averager.h"
+#include "DLUtility.PD.h"
 #include "DLSensor.Thermistor.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
@@ -32,35 +33,6 @@
 /*
  * Private Functions
  */
-
-/*
- * adcTomV
- *
- * Convert a raw ADC reading to millivolts
- *
- * in: Raw ADC reading
- * mvPerBit: Millivolts per ADC bit
- */
-static float adcTomV(float in, float mvPerBit)
-{
-	return (in * mvPerBit);
-}
-
-/*
- * potentialDividerConversion
- *
- * Assuming that the voltage in is from a potential divider
- * of resistors r1 and r2, calculate the divider input voltage
- *
- * in: The input voltage
- * r1: The "top" resistor in the divider
- * r2: The "bottom" resistor in the divider
- */
-
-static float potentialDividerConversion(float in, float r1, float r2)
-{
-	return (in * (r1 + r2)) / r2;
-}
 
 /* 
  * mvToAmps
@@ -82,6 +54,19 @@ static float mvToAmps(float mV, float mVperAmp, float mvAtZero)
  * Public Functions
  */
 
+/*
+ * CONV_ADCtoMillivolts
+ *
+ * Convert a raw ADC reading to millivolts
+ *
+ * in: Raw ADC reading
+ * mvPerBit: Millivolts per ADC bit
+ */
+float CONV_ADCtoMillivolts(float in, float mvPerBit)
+{
+	return (in * mvPerBit);
+}
+
 /* 
  * CONV_VoltsFromRaw
  *
@@ -95,8 +80,8 @@ float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData)
 {
 	if (conversionData)
 	{
-		float volts = adcTomV(raw, conversionData->mvPerBit) / 1000;
-    	return potentialDividerConversion(volts, conversionData->R1, conversionData->R2);
+		float volts = CONV_ADCtoMillivolts(raw, conversionData->mvPerBit) / 1000;
+    	return PD_GetInputVoltage(volts, conversionData->R1, conversionData->R2);
     }
     else
     {
@@ -117,7 +102,7 @@ float CONV_AmpsFromRaw(float raw, CURRENTCHANNEL * conversionData)
 {
 	if (conversionData)
 	{
-		float mv = adcTomV(raw, conversionData->mvPerBit);
+		float mv = CONV_ADCtoMillivolts(raw, conversionData->mvPerBit);
 		return mvToAmps(mv,conversionData->mvPerAmp, conversionData->offset);
 	}
 	else

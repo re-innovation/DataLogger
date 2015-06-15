@@ -49,8 +49,9 @@ static CURRENTCHANNEL s_currentChannelSettings = {
 	.mvPerAmp = 600.0f,
 };
 
-static float sampleConversionFunction(float in)
+static float sampleConversionFunction(float in, void * data)
 {
+	(void)data;
 	return in * 2;
 }
 
@@ -352,17 +353,15 @@ static void test_DatafieldReturnsCorrectBooleanForHasData(void)
 	TEST_ASSERT_FALSE(dataField.hasData());
 }
 
-static void test_DatafieldUsesExtraConversionFunction(void)
+static void test_DatafieldUsesAlternativeConversionFunction(void)
 {
 	NumericDataField voltsDataField = NumericDataField(VOLTAGE, (void*)&s_voltageChannelSettings, 0);
 	voltsDataField.setDataSizes(10, 10);
-	voltsDataField.setExtraConversion(sampleConversionFunction);
+	voltsDataField.setAltConversion(sampleConversionFunction);
 
 	fillWithTestIntData(&voltsDataField);
-	float expectedConverted = CONV_VoltsFromRaw(s_expectedAverage, &s_voltageChannelSettings);
 
-
-	TEST_ASSERT_EQUAL_FLOAT(expectedConverted * 2, voltsDataField.getConvData(0));
+	TEST_ASSERT_EQUAL_FLOAT(s_expectedAverage * 2, voltsDataField.getConvData(0));
 }
 
 /*static void test_writeNumericDataFieldsToBuffer_WritesCorrectValues(void)
@@ -427,8 +426,8 @@ int main(void)
 
     RUN_TEST(test_GetFieldTypeString_ReturnsStringforValidIndexAndEmptyOtherwise);
 
-    RUN_TEST(test_DatafieldUsesExtraConversionFunction);
-
+    RUN_TEST(test_DatafieldUsesAlternativeConversionFunction);
+    
     //RUN_TEST(test_writeNumericDataFieldsToBuffer_WritesCorrectValues);
     //RUN_TEST(test_writeStringDataFieldsToBuffer_WritesCorrectValues);
 

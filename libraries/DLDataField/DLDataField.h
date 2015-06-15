@@ -56,7 +56,8 @@ class NumericDataField : public DataField
         void setDataSizes(uint32_t N, uint32_t averagerN);
 
         bool storeData(int32_t data);
-        void setExtraConversion(APP_CONVERSION_FN * extraConversionFn);
+
+        void setAltConversion(APP_CONVERSION_FN * altConversionFn);
 
         float getRawData(bool alsoRemove);
         float getConvData(bool alsoRemove);
@@ -71,8 +72,7 @@ class NumericDataField : public DataField
     private:
         float * m_data;
         void * m_conversionData;
-        APP_CONVERSION_FN * m_extraConversionFn;
-
+        APP_CONVERSION_FN * m_altConversionFn;
         #ifdef TEST
         void printContents(void);
         #endif

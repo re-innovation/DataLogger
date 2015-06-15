@@ -55,13 +55,14 @@ static void printThermistorData(char * buffer, THERMISTORCHANNEL * data)
     sprintf(buffer, "Other R = %.1f, R25 = %.1f, B = %.1f, maxADC = %d, %s",
         data->otherR, data->R25, data->B, (int)data->maxADC, data->highside ? "highside" : "lowside");
 }
+
 /*
  * Public class Functions
  */
 NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     m_conversionData = fieldData;
-    m_extraConversionFn = NULL;
+    m_altConversionFn = NULL;
 }
 
 NumericDataField::~NumericDataField()
@@ -85,9 +86,10 @@ void NumericDataField::setDataSizes(uint32_t N, uint32_t averagerN)
     m_averager = new Averager<int32_t>(averagerN);
 }
 
-void NumericDataField::setExtraConversion(APP_CONVERSION_FN * extraConversionFn)
+
+void NumericDataField::setAltConversion(APP_CONVERSION_FN * altConversionFn)
 {
-    m_extraConversionFn = extraConversionFn;
+    m_altConversionFn = altConversionFn;
 }
 
 float NumericDataField::getRawData(bool alsoRemove)
@@ -110,23 +112,26 @@ float NumericDataField::getConvData(bool alsoRemove)
 
     if (m_conversionData)
     {
-        switch (m_fieldType)
+        if (m_altConversionFn)
         {
-        case VOLTAGE:
-            data = CONV_VoltsFromRaw(data, (VOLTAGECHANNEL*)m_conversionData);
-            break;
-        case CURRENT:
-            data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
-            break;
-        case TEMPERATURE_C:
-            data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
-        default:
-            break;
+            // Conversion has been overriden for this field
+            data = m_altConversionFn(data, this);
         }
-
-        if (m_extraConversionFn)
+        else
         {
-            data = m_extraConversionFn(data, this);
+            switch (m_fieldType)
+            {
+            case VOLTAGE:
+                data = CONV_VoltsFromRaw(data, (VOLTAGECHANNEL*)m_conversionData);
+                break;
+            case CURRENT:
+                data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
+                break;
+            case TEMPERATURE_C:
+                data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
+            default:
+                break;
+            }
         }
     }
 

@@ -7,7 +7,9 @@ SRC_FILES += DLSensor/DLSensor.Thermistor.cpp
 
 SRC_FILES += DLSettings/DLSettings.DataChannels.cpp DLSettings/DLSettings.DataChannels.Helper.cpp
 
-INC_DIRS += -IDLUtility -IDLSettings -IDLSensor -IDLSettings
+SRC_FILES += DLPlatform/DLPlatform.cpp
+
+INC_DIRS += -IDLUtility -IDLSettings -IDLSensor -IDLSettings -IDLPlatform
 
 local_setup: ;
 

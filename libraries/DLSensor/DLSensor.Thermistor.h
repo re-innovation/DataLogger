@@ -24,6 +24,6 @@ class Thermistor
 };
 
 Thermistor * getHighsideThermistor(float B, float R25);
-Thermistor * getTLowsideThermistor(float B, float R25);
+Thermistor * getLowsideThermistor(float B, float R25);
 
 #endif

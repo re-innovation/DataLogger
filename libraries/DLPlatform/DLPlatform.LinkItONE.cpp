@@ -21,7 +21,8 @@
 /*
  * Local Application Includes
  */
- 
+
+#include "DLUtility.PD.h" 
 #include "DLUtility.Averager.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
@@ -39,10 +40,17 @@ static float thermistorADCConversion(float in, void * field)
 
 	THERMISTORCHANNEL * pChannelParams = (THERMISTORCHANNEL*)field;
 
-	if (!pChannelParams) { return in; }
+	// Get the thermistor voltage
+	float mv = CONV_ADCtoMillivolts(in, 5000.0f/1024.0f);
 
-	return in;
+	// Recalculate actual thermistor resistance based on divider and 66K in parallel
+	float parallelR = PD_GetLowerResistance(pChannelParams->otherR, 3300, mv);
+	float thermistorR = 1.0/((1.0/parallelR) - (1.0/66000.0));
+	
+	Thermistor thermistor = Thermistor(pChannelParams->B, pChannelParams->R25, pChannelParams->highside);
+	return thermistor.TemperatureFromResistance(thermistorR);
 }
+
 
 void PLATFORM_LINKITONE_specialFieldSetup(NumericDataField * field)
 {
@@ -55,6 +63,6 @@ void PLATFORM_LINKITONE_specialFieldSetup(NumericDataField * field)
 
 	if (field->getType() == TEMPERATURE_C)
 	{
-		field->setExtraConversion(thermistorADCConversion);
+		field->setAltConversion(thermistorADCConversion);
 	}
 }

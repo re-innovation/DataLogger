@@ -73,6 +73,8 @@
 
 #include "DLSMS.h"
 
+#include "DLPlatform.h"
+
 #include "TaskAction.h"
 
 /*
