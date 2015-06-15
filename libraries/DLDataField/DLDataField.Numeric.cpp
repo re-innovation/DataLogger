@@ -126,7 +126,7 @@ float NumericDataField::getConvData(bool alsoRemove)
 
         if (m_extraConversionFn)
         {
-            data = m_extraConversionFn(data);
+            data = m_extraConversionFn(data, this);
         }
     }
 

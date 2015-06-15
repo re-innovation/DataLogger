@@ -35,6 +35,7 @@
 #include "DLSettings.DataChannels.h"
 #include "DLUtility.h"
 #include "DLUtility.ArrayFunctions.h"
+#include "DLPlatform.h"
 
 DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 {
@@ -67,6 +68,10 @@ bool DataFieldManager::addField(NumericDataField * field)
     if (!field) { return false; }
 
     if (m_fieldCount == MAX_FIELDS) { return false; }
+
+    // The field might need extra setup based on the datatype/sensor and platform.
+    // The platform interface takes care of that.
+    PLATFORM_specialFieldSetup(field);
 
     field->setDataSizes(m_dataSize, m_averagerSize);
 

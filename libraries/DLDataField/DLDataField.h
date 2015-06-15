@@ -4,7 +4,7 @@
 // A datafield should return this value if data is requested when none exists
 #define DATAFIELD_NO_DATA_VALUE (float)(0xFFFFFFFF)
 
-typedef float (APP_CONVERSION_FN)(float);
+typedef float (APP_CONVERSION_FN)(float, void *);
 
 class DataField
 {
@@ -67,6 +67,7 @@ class NumericDataField : public DataField
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
 
+        void * getConversionParams(void) { return m_conversionData; }
     private:
         float * m_data;
         void * m_conversionData;
