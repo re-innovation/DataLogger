@@ -24,8 +24,12 @@
 
 #include "DLUtility.PD.h" 
 #include "DLUtility.Averager.h"
+
 #include "DLDataField.Types.h"
+#include "DLDataField.Conversion.h"
 #include "DLDataField.h"
+
+#include "DLSensor.Thermistor.h"
 
 #include "DLPlatform.h"
 
