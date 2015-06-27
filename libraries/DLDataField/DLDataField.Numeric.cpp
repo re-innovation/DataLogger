@@ -115,7 +115,7 @@ float NumericDataField::getConvData(bool alsoRemove)
         if (m_altConversionFn)
         {
             // Conversion has been overriden for this field
-            data = m_altConversionFn(data, this);
+            data = m_altConversionFn(data, (void*)m_conversionData);
         }
         else
         {
