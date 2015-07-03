@@ -44,5 +44,7 @@ SMSInterface * SMS_GetInterface(SMS_INTERFACE provider)
 	{
 	case SMS_INTERFACE_LINKITONE:
 		return new LinkItOneSMSInterface();
+	default:
+		return NULL;
 	}
 }

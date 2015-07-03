@@ -3,7 +3,7 @@ CC = g++
 CFLAGS=-Wall -Wextra -Werror
 
 INC_DIRS = -IDLCSV -IDLDataField -IDLFilename -IDLGPS -IDLHTTP -IDLLocalStorage -IDLLocation
-INC_DIRS += -IDLNetwork -IDLSecurity -IDLSensor -IDLService -IDLSettings -IDLSMS 
+INC_DIRS += -IDLNetwork -IDLSecurity -IDLSensor -IDLService -IDLSettings -IDLSMS -IDLPlatform
 INC_DIRS += -IDLTest  -IDLTime -IDLUtility -ITaskAction
 
 DIR = $(dir $(INO_FILE))
@@ -14,6 +14,7 @@ SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DL
 SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest/DLTest.Mock.Sensor.ADS1x1x.cpp
 SRC_FILES += DLTest/DLTest.Mock.Location.cpp DLTest/DLTest.Mock.Time.cpp DLTest/DLTest.Mock.GPS.cpp
 SRC_FILES += DLTest/DLTest.Mock.Network.cpp DLTest/DLTest.Mock.Sensor.LinkItONE.cpp TaskAction/TaskAction.cpp
+SRC_FILES += DLTest/DLTest.Mock.Battery.cpp DLTest/DLTest.Mock.SMS.LinkItONE.cpp
 
 SYMBOLS = -g -DMOCK -DTEST
 

@@ -47,6 +47,7 @@
 #include "app.data.h"
 #include "app.sd_storage.h"
 #include "app.sms.h"
+#include "app.errors.h"
 
 /*
  * Applications Data
@@ -62,7 +63,7 @@ static uint32_t s_numberOfAveragesToStore= 0;
 static uint32_t s_numberOfAveragesToUpload = 0;
 static uint8_t s_fieldCount;
 
-static bool s_debugOut = true;
+static bool s_debugEnabled = true;
 static bool * s_debugFieldFlags;
 
 static bool s_setupValid = false;
@@ -96,6 +97,7 @@ static void debugTaskFn(void)
     {
         for (i = 0; i < fieldCount; i++)
         {
+            // Data has to be removed from manager whether it's printed or not
             float average = ((NumericDataField *)s_dataDebugManager->getField(i))->getRawData(false);
             float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
              
@@ -120,17 +122,17 @@ void APP_DATA_Setup(
     unsigned long storageAveragingInterval, unsigned long uploadAveragingInterval,
     uint16_t valuesPerSecond, uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
 {    
-    if (storageAveragingInterval == 0) { APP_FatalError("Storage averaging interval is 0 seconds!"); }
-    if (uploadAveragingInterval == 0) { APP_FatalError("Upload averaging interval is 0 seconds!"); }
+    if (storageAveragingInterval == 0) { APP_FatalError("Storage averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
+    if (uploadAveragingInterval == 0) { APP_FatalError("Upload averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
 
     if (storageAveragingInterval > storageInterval)
     {
-        APP_FatalError("Storage averaging interval cannot be longer than storage interval.");
+        APP_FatalError("Storage averaging interval cannot be longer than storage interval.", ERR_TYPE_FATAL_CONFIG);
     }
 
     if (uploadAveragingInterval > uploadInterval)
     {
-        APP_FatalError("Upload averaging interval cannot be longer than upload interval.");
+        APP_FatalError("Upload averaging interval cannot be longer than upload interval.", ERR_TYPE_FATAL_CONFIG);
     }
 
     uint32_t storageAveragerSize = valuesPerSecond * storageAveragingInterval;
@@ -165,17 +167,21 @@ void APP_DATA_Setup(
     s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
     s_dataDebugManager = new DataFieldManager(1, valuesPerSecond);
 
-    if (!s_storageManager) { APP_FatalError("Failed to create storage manager"); }
-    if (!s_uploadManager) { APP_FatalError("Failed to create upload manager"); }
-    if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager"); }
+    if (!s_storageManager) { APP_FatalError("Failed to create storage manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_uploadManager) { APP_FatalError("Failed to create upload manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager", ERR_TYPE_FATAL_RUNTIME); }
 
+    Serial.print("Attempting to read channel settings from ");
+    Serial.print("filename");
+    Serial.println("...");
+    
     uint8_t storageFieldCount = APP_SD_ReadDataChannelSettings(s_storageManager, filename);    
     uint8_t uploadFieldCount = APP_SD_ReadDataChannelSettings(s_uploadManager, filename);
     uint8_t debugFieldCount = APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
 
     if ((storageFieldCount != uploadFieldCount) || (uploadFieldCount != debugFieldCount) || (debugFieldCount != storageFieldCount))
     {
-        APP_FatalError("Field counts for data managers do not match!");
+        APP_FatalError("Field counts for data managers do not match!", ERR_TYPE_FATAL_CONFIG);
     }
     else
     {
@@ -184,7 +190,7 @@ void APP_DATA_Setup(
 
     if (s_fieldCount == 0)
     {
-        APP_FatalError("No valid channel configurations read!");
+        APP_FatalError("No valid channel configurations read!", ERR_TYPE_FATAL_CHANNEL);
     }
 
     Serial.print("Data Managers created with ");
@@ -208,7 +214,17 @@ void APP_DATA_Setup(
         Serial.println(")");
     }
 
-    if (s_debugOut)
+    // Serial data output is enabled if ENABLE_DATA_DEBUG is not zero
+    if (Settings_intIsSet(ENABLE_DATA_DEBUG))
+    {
+        s_debugEnabled = Settings_getInt(ENABLE_DATA_DEBUG) != 0;
+    }
+    else
+    {
+        s_debugEnabled = true; // If the setting is not present, default to enabled
+    }
+    
+    if (s_debugEnabled)
     {
         /* Set the fields to debug based on settings */
         s_debugFieldFlags = new bool[s_fieldCount];
@@ -319,7 +335,7 @@ void APP_DATA_Tick(void)
 {
     if (s_setupValid)
     {
-        if (s_debugOut)
+        if (s_debugEnabled)
         {
             debugTask.tick();
         }

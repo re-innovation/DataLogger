@@ -37,6 +37,7 @@
 #include "DLSettings.Reader.Errors.h"
 #include "DLSettings.Global.Reader.h"
 #include "DLSettings.DataChannels.Reader.h"
+#include "TaskAction.h"
 
 /*
  * Application Includes
@@ -45,8 +46,7 @@
 #include "app.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-#include "TaskAction.h"
-
+#include "app.errors.h"
 
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
@@ -250,11 +250,14 @@ void APP_SD_WriteEntryIDToOpenFile(void)
 
 void APP_SD_ReadGlobalSettings(char const * const filename)
 {
+    Serial.print("Attempting to read global settings from ");
+    Serial.print(filename);
+    Serial.println("...");
     SETTINGS_READER_RESULT result = Settings_readGlobalFromFile(s_sdCard, filename);
 
     if (result != ERR_READER_NONE)
     {
-        APP_FatalError(Settings_getLastReaderResultText());
+        APP_FatalError(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CONFIG);
     }
 
     Settings_echoAllSet(localPrintFn);
@@ -266,7 +269,7 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
         sprintf(s_errString, "Some or all required settings not found in '%s': %s",
             filename, missingSettings);
 
-        APP_FatalError(s_errString);
+        APP_FatalError(s_errString, ERR_TYPE_FATAL_CONFIG);
     }
 
     if (Settings_stringIsSet(DEBUG_MODULES))
@@ -275,22 +278,42 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
     }
 }
 
+/*
+ * APP_SD_ReadDataChannelSettings
+ *
+ * Reads data channel settings
+ * 
+ * pManager : Pointer to dataManager object to configure
+ * filename : Name of file to read settings from
+ *
+ * Returns:  number of channels configured
+ */
 uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
 {
     if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
-        APP_FatalError(Settings_getLastReaderResultText());
+        APP_FatalError(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CHANNEL);
         return 0;
     }
     return pManager->fieldCount();
 }
 
+/*
+ * APP_SD_EnableDebugging
+ *
+ * Enables serial debug output of SD card functionality
+ */
 void APP_SD_EnableDebugging(void)
 {
     s_debugThisModule = true;
     s_sdCard->setEcho(true);
 }
 
+/*
+ * APP_SD_Tick
+ *
+ * Application must call this function as often as possible to run SD task
+ */
 void APP_SD_Tick(void)
 {
 	writeToSDCardTask.tick();

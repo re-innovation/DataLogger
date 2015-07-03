@@ -85,6 +85,7 @@
 #include "app.sd_storage.h"
 #include "app.data.h"
 #include "app.sms.h"
+#include "app.errors.h"
 
 // Pointers to fuctionality objects
 
@@ -116,33 +117,41 @@ static uint32_t s_uploadInterval = 0;
 static TM s_gpsTime;
 static TM s_rtcTime;
 
-#define DATA_LED_PIN (5)
-#define STATUS_LED_PIN (4)
+#define HEARTBEAT_LED_PIN (5)
+#define ERROR_LED_PIN (4)
 
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
 
 static int s_batteryWarnLevel = -1;
 
+static APP_ERROR_ENUM s_errorState = ERR_NONE;
+
 /*
  * APP_FatalError
  *
  * Prints error to serial and then loops flashing LED
  */
-void APP_FatalError(char const * const err)
+void APP_FatalError(char const * const err, int nErrorType)
 {
     Serial.println("Application error:");
     Serial.println(err);
 
+    int i;
     #ifdef ARDUINO
     while (1)
     {
-        digitalWrite(STATUS_LED_PIN, HIGH);
-        delay(200);
-        digitalWrite(STATUS_LED_PIN, LOW);
-        delay(200);
+        for (i = 0; i < nErrorType; ++i)
+        {
+            digitalWrite(ERROR_LED_PIN, HIGH);
+            delay(200);
+            digitalWrite(ERROR_LED_PIN, LOW);
+            delay(200);
+        }
+        delay(2000);
     }
     #else
+    (void)i; (void)nErrorType;
     _exitMock();
     #endif    
 }
@@ -204,20 +213,24 @@ static void delayStart(uint8_t seconds)
         Serial.print("...");
         delay(1000);
     }
+    Serial.println();
 }
+
 /*
  * Tasks
  */
-
-void heartbeatTaskFn(void)
+static void heartbeatTaskFn(void);
+TaskAction heartbeatTask(heartbeatTaskFn, 1000, INFINITE_TICKS);
+static void heartbeatTaskFn(void)
 {
     static bool ledState = false;
-    digitalWrite(STATUS_LED_PIN, ledState ? HIGH : LOW);
+    digitalWrite(HEARTBEAT_LED_PIN, ledState ? HIGH : LOW);
+    // 1s on, 4s off by setting task interval
+    heartbeatTask.SetInterval(ledState ? 1000 : 4000);
     ledState = !ledState;
 }
-TaskAction heartbeatTask(heartbeatTaskFn, 500, INFINITE_TICKS);
 
-void batteryCheckTaskFn(void)
+static void batteryCheckTaskFn(void)
 {
     int batteryLevel = LBattery.level();
     bool charging = LBattery.isCharging();
@@ -248,7 +261,26 @@ void batteryCheckTaskFn(void)
 }
 TaskAction batteryCheckTask(batteryCheckTaskFn, 60*60*1000, INFINITE_TICKS);
 
-void readFromADCsTaskFn(void)
+static void errorLEDTaskFn(void)
+{
+    switch(s_errorState)
+    {
+    case ERR_NONE:
+        digitalWrite(ERROR_LED_PIN, LOW);
+        break;
+    case ERR_NO_GPS:
+        break;
+    case ERR_DATA_UPLOAD_FAILED:
+        break;
+    case ERR_BATT_LEVEL_LOW:
+        break;
+    default:
+        break;
+    }
+}
+TaskAction errorLEDTask(errorLEDTaskFn, 500, INFINITE_TICKS);
+
+static void readFromADCsTaskFn(void)
 {
     uint8_t adc = 0;
     uint8_t ch = 0;
@@ -290,8 +322,9 @@ void readFromADCsTaskFn(void)
 }
 TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
 
+static void remoteUploadTaskFn(void);
 TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
-void remoteUploadTaskFn(void)
+static void remoteUploadTaskFn(void)
 {
     if (APP_DATA_UploadIsPending() && APP_DATA_UploadDataRemaining())
     {
@@ -300,7 +333,6 @@ void remoteUploadTaskFn(void)
         APP_DATA_SetUploadPending(false);
         remoteUploadTask.SetInterval(s_uploadInterval * 1000);
 
-        digitalWrite(DATA_LED_PIN, HIGH);
         uint16_t nFields = APP_DATA_GetNumberOfFields();
         
         if (!s_gprsConnection->isConnected())
@@ -314,11 +346,11 @@ void remoteUploadTaskFn(void)
         while(APP_DATA_UploadDataRemaining())
         {
 
-            Serial.print("Remaining records to upload: ");
-            Serial.println(APP_DATA_UploadDataRemaining());
-
             if (s_debugUpload)
             {
+                Serial.print("Remaining records to upload: ");
+                Serial.println(APP_DATA_UploadDataRemaining());
+
                 Serial.print("Attempting upload to ");
                 Serial.println(s_thingSpeakService->getURL());
             }
@@ -352,9 +384,7 @@ void remoteUploadTaskFn(void)
                     Serial.println("!");
                 }
             }
-        }
-        
-        digitalWrite(DATA_LED_PIN, LOW);
+        }        
     }
     else
     {
@@ -372,8 +402,15 @@ void gpsTaskFn(void)
 
     if (success)
     {
-        if (s_debugGPS) { Serial.println("Updating RTC time from GPS."); }
         Time_GetTime(&s_gpsTime, TIME_GPS);
+        if (s_debugGPS)
+        {
+            Serial.print("Updating RTC time from GPS (");
+            Time_PrintTime(&s_gpsTime);
+            Serial.print(" ");
+            Time_PrintDate(&s_gpsTime);
+            Serial.println(")");
+        }
         Time_SetPlatformTime(&s_gpsTime);
     }
     else
@@ -441,7 +478,7 @@ void setupBattery(void)
         
         if (Settings_intIsSet(BATTERY_WARN_INTERVAL_MINUTES))
         {
-            unsigned long intervalInMinutes = Settings_getInt(BATTERY_WARN_INTERVAL_MINUTES);
+            intervalInMinutes = Settings_getInt(BATTERY_WARN_INTERVAL_MINUTES);
         }    
         
         batteryCheckTask.SetInterval(intervalInMinutes * 60 * 1000);   
@@ -468,8 +505,8 @@ void setup()
 
     delayStart(10);
 
-    pinMode(DATA_LED_PIN, OUTPUT);
-    pinMode(STATUS_LED_PIN, OUTPUT);
+    pinMode(HEARTBEAT_LED_PIN, OUTPUT);
+    pinMode(ERROR_LED_PIN, OUTPUT);
 
     Location_Setup(0);
  
@@ -478,6 +515,8 @@ void setup()
     /* Tell the settings modules which settings are 
     required. If these settings are missing, the application
     will not start (APP_FatalError will be called) */
+
+    Settings_Init();
     Settings_requireInt(UPLOAD_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(STORAGE_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);

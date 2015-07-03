@@ -36,7 +36,7 @@
 
 static SMSInterface * s_linkitoneSMSInterface;
 
-bool APP_SMS_Setup(void)
+void APP_SMS_Setup(void)
 {
 	s_linkitoneSMSInterface = SMS_GetInterface(SMS_INTERFACE_LINKITONE);
 }

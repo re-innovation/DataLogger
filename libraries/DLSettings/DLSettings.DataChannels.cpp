@@ -27,9 +27,16 @@
  */
 
 #include "DLDataField.Types.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"
 #include "DLUtility.h"
+
+/*
+ * Defines and Typedefs
+ */
+
+#define MAX_LINE_LENGTH (200)
 
 /*
  * Private Variables
@@ -49,59 +56,9 @@ static FIELD_TYPE s_fieldTypes[MAX_CHANNELS];
  */
 static uint8_t s_valuesSetBitFields[MAX_CHANNELS];
 
-static DATACHANNELERROR s_lastResult = ERR_DATA_CH_NONE;
-
 /*
  * Private Functions
  */
-
-static DATACHANNELERROR noError(void)
-{
-    s_lastResult = ERR_DATA_CH_NONE;
-    return s_lastResult;
-}
-
-static DATACHANNELERROR noEqualsError(void)
-{
-    s_lastResult = ERR_DATA_CH_NO_EQUALS;
-    return s_lastResult;
-}
-
-static DATACHANNELERROR noChannelError(void)
-{
-    s_lastResult = ERR_DATA_CH_NO_CHANNEL;
-    return s_lastResult;
-}
-
-static DATACHANNELERROR noSettingError(void)
-{
-    s_lastResult = ERR_DATA_CH_NO_SETTING;
-    return s_lastResult;  
-}
-
-static DATACHANNELERROR unknownTypeError(void)
-{
-    s_lastResult = ERR_DATA_CH_UNKNOWN_TYPE;
-    return s_lastResult;  
-}
-
-static DATACHANNELERROR unknownSettingError(void)
-{
-    s_lastResult = ERR_DATA_CH_UNKNOWN_SETTING;
-    return s_lastResult;
-}
-
-static DATACHANNELERROR invalidSettingError(void)
-{
-    s_lastResult = ERR_DATA_CH_INVALID_SETTING;
-    return s_lastResult;
-}
-
-static DATACHANNELERROR channelNotSetError(void)
-{
-    s_lastResult = ERR_DATA_CH_CHANNEL_TYPE_NOT_SET;
-    return s_lastResult;  
-}
 
 static void setupChannel(uint8_t ch, FIELD_TYPE type)
 {
@@ -139,7 +96,7 @@ static bool thermistorChannelIsValid(uint8_t channel)
     return s_valuesSetBitFields[channel] == 0x1F; // Thermistor needs five values set   
 }
 
-static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName, char * pValueString)
+static SETTINGS_READER_RESULT tryParseAsVoltageSetting(uint8_t ch, char * pSettingName, char * pValueString, int lineNo)
 {
     float setting;
 
@@ -147,7 +104,7 @@ static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName
 
     if (0 == strncmp(pSettingName, "mvperbit", 8))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((VOLTAGECHANNEL*)s_channels[ch])->mvPerBit = setting;
         s_valuesSetBitFields[ch] |= 0x01;
         return noError();
@@ -155,7 +112,7 @@ static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName
 
     if (0 == strncmp(pSettingName, "r1", 2))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((VOLTAGECHANNEL*)s_channels[ch])->R1 = setting;
         s_valuesSetBitFields[ch] |= 0x02;
         return noError();
@@ -163,16 +120,16 @@ static DATACHANNELERROR tryParseAsVoltageSetting(uint8_t ch, char * pSettingName
 
     if (0 == strncmp(pSettingName, "r2", 2))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((VOLTAGECHANNEL*)s_channels[ch])->R2 = setting;
         s_valuesSetBitFields[ch] |= 0x04;
         return noError();
     }
 
-    return unknownSettingError();
+    return unknownSettingError(lineNo, pSettingName);
 }
 
-static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName, char * pValueString)
+static SETTINGS_READER_RESULT tryParseAsCurrentSetting(uint8_t ch, char * pSettingName, char * pValueString, int lineNo)
 {
     float setting;
     
@@ -180,7 +137,7 @@ static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName
     
     if (0 == strncmp(pSettingName, "mvperbit", 8))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((CURRENTCHANNEL*)s_channels[ch])->mvPerBit = setting;
         s_valuesSetBitFields[ch] |= 0x01;
         return noError();
@@ -188,7 +145,7 @@ static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName
     
     if (0 == strncmp(pSettingName, "offset", 6))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((CURRENTCHANNEL*)s_channels[ch])->offset = setting;
         s_valuesSetBitFields[ch] |= 0x02;
         return noError();
@@ -196,16 +153,16 @@ static DATACHANNELERROR tryParseAsCurrentSetting(uint8_t ch, char * pSettingName
 
     if (0 == strncmp(pSettingName, "mvperamp", 8))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((CURRENTCHANNEL*)s_channels[ch])->mvPerAmp = setting;
         s_valuesSetBitFields[ch] |= 0x04;
         return noError();
     }
 
-    return unknownSettingError();
+    return unknownSettingError(lineNo, pSettingName);
 }
 
-static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingName, char * pValueString)
+static SETTINGS_READER_RESULT tryParseAsThermistorSetting(uint8_t ch, char * pSettingName, char * pValueString, int lineNo)
 {
     float setting;
     
@@ -213,7 +170,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
     
     if (0 == strncmp(pSettingName, "maxadc", 6))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((THERMISTORCHANNEL*)s_channels[ch])->maxADC = setting;
         s_valuesSetBitFields[ch] |= 0x01;
         return noError();
@@ -221,7 +178,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
     
     if (0 == strncmp(pSettingName, "b", 1))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((THERMISTORCHANNEL*)s_channels[ch])->B = setting;
         s_valuesSetBitFields[ch] |= 0x02;
         return noError();
@@ -229,7 +186,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
 
     if (0 == strncmp(pSettingName, "r25", 3))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((THERMISTORCHANNEL*)s_channels[ch])->R25 = setting;
         s_valuesSetBitFields[ch] |= 0x04;
         return noError();
@@ -237,7 +194,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
 
     if (0 == strncmp(pSettingName, "otherr", 6))
     {
-        if (!settingParsedAsFloat) { return invalidSettingError(); }
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((THERMISTORCHANNEL*)s_channels[ch])->otherR = setting;
         s_valuesSetBitFields[ch] |= 0x08;
         return noError();
@@ -250,7 +207,7 @@ static DATACHANNELERROR tryParseAsThermistorSetting(uint8_t ch, char * pSettingN
         return noError();
     }
 
-    return unknownSettingError();
+    return unknownSettingError(lineNo, pSettingName);
 }
 
 /*
@@ -264,10 +221,11 @@ void Settings_InitDataChannels(void)
     {
         s_channels[i] = NULL;
         s_valuesSetBitFields[i] = 0x00;
+        s_fieldTypes[i] = INVALID_TYPE;
     }
 }
 
-DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
+SETTINGS_READER_RESULT Settings_parseDataChannelSetting(char const * const setting, int lineNo)
 {
     char * pSettingString;
     char * pValueString;
@@ -276,31 +234,34 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
 
     uint8_t length = strlen(setting);
 
-    char * lowercaseCopy = new char[length+1];
+    char lowercaseCopy[MAX_LINE_LENGTH];
+
     strncpy_safe(lowercaseCopy, setting, length+1);
     toLowerStr(lowercaseCopy);
 
     bool success = true;
 
     if (*setting == '#') { return noError(); } // Line is a comment
+    
+    // If line is blank, fail early
+    if (stringIsWhitespace(setting)) { return noError(); }
 
     // Split the string by '=' to get setting and name
     success &= splitAndStripWhiteSpace(lowercaseCopy, '=', &pSettingString, NULL, &pValueString, NULL);
-    if (!success) { return noEqualsError(); }
+    if (!success) { return noEqualsError(lineNo); }
 
     // Split the setting to get channel and setting name
     success &= splitAndStripWhiteSpace(pSettingString, '.', &pChannelString, NULL, &pChannelSettingString, NULL);
-    if (!success) { return noSettingError(); }
+    if (!success) { return noSettingError(lineNo); }
 
     int8_t ch = Settings_getChannelFromSetting(pChannelString);
-    if (ch == -1) { return noChannelError(); }
+    if (ch == -1) { return noChannelError(lineNo); }
 
-    
     if (0 == strncmp(pChannelSettingString, "type", 4))
     {
         // Try to interpret setting as a channel type
         s_fieldTypes[ch] = Setting_parseSettingAsType(pValueString);
-        if (s_fieldTypes[ch] == INVALID_TYPE) { return unknownTypeError(); }
+        if (s_fieldTypes[ch] == INVALID_TYPE) { return unknownTypeError(lineNo, pValueString); }
 
         setupChannel(ch, s_fieldTypes[ch]);
         return noError();
@@ -310,18 +271,18 @@ DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
     switch (s_fieldTypes[ch])
     {
     case VOLTAGE:
-        return tryParseAsVoltageSetting(ch, pChannelSettingString, pValueString);
+        return tryParseAsVoltageSetting(ch, pChannelSettingString, pValueString, lineNo);
     case CURRENT:
-        return tryParseAsCurrentSetting(ch, pChannelSettingString, pValueString);
+        return tryParseAsCurrentSetting(ch, pChannelSettingString, pValueString, lineNo);
     case TEMPERATURE_C:
     case TEMPERATURE_F:
     case TEMPERATURE_K:
-        return tryParseAsThermistorSetting(ch, pChannelSettingString, pValueString);
+        return tryParseAsThermistorSetting(ch, pChannelSettingString, pValueString, lineNo);
 
     case INVALID_TYPE:
     default:
         // If the channel type is not set prior to any other settings, this is an error.
-        return channelNotSetError();
+        return channelNotSetError(lineNo, ch);
     }
 }
 

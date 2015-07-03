@@ -25,13 +25,14 @@
 #endif
 
 /*
- * Local Application Includes
+ * Datalogger Library Includes
  */
 
 #include "DLUtility.Averager.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 #include "DLUtility.h"
 #include "DLUtility.ArrayFunctions.h"

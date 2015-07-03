@@ -37,7 +37,8 @@
     INT(DATA_STORAGE_INTERVAL_SECS) \
     INT(SERIAL_DATA_INTERVAL_SECS) \
     INT(BATTERY_WARN_INTERVAL_MINUTES) \
-    INT(BATTERY_WARN_LEVEL)
+    INT(BATTERY_WARN_LEVEL) \
+    INT(ENABLE_DATA_DEBUG)
     
 #define GENERATE_ENUM(ENUM) ENUM, // This turns each setting into an enum entry
 #define GENERATE_STRING(STRING) #STRING, // This turns each setting into a string in an array
