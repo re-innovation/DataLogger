@@ -2,6 +2,8 @@ SRC_FILES += ../applications/LinkitONE.Crest/app.data.cpp
 SRC_FILES += ../applications/LinkitONE.Crest/app.sd_storage.cpp
 SRC_FILES += ../applications/LinkitONE.Crest/app.sms.cpp
 
+SRC_FILES += DLError/DLError.cpp
+
 SRC_FILES += DLDataField/DLDataField.cpp
 SRC_FILES += DLDataField/DLDataField.Manager.cpp
 SRC_FILES += DLDataField/DLDataField.Numeric.cpp
@@ -29,6 +31,8 @@ SRC_FILES += DLSettings/DLSettings.Reader.Errors.cpp
 SRC_FILES += DLGPS/DLGPS.cpp
 
 SRC_FILES += DLSMS/DLSMS.cpp
+
+SRC_FILES += DLBattery/DLBattery.cpp
 
 SRC_FILES += DLService/DLService.cpp
 SRC_FILES += DLService/DLService.thingspeak.cpp

@@ -24,6 +24,8 @@
  * Datalogger Library Includes
  */
 
+#include "DLError.h"
+
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
@@ -47,7 +49,6 @@
 #include "app.data.h"
 #include "app.sd_storage.h"
 #include "app.sms.h"
-#include "app.errors.h"
 
 /*
  * Applications Data
@@ -118,21 +119,21 @@ static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
  * Public Functions
  */
 
-void APP_DATA_Setup(
+void APP_Data_Setup(
     unsigned long storageAveragingInterval, unsigned long uploadAveragingInterval,
     uint16_t valuesPerSecond, uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
 {    
-    if (storageAveragingInterval == 0) { APP_FatalError("Storage averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
-    if (uploadAveragingInterval == 0) { APP_FatalError("Upload averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
+    if (storageAveragingInterval == 0) { Error_Fatal("Storage averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
+    if (uploadAveragingInterval == 0) { Error_Fatal("Upload averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
 
     if (storageAveragingInterval > storageInterval)
     {
-        APP_FatalError("Storage averaging interval cannot be longer than storage interval.", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Storage averaging interval cannot be longer than storage interval.", ERR_TYPE_FATAL_CONFIG);
     }
 
     if (uploadAveragingInterval > uploadInterval)
     {
-        APP_FatalError("Upload averaging interval cannot be longer than upload interval.", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Upload averaging interval cannot be longer than upload interval.", ERR_TYPE_FATAL_CONFIG);
     }
 
     uint32_t storageAveragerSize = valuesPerSecond * storageAveragingInterval;
@@ -167,9 +168,9 @@ void APP_DATA_Setup(
     s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
     s_dataDebugManager = new DataFieldManager(1, valuesPerSecond);
 
-    if (!s_storageManager) { APP_FatalError("Failed to create storage manager", ERR_TYPE_FATAL_RUNTIME); }
-    if (!s_uploadManager) { APP_FatalError("Failed to create upload manager", ERR_TYPE_FATAL_RUNTIME); }
-    if (!s_dataDebugManager) { APP_FatalError("Failed to create debug manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_storageManager) { Error_Fatal("Failed to create storage manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_uploadManager) { Error_Fatal("Failed to create upload manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_dataDebugManager) { Error_Fatal("Failed to create debug manager", ERR_TYPE_FATAL_RUNTIME); }
 
     Serial.print("Attempting to read channel settings from ");
     Serial.print("filename");
@@ -181,7 +182,7 @@ void APP_DATA_Setup(
 
     if ((storageFieldCount != uploadFieldCount) || (uploadFieldCount != debugFieldCount) || (debugFieldCount != storageFieldCount))
     {
-        APP_FatalError("Field counts for data managers do not match!", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Field counts for data managers do not match!", ERR_TYPE_FATAL_CONFIG);
     }
     else
     {
@@ -190,7 +191,7 @@ void APP_DATA_Setup(
 
     if (s_fieldCount == 0)
     {
-        APP_FatalError("No valid channel configurations read!", ERR_TYPE_FATAL_CHANNEL);
+        Error_Fatal("No valid channel configurations read!", ERR_TYPE_FATAL_CHANNEL);
     }
 
     Serial.print("Data Managers created with ");
@@ -260,78 +261,78 @@ void APP_DATA_Setup(
     s_setupValid = true;
 }
 
-void APP_DATA_NewDataArray(int32_t * data)
+void APP_Data_NewDataArray(int32_t * data)
 {
     s_storageManager->storeDataArray(data);
     s_uploadManager->storeDataArray(data);
     s_dataDebugManager->storeDataArray(data);
 }
 
-void APP_DATA_GetUploadData(float * buffer)
+void APP_Data_GetUploadData(float * buffer)
 {
     s_uploadManager->getDataArray(buffer, true, true);
 }
 
-uint16_t APP_DATA_GetNumberOfFields(void)
+uint16_t APP_Data_GetNumberOfFields(void)
 {
     return s_fieldCount;
 }
 
-bool APP_DATA_StorageDataRemaining(void)
+bool APP_Data_StorageDataRemaining(void)
 {
     return s_storageManager->hasData();
 }
 
-bool APP_DATA_UploadIsPending(void)
+bool APP_Data_UploadIsPending(void)
 {
     return s_uploadPending;
 }
 
-bool APP_DATA_UploadDataRemaining(void)
+bool APP_Data_UploadDataRemaining(void)
 {
     return s_uploadManager->count() > 0;
 }
 
-void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
+void APP_Data_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
 {
     (void)s_storageManager->writeHeadersToBuffer(buffer, bufferLength);
 }
 
-uint32_t * APP_DATA_GetChannelNumbers(void)
+uint32_t * APP_Data_GetChannelNumbers(void)
 {
     return s_storageManager->getChannelNumbers();
 }
 
-uint32_t APP_DATA_GetNumberOfAveragesForStorage(void) { return s_numberOfAveragesToStore; }
-uint32_t APP_DATA_GetNumberOfAveragesForUpload(void) { return s_numberOfAveragesToUpload; }
+uint32_t APP_Data_GetNumberOfAveragesForStorage(void) { return s_numberOfAveragesToStore; }
+uint32_t APP_Data_GetNumberOfAveragesForUpload(void) { return s_numberOfAveragesToUpload; }
 
-uint32_t APP_DATA_GetUploadBufferSize(void)
+uint32_t APP_Data_GetUploadBufferSize(void)
 {
     uint32_t uploadBufferSize = 0;
-    uploadBufferSize = 10 * APP_DATA_GetNumberOfFields(); // Allow 10 bytes per field
+    uploadBufferSize = 10 * APP_Data_GetNumberOfFields(); // Allow 10 bytes per field
     uploadBufferSize += 20; // Allow 20 extra chars per data line
-    uploadBufferSize *= APP_DATA_GetNumberOfAveragesForUpload(); // Each line needs recording
+    uploadBufferSize *= APP_Data_GetNumberOfAveragesForUpload(); // Each line needs recording
     uploadBufferSize *= 2; // For safety, allocate twice the requirement
     uploadBufferSize = max(uploadBufferSize, 512); // Ensure a minimum size for the buffer
     return uploadBufferSize;
 }
 
-NumericDataField * APP_DATA_GetUploadField(uint8_t i)
+NumericDataField * APP_Data_GetUploadField(uint8_t i)
 {
     return (NumericDataField *)s_uploadManager->getField(i);
 }
 
-NumericDataField * APP_DATA_GetStorageField(uint8_t i)
+NumericDataField * APP_Data_GetStorageField(uint8_t i)
 {
     return (NumericDataField *)s_storageManager->getField(i);
 }
 
-void APP_DATA_SetUploadPending(bool pending)
+void APP_Data_SetUploadPending(bool pending)
 {
     s_uploadPending = pending;
 }
 
-void APP_DATA_Tick(void)
+void APP_Data_Tick(void)
 {
     if (s_setupValid)
     {

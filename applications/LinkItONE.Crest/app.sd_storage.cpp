@@ -23,7 +23,8 @@
 /*
  * Datalogger Library Includes
  */
-
+ 
+#include "DLError.h"
 #include "DLFilename.h"
 #include "DLLocalStorage.h"
 #include "DLUtility.h"
@@ -46,7 +47,6 @@
 #include "app.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-#include "app.errors.h"
 
 static LocalStorageInterface * s_sdCard;
 static FILE_HANDLE s_fileHandle;
@@ -73,7 +73,7 @@ static void writeToSDCardTaskFn(void)
 
     NumericDataField * pField;
     
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
+    uint16_t nFields = APP_Data_GetNumberOfFields();
     uint16_t linesWritten = 0;
 
     if (s_debugThisModule)
@@ -88,14 +88,14 @@ static void writeToSDCardTaskFn(void)
     if (s_fileHandle != INVALID_HANDLE)
     {
         uint16_t i;
-        while (APP_DATA_StorageDataRemaining())
+        while (APP_Data_StorageDataRemaining())
         {
             APP_SD_WriteTimestampToOpenFile();
             APP_SD_WriteEntryIDToOpenFile();
 
             for (i = 0; i < nFields; ++i)
             {
-                pField = APP_DATA_GetStorageField(i);
+                pField = APP_Data_GetStorageField(i);
 
                 // Write from datafield to buffer then from buffer to SD file
                 pField->getConvDataAsString(buffer, "%.4f", true);
@@ -168,7 +168,7 @@ void createAndOpenNewFileForToday(void)
     s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
 
     char csvHeaders[200];
-    APP_DATA_WriteHeadersToBuffer(csvHeaders, 200);
+    APP_Data_WriteHeadersToBuffer(csvHeaders, 200);
 
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
@@ -257,7 +257,7 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
 
     if (result != ERR_READER_NONE)
     {
-        APP_FatalError(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CONFIG);
     }
 
     Settings_echoAllSet(localPrintFn);
@@ -269,7 +269,7 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
         sprintf(s_errString, "Some or all required settings not found in '%s': %s",
             filename, missingSettings);
 
-        APP_FatalError(s_errString, ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal(s_errString, ERR_TYPE_FATAL_CONFIG);
     }
 
     if (Settings_stringIsSet(DEBUG_MODULES))
@@ -292,7 +292,7 @@ uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const *
 {
     if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
-        APP_FatalError(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CHANNEL);
+        Error_Fatal(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CHANNEL);
         return 0;
     }
     return pManager->fieldCount();
