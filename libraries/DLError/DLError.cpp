@@ -13,7 +13,7 @@
  * Arduino Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
  
 /*
  * Standard Library Includes
@@ -25,12 +25,6 @@
  * DataLogger Includes
  */
 
-#include "TaskAction.h"
-
-/*
- * Application Includes
- */
-
 #include "DLError.h"
 
 /*
@@ -38,87 +32,44 @@
  */
 
 // Flags for each application error
-static bool s_error_states[ERR_MAX];
+static bool s_error_states[ERR_RUNNING_MAX];
 
-// LED delay for each application error (defines 1/2 of flash period)
-static uint16_t s_error_flash_timing[ERR_MAX] = {
-	500,	// 1 flash per second
-	250,	// 2 flashes per second
-	100		// 5 flashes per second
-};
+static FATAL_ERROR_ENUM s_current_fatal_error = ERR_FATAL_NONE;
+static RUNNING_ERROR_ENUM s_current_running_error = ERR_RUNNING_NONE;
 
-static ERROR_ENUM s_current_error = ERR_MAX;
-
-static uint8_t s_error_led_pin = 13;
+static APP_FATAL_ERROR_HANDLER s_fatal_handler;
+static APP_RUNNING_ERROR_HANDLER s_running_handler;
 
 /*
  * Private Module Functions
  */
 
-static void errorLEDTaskFn(void)
-{
-	static bool ledon = false;
-
-	if (s_current_error == ERR_MAX)
-	{
-        // No error,  turn LED off
-		ledon = false;
-		digitalWrite(s_error_led_pin, ledon);
-	}
-	else
-	{
-		digitalWrite(s_error_led_pin, ledon = !ledon);
-	}
-}
-TaskAction errorLEDTask(errorLEDTaskFn, 0, INFINITE_TICKS);
-
 /*
- * Public Module Functions
- */
-
- void Error_Tick(void)
- {
- 	errorLEDTask.tick();
- }
-
-/*
- * Error_Set_LEDs
+ * Error_Setup
  *
- * Set error LED pins
+ * Set error Lcallback functions
  */
 
-void Error_Set_LEDs(uint8_t error_led)
+void Error_Setup(APP_FATAL_ERROR_HANDLER fnFatalHandler, APP_RUNNING_ERROR_HANDLER fnRunningHandler)
 {
-	s_error_led_pin = error_led;	
+	s_fatal_handler = fnFatalHandler;
+    s_running_handler = fnRunningHandler;
+    s_current_fatal_error = ERR_FATAL_NONE;
+    s_current_running_error = ERR_RUNNING_NONE;
 }
 
 /*
  * Error_Fatal
  *
- * Prints error to serial and then loops flashing LED
+ * Calls back to application fatal error handler
  */
-void Error_Fatal(char const * const err, int nErrorType)
+void Error_Fatal(char const * const err, FATAL_ERROR_ENUM errorType)
 {
-    Serial.println("Application error:");
-    Serial.println(err);
-
-    int i;
-    #ifdef ARDUINO
-    while (1)
+    s_current_fatal_error = errorType;
+    if (s_fatal_handler)
     {
-        for (i = 0; i < nErrorType; ++i)
-        {
-            digitalWrite(s_error_led_pin, HIGH);
-            delay(200);
-            digitalWrite(s_error_led_pin, LOW);
-            delay(200);
-        }
-        delay(2000);
-    }
-    #else
-    (void)i; (void)nErrorType;
-    _exitMock();
-    #endif    
+        s_fatal_handler(err, errorType);
+    } 
 }
 
 /*
@@ -127,21 +78,45 @@ void Error_Fatal(char const * const err, int nErrorType)
  * Sets error LED timing
  */
 
-void Error_Running(ERROR_ENUM error, bool set)
+void Error_Running(RUNNING_ERROR_ENUM error, bool set)
 {
 	s_error_states[error] = set;
 
 	int i;
 
-    s_current_error = ERR_MAX; // Assume no current error
+    s_current_running_error = ERR_RUNNING_NONE; // Assume no current error
 
-    for (i = ERR_MAX-1; i >= (ERROR_ENUM)0; i--)
+    for (i = ERR_RUNNING_NONE+1; i < ERR_RUNNING_MAX; ++i)
     {
     	if (s_error_states[i])
     	{
-    		s_current_error = (ERROR_ENUM)i;
-    		errorLEDTask.SetInterval(s_error_flash_timing[i]);
-            break;
+    		s_current_running_error = (RUNNING_ERROR_ENUM)i;
     	}
     }  
+
+    if (s_running_handler)
+    {
+        s_running_handler(s_current_running_error);
+    }
+}
+
+/*
+ * Error_Get_Running_Error
+ *
+ * Returns current running error
+ */
+RUNNING_ERROR_ENUM Error_Get_Running_Error(void)
+{
+    return s_current_running_error;
+}
+
+/*
+ * Error_Get_Fatal_Error
+ *
+ * Returns current fatal error
+ */
+
+FATAL_ERROR_ENUM Error_Get_Fatal_Error(void)
+{
+    return s_current_fatal_error;
 }

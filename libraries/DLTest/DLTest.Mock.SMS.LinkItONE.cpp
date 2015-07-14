@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "DLSMS.h"
-#include "DLSMS.LinkItONE.h"
+#include "DLSMS.linkitone.h"
 
 LinkItOneSMSInterface::LinkItOneSMSInterface() {}
 LinkItOneSMSInterface::~LinkItOneSMSInterface() {}

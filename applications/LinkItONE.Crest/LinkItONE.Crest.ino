@@ -89,6 +89,7 @@
 #include "app.sd_storage.h"
 #include "app.data.h"
 #include "app.sms.h"
+#include "app.error.h"
 
 // Pointers to fuctionality objects
 
@@ -118,9 +119,6 @@ static uint32_t s_uploadInterval = 0;
 
 static TM s_gpsTime;
 static TM s_rtcTime;
-
-#define HEARTBEAT_LED_PIN (5)
-#define ERROR_LED_PIN (4)
 
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
@@ -294,7 +292,7 @@ static void remoteUploadTaskFn(void)
 
             success = s_gprsConnection->sendHTTPRequest(s_thingSpeakService->getURL(), s_requestBuffer, response_buffer);
 
-            Error_Running(ERR_DATA_UPLOAD_FAILED, !success);
+            Error_Running(ERR_RUNNING_DATA_UPLOAD_FAILED, !success);
 
             if (success)
             {
@@ -325,7 +323,7 @@ void gpsTaskFn(void)
     Location_UpdateNow();
     bool success = GPS_InfoIsValid();
 
-    Error_Running(ERR_NO_GPS, !success);
+    Error_Running(ERR_RUNNING_NO_GPS, !success);
 
     if (success)
     {
@@ -478,6 +476,6 @@ void loop()
     heartbeatTask.tick();
     gpsTask.tick();
     Battery_Tick();
-    Error_Tick();
+    APP_Error_Tick();
 }
 

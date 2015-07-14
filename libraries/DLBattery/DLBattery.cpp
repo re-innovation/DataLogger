@@ -13,7 +13,7 @@
  * Arduino Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
  
 /*
  * Standard Library Includes
@@ -88,7 +88,7 @@ static void batteryCheckTaskFn(void)
     char sms[140];
 
     battery_low = batteryLevel <= s_batteryWarnLevel;
-    Error_Running(ERR_BATT_LEVEL_LOW, battery_low);
+    Error_Running(ERR_RUNNING_BATT_LEVEL_LOW, battery_low);
 
     if (battery_low)
     {

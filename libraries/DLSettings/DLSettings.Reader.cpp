@@ -22,7 +22,7 @@
  * Standard Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
 
 /*
  * Local Includes

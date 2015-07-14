@@ -12,7 +12,7 @@
  * Arduino Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
 
 /*
  * Standard Library Includes

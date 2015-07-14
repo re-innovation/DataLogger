@@ -12,7 +12,7 @@
  * Arduino Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
  
 /*
  * Standard Library Includes
@@ -257,7 +257,7 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
 
     if (result != ERR_READER_NONE)
     {
-        Error_Fatal(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal(Settings_getLastReaderResultText(), ERR_FATAL_CONFIG);
     }
 
     Settings_echoAllSet(localPrintFn);
@@ -269,7 +269,7 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
         sprintf(s_errString, "Some or all required settings not found in '%s': %s",
             filename, missingSettings);
 
-        Error_Fatal(s_errString, ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal(s_errString, ERR_FATAL_CONFIG);
     }
 
     if (Settings_stringIsSet(DEBUG_MODULES))
@@ -292,7 +292,7 @@ uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const *
 {
     if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
-        Error_Fatal(Settings_getLastReaderResultText(), ERR_TYPE_FATAL_CHANNEL);
+        Error_Fatal(Settings_getLastReaderResultText(), ERR_FATAL_CHANNEL);
         return 0;
     }
     return pManager->fieldCount();

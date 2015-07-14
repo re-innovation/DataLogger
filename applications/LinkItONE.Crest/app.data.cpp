@@ -12,7 +12,7 @@
  * Arduino Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
 
 /*
  * Standard Library Includes
@@ -123,17 +123,17 @@ void APP_Data_Setup(
     unsigned long storageAveragingInterval, unsigned long uploadAveragingInterval,
     uint16_t valuesPerSecond, uint16_t storageInterval, uint16_t uploadInterval, char const * const filename)
 {    
-    if (storageAveragingInterval == 0) { Error_Fatal("Storage averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
-    if (uploadAveragingInterval == 0) { Error_Fatal("Upload averaging interval is 0 seconds!", ERR_TYPE_FATAL_CONFIG); }
+    if (storageAveragingInterval == 0) { Error_Fatal("Storage averaging interval is 0 seconds!", ERR_FATAL_CONFIG); }
+    if (uploadAveragingInterval == 0) { Error_Fatal("Upload averaging interval is 0 seconds!", ERR_FATAL_CONFIG); }
 
     if (storageAveragingInterval > storageInterval)
     {
-        Error_Fatal("Storage averaging interval cannot be longer than storage interval.", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Storage averaging interval cannot be longer than storage interval.", ERR_FATAL_CONFIG);
     }
 
     if (uploadAveragingInterval > uploadInterval)
     {
-        Error_Fatal("Upload averaging interval cannot be longer than upload interval.", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Upload averaging interval cannot be longer than upload interval.", ERR_FATAL_CONFIG);
     }
 
     uint32_t storageAveragerSize = valuesPerSecond * storageAveragingInterval;
@@ -168,9 +168,9 @@ void APP_Data_Setup(
     s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
     s_dataDebugManager = new DataFieldManager(1, valuesPerSecond);
 
-    if (!s_storageManager) { Error_Fatal("Failed to create storage manager", ERR_TYPE_FATAL_RUNTIME); }
-    if (!s_uploadManager) { Error_Fatal("Failed to create upload manager", ERR_TYPE_FATAL_RUNTIME); }
-    if (!s_dataDebugManager) { Error_Fatal("Failed to create debug manager", ERR_TYPE_FATAL_RUNTIME); }
+    if (!s_storageManager) { Error_Fatal("Failed to create storage manager", ERR_FATAL_RUNTIME); }
+    if (!s_uploadManager) { Error_Fatal("Failed to create upload manager", ERR_FATAL_RUNTIME); }
+    if (!s_dataDebugManager) { Error_Fatal("Failed to create debug manager", ERR_FATAL_RUNTIME); }
 
     Serial.print("Attempting to read channel settings from ");
     Serial.print("filename");
@@ -182,7 +182,7 @@ void APP_Data_Setup(
 
     if ((storageFieldCount != uploadFieldCount) || (uploadFieldCount != debugFieldCount) || (debugFieldCount != storageFieldCount))
     {
-        Error_Fatal("Field counts for data managers do not match!", ERR_TYPE_FATAL_CONFIG);
+        Error_Fatal("Field counts for data managers do not match!", ERR_FATAL_CONFIG);
     }
     else
     {
@@ -191,7 +191,7 @@ void APP_Data_Setup(
 
     if (s_fieldCount == 0)
     {
-        Error_Fatal("No valid channel configurations read!", ERR_TYPE_FATAL_CHANNEL);
+        Error_Fatal("No valid channel configurations read!", ERR_FATAL_CHANNEL);
     }
 
     Serial.print("Data Managers created with ");

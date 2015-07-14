@@ -1,6 +1,7 @@
-SRC_FILES += ../applications/LinkitONE.Crest/app.data.cpp
-SRC_FILES += ../applications/LinkitONE.Crest/app.sd_storage.cpp
-SRC_FILES += ../applications/LinkitONE.Crest/app.sms.cpp
+SRC_FILES += ../applications/LinkItONE.Crest/app.data.cpp
+SRC_FILES += ../applications/LinkItONE.Crest/app.sd_storage.cpp
+SRC_FILES += ../applications/LinkItONE.Crest/app.sms.cpp
+SRC_FILES += ../applications/LinkItONE.Crest/app.error.cpp
 
 SRC_FILES += DLError/DLError.cpp
 

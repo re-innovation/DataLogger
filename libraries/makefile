@@ -2,6 +2,10 @@ CC = g++
 
 CFLAGS=-Wall -Wextra -Werror -g
 
+ifndef UNITY_PATH
+$(error UNITY_PATH is not set)
+endif
+
 SRC_FILES=$(UNITY_PATH)/unity.c
 INC_DIRS=-I$(UNITY_PATH) -IDLTest -I$(TEST_MODULE)
 SYMBOLS=-DTEST -DDL_PATH="."
