@@ -73,6 +73,7 @@
 #include "DLService.thingspeak.h"
 
 #include "DLSMS.h"
+#include "DLSMS.messaging.h"
 
 #include "DLPlatform.h"
 
@@ -88,7 +89,6 @@
 #include "app.upload_manager.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-#include "app.sms.h"
 #include "app.error.h"
 
 // Pointers to fuctionality objects
@@ -451,7 +451,7 @@ void setup()
 
     APP_Error_Setup();
     
-    APP_SMS_Setup();
+    SMS_Setup(SMS_INTERFACE_LINKITONE);
 
     Battery_Setup();
 
