@@ -84,7 +84,10 @@ static void fatal_error_handler(char const * const err, FATAL_ERROR_ENUM errorTy
 
 static void running_error_handler(RUNNING_ERROR_ENUM errorType)
 {
+	Serial.print("Running error: ");
+    Serial.println(errorType);
 	bool is_error = errorType != ERR_RUNNING_NONE;
+
 	if (is_error)
 	{
 		errorTask.SetInterval(s_error_flash_timing[errorType]);

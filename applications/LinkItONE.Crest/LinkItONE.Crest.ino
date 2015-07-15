@@ -449,6 +449,8 @@ void setup()
     was set up successfully and there are valid fields.
     Configure the remaining application functionality. */
 
+    APP_Error_Setup();
+    
     APP_SMS_Setup();
 
     Battery_Setup();
