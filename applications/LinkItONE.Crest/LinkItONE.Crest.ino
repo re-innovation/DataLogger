@@ -404,6 +404,8 @@ void setup()
     pinMode(HEARTBEAT_LED_PIN, OUTPUT);
     pinMode(ERROR_LED_PIN, OUTPUT);
 
+    APP_Error_Setup();
+
     Location_Setup(0);
  
     APP_SD_Init(); // This just initialises the SD card module so settings can be read
@@ -448,8 +450,6 @@ void setup()
     /* If execution got this far, the application data storage functionality
     was set up successfully and there are valid fields.
     Configure the remaining application functionality. */
-
-    APP_Error_Setup();
     
     SMS_Setup(SMS_INTERFACE_LINKITONE);
 

@@ -48,7 +48,6 @@
 #include "app.h"
 #include "app.data.h"
 #include "app.sd_storage.h"
-#include "app.sms.h"
 
 /*
  * Applications Data
