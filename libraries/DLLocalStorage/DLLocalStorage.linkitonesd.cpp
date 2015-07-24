@@ -46,9 +46,11 @@ static bool s_fileIsOpenForWrite = false;
 
 LinkItOneSD::LinkItOneSD()
 {
-    LSD.begin(); // Start the LinkIt ONE SD Interface
+    m_successfulInit = LSD.begin(); // Start the LinkIt ONE SD Interface
     m_echo = false;
 }
+
+bool LinkItOneSD::inError() { return !m_successfulInit; }
 
 void LinkItOneSD::setEcho(bool set)
 {
