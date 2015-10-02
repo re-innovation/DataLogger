@@ -81,6 +81,8 @@ float CONV_VoltsFromRaw(float raw, VOLTAGECHANNEL * conversionData)
 	if (conversionData)
 	{
 		float volts = CONV_ADCtoMillivolts(raw, conversionData->mvPerBit) / 1000;
+    	volts -= conversionData->offset;
+    	volts *= conversionData->multiplier;
     	return PD_GetInputVoltage(volts, conversionData->R1, conversionData->R2);
     }
     else

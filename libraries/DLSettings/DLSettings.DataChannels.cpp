@@ -49,10 +49,10 @@ static FIELD_TYPE s_fieldTypes[MAX_CHANNELS];
  * For each of the channels that can be stored,
  * the bitfield stores a 1 if a setting has been set.
  * For example, the VOLTAGECHANNEL needs mvPerBit (0x01),
- * R1 (0x02) and R2 (0x04) settings.
+ * R1 (0x02), R2 (0x04) and offset (0x08) settings.
  * 
  * If only R1 and mvPerBit are set, the value in the bitfield will be
- * 0x03, not 0x07 and the field will not be considered complete.
+ * 0x03, not 0x0F and the field will not be considered complete.
  */
 static uint8_t s_valuesSetBitFields[MAX_CHANNELS];
 
@@ -83,7 +83,7 @@ static void setupChannel(uint8_t ch, FIELD_TYPE type)
 
 static bool voltageChannelIsValid(uint8_t channel)
 {
-    return s_valuesSetBitFields[channel] == 0x07; // Voltage needs three values set   
+    return s_valuesSetBitFields[channel] == 0x1F; // Voltage needs five values set   
 }
 
 static bool currentChannelIsValid(uint8_t channel)
@@ -123,6 +123,22 @@ static SETTINGS_READER_RESULT tryParseAsVoltageSetting(uint8_t ch, char * pSetti
         if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
         ((VOLTAGECHANNEL*)s_channels[ch])->R2 = setting;
         s_valuesSetBitFields[ch] |= 0x04;
+        return noError();
+    }
+
+    if (0 == strncmp(pSettingName, "offset", 6))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->offset = setting;
+        s_valuesSetBitFields[ch] |= 0x08;
+        return noError();
+    }
+
+    if (0 == strncmp(pSettingName, "multiplier", 10))
+    {
+        if (!settingParsedAsFloat) { return invalidSettingError(lineNo, pSettingName); }
+        ((VOLTAGECHANNEL*)s_channels[ch])->multiplier = setting;
+        s_valuesSetBitFields[ch] |= 0x10;
         return noError();
     }
 
