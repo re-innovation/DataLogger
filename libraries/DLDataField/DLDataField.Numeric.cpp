@@ -40,8 +40,8 @@
 
 static void printVoltageData(char * buffer, VOLTAGECHANNEL * data)
 {
-    sprintf(buffer, "R1 = %.1f, R2 = %.1f, mVPerBit = %.4f",
-        data->R1, data->R2, data->mvPerBit);
+    sprintf(buffer, "R1 = %.1f, R2 = %.1f, mVPerBit = %.4f, Offset = %.4f, Multipler = %.4f",
+        data->R1, data->R2, data->mvPerBit, data->offset, data->multiplier);
 }
 
 static void printCurrentData(char * buffer, CURRENTCHANNEL * data)
