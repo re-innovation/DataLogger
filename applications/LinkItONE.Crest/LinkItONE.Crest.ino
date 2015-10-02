@@ -396,7 +396,6 @@ void setupTime(void)
 
 void setup()
 {   
-    // setup Serial port
     Serial.begin(115200);
 
     delayStart(10);
