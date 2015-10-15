@@ -128,6 +128,9 @@ static void writeToSDCardTaskFn(void)
             Serial.println("' when trying to write data.");
         }
     }
+
+    Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
+
 }
 
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
