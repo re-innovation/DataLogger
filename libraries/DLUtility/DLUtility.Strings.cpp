@@ -249,7 +249,10 @@ bool FixedLengthAccumulator::writeLine(const char * s)
 void FixedLengthAccumulator::reset(void)
 {
     m_writeIndex = 0;
-    m_buffer[m_writeIndex] = '\0';
+    if (m_buffer)
+    {
+        m_buffer[m_writeIndex] = '\0';
+    }
 }
 
 /*
