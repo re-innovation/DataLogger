@@ -1,5 +1,11 @@
 *.sublime-project
 *.sublime-workspace
 *.Test
+*.o
 *.exe
+*.mocked
+*.modified
 *.stackdump
+*.debug
+
+libraries/Datalogger

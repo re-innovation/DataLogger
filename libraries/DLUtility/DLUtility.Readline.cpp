@@ -30,7 +30,7 @@
  * Public Functions 
  */
 
-uint32_t ReadLineWithReadFunction(READFN fn, char * buffer, uint32_t n, bool stripCRLF)
+uint32_t readLineWithReadFunction(READFN fn, char * buffer, uint32_t n, bool stripCRLF)
 {
 	uint32_t readCount = 0;
 	char next;

@@ -9,7 +9,7 @@ enum time_type_enum
 {
     TIME_PLATFORM,  // Time from local platform (e.g. RTC)
     TIME_GPS,       // Time from GPS source
-    TIME_NTP,       // Time from NTP source
+    TIME_NETWORK,   // Time from network source
 };
 typedef enum time_type_enum TIME_TYPE;
 
@@ -17,6 +17,11 @@ typedef enum time_type_enum TIME_TYPE;
  * Public Function Prototypes
  */
 
-bool Time_GetTime(TM * tm, TIME_TYPE type);
+bool Time_GetTime(TM *, TIME_TYPE type);
+
+void Time_SetPlatformTime(TM *);
+
+void Time_PrintTime(TM * pTime, bool endwithCRLF = false);
+void Time_PrintDate(TM * pTime, bool endwithCRLF = false);
 
 #endif

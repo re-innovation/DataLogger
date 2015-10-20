@@ -28,10 +28,16 @@ class ADS1x1x
 
         int16_t readADC_DifferentialWithConfig(uint16_t);
 
+        bool m_fake;
+        uint16_t m_minFakeRead[4];
+        uint16_t m_maxFakeRead[4];
+
     public:
         ADS1x1x(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
+
+        void      fake(uint8_t ch, uint16_t minFakeRead, uint16_t maxFakeRead);
         void      begin(void);
-        uint16_t  readADC_SingleEnded(uint8_t channel);
+        int16_t   readADC_SingleEnded(uint8_t channel);
         int16_t   readADC_Differential(uint8_t channel);
         int16_t   getLastConversionResults();
         void      setGain(ADS_GAIN gain);
@@ -52,9 +58,9 @@ class ADS1013 : public ADS1x1x
         ADS1013(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
         bool hasComparator(void) { return false; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1014 : public ADS1x1x
@@ -64,11 +70,9 @@ class ADS1014 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
-        
-
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1015 : public ADS1x1x
@@ -79,10 +83,9 @@ class ADS1015 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 4; }
-        uint8_t  getResolution(void) { return 12; };
+        uint8_t getResolution(void) { return 12; };
         uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 1; }
-
+        uint8_t getConversionTime(void) { return 1; }
 };
 
 class ADS1113 : public ADS1x1x
@@ -91,10 +94,11 @@ class ADS1113 : public ADS1x1x
         ADS1113(uint8_t i2cAddress = DEFAULT_ADS1x1x_ADDRESS);
         bool hasComparator(void) { return false; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 12; }
 };
+
 class ADS1114 : public ADS1x1x
 {
     public:
@@ -102,10 +106,11 @@ class ADS1114 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 2; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 12; }
 };
+
 class ADS1115 : public ADS1x1x
 {
     public:
@@ -114,9 +119,8 @@ class ADS1115 : public ADS1x1x
 
         bool hasComparator(void) { return true; }
         uint8_t getMaxChannels(void) { return 4; }
-        uint8_t  getResolution(void) { return 16; };
-        uint8_t getBitShift(void) { return 4; }
-        uint8_t  getConversionTime(void) { return 8; }
-
+        uint8_t getResolution(void) { return 16; };
+        uint8_t getBitShift(void) { return 0; }
+        uint8_t getConversionTime(void) { return 12; }
 };
 #endif

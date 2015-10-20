@@ -70,12 +70,20 @@ bool LinkItOneGPRS::connect(char const * const url)
 bool LinkItOneGPRS::sendHTTPRequest(const char * const url, const char * request, char * response, bool useHTTPS)
 {
     (void)useHTTPS; // Not currently supported with LinkItOne Arduino SDK
-    if (connect(url))
+
+    bool success = connect(url);
+
+    if (success)
     {
         m_client->print(request);
         readResponse(response);
     }
-    return true;
+    else
+    {
+        Serial.print("sendHTTPRequest: Failed to connect to ");
+        Serial.println(url);
+    }
+    return success;
 }
 
 void LinkItOneGPRS::readResponse(char * response)
@@ -102,7 +110,7 @@ void LinkItOneGPRS::readResponse(char * response)
             }
             else
             {
-                Serial.println("Client not available");
+                //Serial.println("Client not available");
             }
         }
         else

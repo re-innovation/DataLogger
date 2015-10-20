@@ -12,13 +12,19 @@
  * Arduino/C++ Library Includes
  */
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#include <stdint.h>
+#include <stdlib.h>
+#endif
 
 /*
  * Local Application Includes
  */
 
-#include "DLSettings.h"
+#include "DLUtility.h"
+#include "DLSettings.Global.h"
 #include "DLService.h"
 #include "DLService.thingspeak.h"
 
@@ -43,4 +49,7 @@
             char * key = Settings_getString(THINGSPEAK_API_KEY);
             return new Thingspeak(url, key);
     }
+
+    // If here, no service found
+    return NULL;
  }

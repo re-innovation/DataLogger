@@ -26,8 +26,8 @@
 #include "DLSensor.ADS1x1x.h"
 
 #ifdef TEST
-#include "DL.Test.Mock.i2c.h"
-#include "DL.Test.Mock.delay.h"
+#include "DLTest.Mock.i2c.h"
+#include "DLTest.Mock.delay.h"
 #endif
 
 /*
@@ -202,15 +202,18 @@ static void writeRegister(uint8_t i2cAddress, uint8_t reg, uint16_t value) {
 
 /**************************************************************************/
 /*!
-@brief  Writes 16-bits to the specified destination register
+@brief  Reads the 16-bit conversion register
+In BOTH differential and single-ended modes, this value is a signed 16-bit integer (-32786 to 32767).
+In single-ended mode, the value CAN drop below 0 due to noise etc. 
+However, the ADC input should not be DRIVEN below 0V.
+Therefore the effective range of the single ended mode in only 15 bits (0 to 32767)
 */
 /**************************************************************************/
-static uint16_t readRegister(uint8_t i2cAddress, uint8_t reg) {
-    (void)reg;
+static int16_t readConversionRegister(uint8_t i2cAddress) {
     Wire.beginTransmission(i2cAddress);
     i2cwrite(ADS1x1x_REG_POINTER_CONVERT);
     Wire.endTransmission();
-    Wire.requestFrom(i2cAddress, (uint8_t)reg);
+    Wire.requestFrom(i2cAddress, (uint8_t)2);
     return ((i2cread() << 8) | i2cread());  
 }
 
@@ -256,6 +259,9 @@ ADS1x1x::ADS1x1x(uint8_t i2cAddress)
     // Set defaults for the lowest performance ADC (ADS1013)
     m_i2cAddress = i2cAddress;
     m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
+    m_fake = false;
+    m_minFakeRead[0] = m_minFakeRead[1] = m_minFakeRead[2] = m_minFakeRead[3] = 0;
+    m_maxFakeRead[0] = m_maxFakeRead[1] = m_maxFakeRead[2] = m_maxFakeRead[3] = 0;
 }
 
 ADS1013::ADS1013(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
@@ -264,6 +270,18 @@ ADS1015::ADS1015(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1113::ADS1113(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1114::ADS1114(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
 ADS1115::ADS1115(uint8_t i2cAddress) : ADS1x1x(i2cAddress) {}
+
+/**************************************************************************/
+/*!
+@brief  Sets up the class to return fake ADC readings
+*/
+/**************************************************************************/
+void ADS1x1x::fake(uint8_t ch, uint16_t minFakeRead, uint16_t maxFakeRead)
+{
+    m_fake = true;
+    m_minFakeRead[ch] = minFakeRead;
+    m_maxFakeRead[ch] = maxFakeRead;
+}
 
 /**************************************************************************/
 /*!
@@ -304,14 +322,15 @@ uint8_t ADS1x1x::getAddress()
     return m_i2cAddress;
 }
 
-
 /**************************************************************************/
 /*!
 @brief  Gets a single-ended ADC reading from the specified channel
 */
 /**************************************************************************/
-uint16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
+int16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
 {
+    static int8_t lastChannel = -1;
+
     if (channel >= getMaxChannels())
     {
         return 0;
@@ -329,15 +348,14 @@ uint16_t ADS1x1x::readADC_SingleEnded(uint8_t channel)
     // Set 'start single-conversion' bit
     config |= ADS1x1x_REG_CONFIG_OS_SINGLE;
 
-    // Write config register to the ADC
+    // Write config register to the ADC and wait for conversion complete
+    //
     writeRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONFIG, config);
-
-    // Wait for the conversion to complete
     delay(getConversionTime());
-
+    
     // Read the conversion results
     // Shift 12-bit results right 4 bits for the ADS1x15
-    return readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> getBitShift();  
+    return readConversionRegister(m_i2cAddress) >> getBitShift();
 }
 
 /**************************************************************************/
@@ -403,7 +421,7 @@ int16_t ADS1x1x::readADC_DifferentialWithConfig(uint16_t differentialConfig)
     // Read the conversion results
     uint8_t bitShift = getBitShift();
 
-    uint16_t res = readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> bitShift;
+    uint16_t res = readConversionRegister(m_i2cAddress) >> bitShift;
     if (bitShift == 0)
     {
         return (int16_t)res;
@@ -435,7 +453,7 @@ int16_t ADS1x1x::getLastConversionResults()
 
 // Read the conversion results
     uint8_t bitShift = getBitShift();
-    uint16_t res = readRegister(m_i2cAddress, ADS1x1x_REG_POINTER_CONVERT) >> bitShift;
+    uint16_t res = readConversionRegister(m_i2cAddress) >> bitShift;
     if (bitShift == 0)
     {
         return (int16_t)res;

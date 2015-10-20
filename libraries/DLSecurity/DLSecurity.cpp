@@ -60,6 +60,7 @@ void TripAlarm::update(bool tripped)
 
 LocationAlarm::LocationAlarm(ON_ALARM_TRIPPED_FN pOnTripFn, uint32_t alarmDistance, LOCATION_2D * pLocation) : Alarm(pOnTripFn)
 {
+    m_homeSet = false;
     setHome(pLocation);
     m_alarmDistance = alarmDistance;
 }
@@ -69,6 +70,7 @@ void LocationAlarm::setHome(LOCATION_2D * pLocation)
 {
     if (pLocation)
     {
+        m_homeSet = true;
         m_home.latitude = pLocation->latitude;
         m_home.longitude = pLocation->longitude;
     }
@@ -81,13 +83,16 @@ void LocationAlarm::setAlarmDistance(uint32_t newDistance)
 
 void LocationAlarm::update(LOCATION_2D * pLocation)
 {
-    uint32_t distanceFromHome = Location_diffInMeters(pLocation, &m_home);
-    
-    if (m_alarmDistance < distanceFromHome)
+    if (m_homeSet)
     {
-        if(m_pOnTripped)
+        uint32_t distanceFromHome = Location_diffInMeters(pLocation, &m_home);
+        
+        if (m_alarmDistance < distanceFromHome)
         {
-            m_pOnTripped();
+            if(m_pOnTripped)
+            {
+                m_pOnTripped();
+            }
         }
     }
 }

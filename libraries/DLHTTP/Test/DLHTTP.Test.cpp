@@ -46,7 +46,7 @@ void test_requestbuilder_BuildsWithMethodAndURLOnly(void)
 {
     builder.setMethodAndURL("GET", "/");   
     builder.writeToBuffer(requestBuffer, 512);
-    TEST_ASSERT_EQUAL_STRING("GET / HTTP/1.1\r\n\r\n", requestBuffer);
+    TEST_ASSERT_EQUAL_STRING("GET / HTTP/1.1\r\n", requestBuffer);
 }
 
 void test_requestbuilder_BuildsWithHeaders(void)
@@ -59,7 +59,7 @@ void test_requestbuilder_BuildsWithHeaders(void)
         "GET / HTTP/1.1\r\n"
         "Host: www.example.com\r\n"
         "Content-Type: text/html\r\n"
-        "Some-Other-Header: Some-Other-Value\r\n\r\n", requestBuffer);
+        "Some-Other-Header: Some-Other-Value\r\n", requestBuffer);
 }
 
 void test_requestbuilder_BuildsWithBodyContent(void)
@@ -72,7 +72,7 @@ void test_requestbuilder_BuildsWithBodyContent(void)
         "Content-Type: text/html\r\n"
         "Some-Other-Header: Some-Other-Value\r\n"
         "\r\n"
-        "This is some data in the body.\r\n\r\n", requestBuffer);
+        "This is some data in the body.\r\n", requestBuffer);
 }
 
 void test_requestbuilder_BuildsWithContentLengthHeader(void)
@@ -85,7 +85,7 @@ void test_requestbuilder_BuildsWithContentLengthHeader(void)
         "Some-Other-Header: Some-Other-Value\r\n"
         "Content-Length: 30\r\n"
         "\r\n"
-        "This is some data in the body.\r\n\r\n", requestBuffer);
+        "This is some data in the body.\r\n", requestBuffer);
 }
 
 void test_requestbuilder_BuildsWithURLParameters(void)
@@ -101,7 +101,7 @@ void test_requestbuilder_BuildsWithURLParameters(void)
 
     TEST_ASSERT_EQUAL_STRING(
         "GET /update?Param1=Param1Value&Param2=Param2Value HTTP/1.1\r\n"
-        "Host: www.example.com\r\n\r\n", requestBuffer); 
+        "Host: www.example.com\r\n", requestBuffer); 
 }
 
 void test_responseparser_ReadsHTTPStatusLine(void)

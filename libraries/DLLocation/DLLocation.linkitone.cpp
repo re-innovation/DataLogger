@@ -28,7 +28,7 @@
 #include "DLUtility.Time.h"
 #include "DLUtility.Location.h"
 #include "DLLocation.h"
-#include "DLLocation.GPS.h"
+#include "DLGPS.h"
 
 /*
  * Private Functio Prototypes
@@ -40,12 +40,7 @@ static void updateTaskFn(void);
  * Local object and variables
  */
  
-static gpsSentenceInfoStruct s_rawInfo;
-static GPS_DATA s_parsedInfo;
-static bool s_infoIsValid = false;
-
 static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
-
 
 /*
  * Public Functions 
@@ -54,7 +49,7 @@ static TaskAction updateTask(updateTaskFn, 0, INFINITE_TICKS);
 bool Location_Setup(uint32_t updatePeriod)
 {
     LGPS.powerOn();
-    
+        
     updateTask.SetInterval(updatePeriod * 1000UL);
     
     // No useful information comes back from powerOn, so must assume that it worked!
@@ -83,31 +78,27 @@ void Location_SetUpdatePeriod(uint32_t newPeriod)
 
 bool Location_GetLocation_2D(LOCATION_2D * pLocation)
 {
-    if (s_infoIsValid)
+    bool valid = GPS_InfoIsValid();
+    if (valid)
     {
-        pLocation->latitude = s_parsedInfo.latitude;
-        pLocation->longitude = s_parsedInfo.longitude;
+        GPS_DATA const * pData = GPS_GetInfo();
+        pLocation->latitude = pData->latitude;
+        pLocation->longitude = pData->longitude;
     }
-    return s_infoIsValid;
+    return valid;
 }
 
 bool Location_GetLocation_3D(LOCATION_3D * pLocation)
 {
-    pLocation->latitude = s_parsedInfo.latitude;
-    pLocation->longitude = s_parsedInfo.longitude;
-    pLocation->altitude_m = s_parsedInfo.altitude;
-}
-
-void Location_GetGPSTime(TM * time)
-{
-    if (!time) { return; }
-    
-    time->tm_sec = s_parsedInfo.sec;
-    time->tm_min = s_parsedInfo.min;
-    time->tm_hour = s_parsedInfo.hour;
-    time->tm_mday = s_parsedInfo.dd;
-    time->tm_mon = s_parsedInfo.mm;
-    time->tm_year = s_parsedInfo.yy;
+    bool valid = GPS_InfoIsValid();
+    if (valid)
+    {
+        GPS_DATA const * pData = GPS_GetInfo();
+        pLocation->latitude = pData->latitude;
+        pLocation->longitude = pData->longitude;
+        pLocation->altitude_m = pData->altitude;
+    }
+    return valid;
 }
 
 /*
@@ -116,6 +107,5 @@ void Location_GetGPSTime(TM * time)
 
 static void updateTaskFn(void)
 {
-    LGPS.getData(&s_rawInfo);
-    s_infoIsValid = GPS_parseGPRMCSentence((char *)&s_rawInfo.GPRMC, &s_parsedInfo);
+    GPS_UpdateNow();
 }

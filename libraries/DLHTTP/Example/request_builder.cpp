@@ -12,12 +12,13 @@ For GET requests:
 request_builder.exe api.thingspeak.com GET "api_key,WHATEVERAPIKEY,field1,10.00,field2,12.00"
 
 For POST requests:
-request_builder.exe api.thingspeak.com POST "api_key,WHATEVERAPIKEY,Host,api.thingspeak.com,Connection,close,field1,10.00,field2,12.00"
+request_builder.exe api.thingspeak.com POST "Host,api.thingspeak.com,Connection,close" "content"
 */
 
 #include <iostream>
+#include <string.h>
 
-#include "../../DLUtility/DLUtility.Strings.cpp"
+#include "../../DLUtility/DLUtility.Strings.h"
 #include "../DLHTTP.h"
 
 int main(int argc, char * argv[])
@@ -48,7 +49,7 @@ int main(int argc, char * argv[])
         if (slash)
         {
             builder.setMethodAndURL(method, slash);
-            strncpy(getURL, url, slash - url);
+            strncpy_safe(getURL, url, slash - url);
             builder.putHeader("Host", getURL);
         }
         else

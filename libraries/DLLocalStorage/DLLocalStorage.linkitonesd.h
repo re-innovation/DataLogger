@@ -9,15 +9,22 @@ class LinkItOneSD : public LocalStorageInterface
 {
     public:
         LinkItOneSD();
-        bool FileExists(char * filePath);
-        bool DirectoryExists(char * dirPath);
-        bool MkDir(char * dirPath);
-        void Write(FILE_HANDLE file, char * toWrite);
-        uint32_t ReadBytes(FILE_HANDLE file, char * buffer, uint32_t n);
-        uint32_t ReadLine(FILE_HANDLE file, char * buffer, uint32_t n);
-        FILE_HANDLE OpenFile(char * filename, bool forWrite = false);
-        bool EndOfFile(FILE_HANDLE file);
-        void CloseFile(FILE_HANDLE file);
+        bool inError();
+        bool fileExists(char const * const filePath);
+        bool directoryExists(char const * const dirPath);
+        bool mkDir(char const * const dirPath);
+        void write(FILE_HANDLE file, char const * const toWrite);
+        uint32_t readBytes(FILE_HANDLE file, char * buffer, uint32_t n);
+        uint32_t readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool stripCRLF);
+        FILE_HANDLE openFile(char const * const filename, bool forWrite = false);
+        bool endOfFile(FILE_HANDLE file);
+        void closeFile(FILE_HANDLE file);
+        void setEcho(bool set);
+        void removeFile(char const * const dirPath);
+
+    private:
+        bool m_echo;
+        bool m_successfulInit;
 };
 
 #endif

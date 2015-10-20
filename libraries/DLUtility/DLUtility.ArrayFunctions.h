@@ -18,4 +18,7 @@ uint16_t getIndexOfMaximum(T * array, uint16_t length);
 template <typename T>
 void fillArray(T * array, T value, uint16_t size);
 
+template <typename T>
+int32_t indexOf(T * array, T value, uint16_t size);
+
 #endif

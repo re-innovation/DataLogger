@@ -1,6 +1,6 @@
 /*
  * linkitonegprs.cpp
- * 
+ *
  * Connect and communicate over GPRS
  *
  * Author: James Fowkes
@@ -41,35 +41,43 @@ static bool s_fileIsOpenForRead = false;
 static bool s_fileIsOpenForWrite = false;
 
 /*
- * Public Functions 
+ * Public Functions
  */
 
 LinkItOneSD::LinkItOneSD()
 {
-    LSD.begin(); // Start the LinkIt ONE SD Interface
+    m_successfulInit = LSD.begin(); // Start the LinkIt ONE SD Interface
+    m_echo = false;
 }
 
-bool LinkItOneSD::FileExists(char * filePath)
+bool LinkItOneSD::inError() { return !m_successfulInit; }
+
+void LinkItOneSD::setEcho(bool set)
 {
-    return LSD.exists(filePath);
+	m_echo = set;
 }
 
-bool LinkItOneSD::DirectoryExists(char * dirPath)
+bool LinkItOneSD::fileExists(char const * const filePath)
 {
-    return LSD.exists(dirPath);
+    return LSD.exists((char*)filePath);
 }
 
-bool LinkItOneSD::MkDir(char * dirPath)
+bool LinkItOneSD::directoryExists(char const * const dirPath)
 {
-    return LSD.mkdir(dirPath);
+    return LSD.exists((char*)dirPath);
 }
 
-char ReadOneByteFromFile(void)
+bool LinkItOneSD::mkDir(char const * const dirPath)
+{
+    return LSD.mkdir((char*)dirPath);
+}
+
+static char readOneByteFromFile(void)
 {
 	return s_file.available() ? s_file.read() : '\0';
 }
 
-FILE_HANDLE LinkItOneSD::OpenFile(char * filename, bool forWrite)
+FILE_HANDLE LinkItOneSD::openFile(char const * const filename, bool forWrite)
 {
     s_file.close(); // Ensure previous file (if any) is closed
     s_file = LSD.open(filename, forWrite ? FILE_WRITE : FILE_READ);
@@ -81,14 +89,17 @@ FILE_HANDLE LinkItOneSD::OpenFile(char * filename, bool forWrite)
     }
     else
     {
+    	Serial.print("Could not open '");
+    	Serial.print(filename);
+    	Serial.println(forWrite ? "' for write" : "' for read");
     	s_fileIsOpenForWrite = false;
     	s_fileIsOpenForRead = false;
     }
 
-    return 0; // The LinkIt ONE can only support one open file at a time, so no need to track file handles
+    return s_file ? 0 : INVALID_HANDLE; // The LinkIt ONE can only support one open file at a time, so no need to track file handles
 }
 
-void LinkItOneSD::Write(FILE_HANDLE file, char * toWrite)
+void LinkItOneSD::write(FILE_HANDLE file, char const * const toWrite)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
 	bool fileAvailableForWrite = true;
@@ -98,10 +109,26 @@ void LinkItOneSD::Write(FILE_HANDLE file, char * toWrite)
 	if (fileAvailableForWrite)
 	{
 		s_file.print(toWrite);
+		if (m_echo)
+		{
+			Serial.print(toWrite);
+		}
+	}
+	else
+	{
+		/*Serial.print("File not open when writing because ");
+		if (s_file.isDirectory())
+		{
+			Serial.println(" file is directory.");
+		}
+		else if (!s_fileIsOpenForWrite)
+		{
+			Serial.println(" file was not opened in write mode.");
+		}*/
 	}
 }
 
-uint32_t LinkItOneSD::ReadBytes(FILE_HANDLE file, char * buffer, uint32_t n)
+uint32_t LinkItOneSD::readBytes(FILE_HANDLE file, char * buffer, uint32_t n)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
 	bool fileAvailableForRead = true;
@@ -114,7 +141,7 @@ uint32_t LinkItOneSD::ReadBytes(FILE_HANDLE file, char * buffer, uint32_t n)
 	}
 }
 
-uint32_t LinkItOneSD::ReadLine(FILE_HANDLE file, char * buffer, uint32_t n)
+uint32_t LinkItOneSD::readLine(FILE_HANDLE file, char * buffer, uint32_t n, bool stripCRLF)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
 	bool fileAvailableForRead = true;
@@ -126,22 +153,27 @@ uint32_t LinkItOneSD::ReadLine(FILE_HANDLE file, char * buffer, uint32_t n)
 
 	if (fileAvailableForRead && buffer)
 	{
-		ReadLineWithReadFunction(ReadOneByteFromFile, buffer, n);
+		readCount = readLineWithReadFunction(readOneByteFromFile, buffer, n, stripCRLF);
 	}
 
 	return readCount;
 }
 
-bool LinkItOneSD::EndOfFile(FILE_HANDLE file)
+bool LinkItOneSD::endOfFile(FILE_HANDLE file)
 {
 	(void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
-	return !s_file.available();	
+	return !s_file.available();
 }
 
-void LinkItOneSD::CloseFile(FILE_HANDLE file)
+void LinkItOneSD::closeFile(FILE_HANDLE file)
 {
     (void)file; // The LinkIt ONE can only support one open file at a time, so discard handle
     s_file.close();
     s_fileIsOpenForWrite = false;
     s_fileIsOpenForRead = false;
+}
+
+void LinkItOneSD::removeFile(char const * const dirPath)
+{
+    LSD.remove((char*)dirPath);
 }

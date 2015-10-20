@@ -38,7 +38,7 @@ enum month_enum
 #endif
 
 // Convert between C years and gregorian years
-#define GREGORIAN_TO_C_YEAR(year) (year % 100) 
+#define GREGORIAN_TO_C_YEAR(year) (year - FIRST_C_YEAR_GR) 
 #define C_TO_GREGORIAN_YEAR(year) (year + FIRST_C_YEAR_GR) 
 
 // Time and date epoch defines
@@ -79,7 +79,7 @@ enum month_enum
 #define DAYS_HRS_MINS_SECS_TO_SECS(d, h, m, s) (d * S_PER_DAY) + HRS_MINS_SECS_TO_SECS(h, m, s)
 
 /* This struct taken from C library time.h */
-struct tm
+struct _tm
 {
 	int tm_sec;    /* seconds after the minute (0 to 61) */
 	int tm_min;    /* minutes after the hour (0 to 59) */
@@ -91,7 +91,7 @@ struct tm
 	int tm_yday;   /* days since January 1 (0 to 365) */
 	int tm_isdst;  /* Daylight Savings Time */
 };
-typedef struct tm TM;
+typedef struct _tm TM;
 
 typedef UNIX_TIME_TYPE UNIX_TIMESTAMP;
 typedef int C_STRUCT_YEAR;

@@ -159,10 +159,6 @@ void RequestBuilder::writeToBuffer(char * buf, uint16_t maxLength, bool addConte
         accumulator.writeString(m_body);
         accumulator.writeString(CRLF);
     }
-    
-    /* Request finishes with blank line */
-
-    accumulator.writeString(CRLF);
 }
 
 void RequestBuilder::reset(void)

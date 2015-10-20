@@ -41,8 +41,8 @@
 #define decrementwithminmax(var, max) (var = (var > 0) ? var - 1 : max)
 
 // Set or clear individual register bits
-#define set(reg, bit) (reg |= (1 << bit))
-#define clr(reg, bit) (reg &= ~(1 << bit))
+#define bset(reg, bit) (reg |= (1 << bit))
+#define bclr(reg, bit) (reg &= ~(1 << bit))
 
 // Division with rounding up or down (for both +ve and -ve numbers)
 #define div_round_pos(x, y) (((x) + ((y)/2))/(y))
