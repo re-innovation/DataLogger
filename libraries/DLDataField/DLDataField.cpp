@@ -1,6 +1,6 @@
 /*
  * DLDataField.cpp
- * 
+ *
  * Stores single item of data and provides get/set functionality
  *
  * Author: James Fowkes
@@ -14,7 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#else 
+#else
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,7 +42,7 @@
 #define T 1 // Second entry is the tail
 
 /*
- * Private Functions 
+ * Private Functions
  */
 
 static char const * _getTypeString(FIELD_TYPE type)
@@ -55,18 +55,18 @@ static char const * _getTypeString(FIELD_TYPE type)
     	"Temp (C)", // TEMPERATURE_C
     	"Temp (F)", // TEMPERATURE_F
     	"Temp (K)", // TEMPERATURE_K
-    
+
     	"Irradiance (W/m2)", // IRRADIANCE_WpM2
 
     	"Wind Direction", // CARDINAL_DIRECTION
-    	"Wind Direction" // DEGREES_DIRECTION		
+    	"Wind Direction" // DEGREES_DIRECTION
 	};
 
-	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";	
+	return (type <= DEGREES_DIRECTION) ? fieldtypestrings[type] : "";
 }
 
 /*
- * DataField Class Functions 
+ * DataField Class Functions
  */
 
 DataField::DataField(FIELD_TYPE fieldType, uint32_t channelNumber)
@@ -192,7 +192,7 @@ uint32_t DataField_writeNumericDataToBuffer(
 	for (i = 0; i < arrayLength; ++i)
 	{
 		datafields[i].getDataAsString(numericBuffer, format, 0);
-		headerAccumulator.writeString(numericBuffer);		
+		headerAccumulator.writeString(numericBuffer);
 		if (!lastinloop(i, arrayLength))
 		{
 			headerAccumulator.writeString(", ");
@@ -213,17 +213,17 @@ if (!buffer) { return 0; }
 
 	for (i = 0; i < arrayLength; ++i)
 	{
-		headerAccumulator.writeString(datafields[i].getData(0));		
+		headerAccumulator.writeString(datafields[i].getData(0));
 		if (!lastinloop(i, arrayLength))
 		{
 			headerAccumulator.writeString(", ");
 		}
 	}
 
-	return headerAccumulator.length();	
+	return headerAccumulator.length();
 }*/
 
-/* In-progress functions 
+/* In-progress functions
 template uint32_t DataField_writeNumericDataToBuffer(
 	char * buffer, NumericDataField datafields[], char const * const format, uint8_t arrayLength, uint8_t bufferLength);
 */

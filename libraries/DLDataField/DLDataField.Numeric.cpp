@@ -1,6 +1,6 @@
 /*
  * DLDataField.String.cpp
- * 
+ *
  * Stores single item of string data and provides get/set functionality
  *
  * Author: James Fowkes
@@ -14,7 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#else 
+#else
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,8 +40,8 @@
 
 static void printVoltageData(char * buffer, VOLTAGECHANNEL * data)
 {
-    sprintf(buffer, "R1 = %.1f, R2 = %.1f, mVPerBit = %.4f",
-        data->R1, data->R2, data->mvPerBit);
+    sprintf(buffer, "R1 = %.1f, R2 = %.1f, mVPerBit = %.4f, Offset = %.4f, Multipler = %.4f",
+        data->R1, data->R2, data->mvPerBit, data->offset, data->multiplier);
 }
 
 static void printCurrentData(char * buffer, CURRENTCHANNEL * data)
@@ -55,12 +55,14 @@ static void printThermistorData(char * buffer, THERMISTORCHANNEL * data)
     sprintf(buffer, "Other R = %.1f, R25 = %.1f, B = %.1f, maxADC = %d, %s",
         data->otherR, data->R25, data->B, (int)data->maxADC, data->highside ? "highside" : "lowside");
 }
+
 /*
  * Public class Functions
  */
 NumericDataField::NumericDataField(FIELD_TYPE type, void * fieldData, uint32_t channelNumber) : DataField(type, channelNumber)
 {
     m_conversionData = fieldData;
+    m_altConversionFn = NULL;
 }
 
 NumericDataField::~NumericDataField()
@@ -73,15 +75,21 @@ void NumericDataField::setDataSizes(uint32_t N, uint32_t averagerN)
     if (N == 0 || averagerN == 0) { return; }
 
     setSize(N);
-    
+
     m_data = new float[N];
-    
+
     if (m_data)
     {
         fillArray(m_data, 0.0f, N);
     }
 
     m_averager = new Averager<int32_t>(averagerN);
+}
+
+
+void NumericDataField::setAltConversion(APP_CONVERSION_FN * altConversionFn)
+{
+    m_altConversionFn = altConversionFn;
 }
 
 float NumericDataField::getRawData(bool alsoRemove)
@@ -104,26 +112,35 @@ float NumericDataField::getConvData(bool alsoRemove)
 
     if (m_conversionData)
     {
-        switch (m_fieldType)
+        if (m_altConversionFn)
         {
-        case VOLTAGE:
-            data = CONV_VoltsFromRaw(data, (VOLTAGECHANNEL*)m_conversionData);
-            break;
-        case CURRENT:
-            data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
-            break;
-        case TEMPERATURE_C:
-            data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
-        default:
-            break;
+            // Conversion has been overriden for this field
+            data = m_altConversionFn(data, (void*)m_conversionData);
+        }
+        else
+        {
+            switch (m_fieldType)
+            {
+            case VOLTAGE:
+                data = CONV_VoltsFromRaw(data, (VOLTAGECHANNEL*)m_conversionData);
+                break;
+            case CURRENT:
+                data = CONV_AmpsFromRaw(data, (CURRENTCHANNEL*)m_conversionData);
+                break;
+            case TEMPERATURE_C:
+                data = CONV_CelsiusFromRawThermistor(data, (THERMISTORCHANNEL*)m_conversionData);
+            default:
+                break;
+            }
         }
     }
 
     return data;
 }
 
-void NumericDataField::storeData(int32_t data)
+bool NumericDataField::storeData(int32_t data)
 {
+    bool dataStored = false;
     m_averager->newData(data);
     if (m_averager->full())
     {
@@ -131,7 +148,9 @@ void NumericDataField::storeData(int32_t data)
         m_data[getWriteIndex()] = (float)m_averager->getFloatAverage();
         postPush();
         m_averager->reset(NULL);
+        dataStored = true;
     }
+    return dataStored;
 }
 
 void NumericDataField::getRawDataAsString(char * buf, char const * const fmt, bool alsoRemove)

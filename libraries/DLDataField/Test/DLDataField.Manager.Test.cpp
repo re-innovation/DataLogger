@@ -53,7 +53,7 @@ void setUp(void)
 
 void test_dataFieldCountStartsAtZero(void)
 {
-    TEST_ASSERT_EQUAL(0, s_manager->count());
+    TEST_ASSERT_EQUAL(0, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(NULL, s_manager->getField(0));
 }
 
@@ -61,7 +61,7 @@ void test_stringDataFieldCanBeAdded(void)
 {
     StringDataField * field = new StringDataField(CARDINAL_DIRECTION, 10, 10, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
-    TEST_ASSERT_EQUAL(1, s_manager->count());
+    TEST_ASSERT_EQUAL(1, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
@@ -69,7 +69,7 @@ void test_numericDataFieldCanBeAdded(void)
 {
     NumericDataField * field = new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 0);
     TEST_ASSERT_TRUE(s_manager->addField(field));
-    TEST_ASSERT_EQUAL(1, s_manager->count());
+    TEST_ASSERT_EQUAL(1, s_manager->fieldCount());
     TEST_ASSERT_EQUAL_PTR(field, s_manager->getField(0));
 }
 
@@ -84,7 +84,7 @@ void test_getFieldsReturnsPointerToArrayOfFields(void)
         s_manager->addField(expected[i]);
     }
 
-    TEST_ASSERT_EQUAL(6, s_manager->count());
+    TEST_ASSERT_EQUAL(6, s_manager->fieldCount());
 
     DataField ** dataFields = s_manager->getFields(); 
 
@@ -138,6 +138,29 @@ void test_managerReturnsCorrectArrayOfChannelNumbers(void)
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expected, s_manager->getChannelNumbers(), 4);
 }
 
+void test_managerDataArrayCanBeAdded(void)
+{
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 1) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 3) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 7) );
+    s_manager->addField( new NumericDataField(VOLTAGE, &s_voltageChannelSettings, 12) );
+
+    int32_t input[] = {34, 5432, 632, -532};
+    s_manager->storeDataArray(input);
+
+    float actualFloats[] = {0.0, 0.0, 0.0, 0.0};
+    float expectedFloats[] = {34.0, 5432.0, 632.0, -532.0};
+
+    s_manager->getDataArray(actualFloats, false, false);
+
+    char message[256];
+    sprintf(message, "Expected: (%.6f, %.6f, %.6f, %.6f), Actual: (%.6f, %.6f, %.6f, %.6f)",
+        expectedFloats[0], expectedFloats[1], expectedFloats[2], expectedFloats[3],
+        actualFloats[0], actualFloats[1], actualFloats[2], actualFloats[3]);
+    
+    TEST_ASSERT_EQUAL_FLOAT_ARRAY_MESSAGE(expectedFloats, actualFloats, 4, message);
+}
+
 int main(void)
 {
     UnityBegin("DLDataField.Manager.Test.cpp");
@@ -149,6 +172,8 @@ int main(void)
 
     RUN_TEST(test_hasDataRemainingReturnsTrueWhenAtLeastOneFieldHasData);
     RUN_TEST(test_managerReturnsCorrectArrayOfChannelNumbers);
+    RUN_TEST(test_managerDataArrayCanBeAdded);
+
     UnityEnd();
     return 0;
 }

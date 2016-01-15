@@ -55,6 +55,12 @@ void _Serial::println(void)
 template void _Serial::print<char *>(char * toPrint);
 template void _Serial::println<char *>(char * toPrint);
 
+template void _Serial::print<char>(char toPrint);
+template void _Serial::println<char>(char toPrint);
+
+template void _Serial::print<bool>(bool toPrint);
+template void _Serial::println<bool>(bool toPrint);
+
 template void _Serial::print<char const *>(char const * toPrint);
 template void _Serial::println<char const *>(char const * toPrint);
 
@@ -69,6 +75,12 @@ template void _Serial::println<uint32_t>(uint32_t toPrint);
 
 template void _Serial::print<int32_t>(int32_t toPrint);
 template void _Serial::println<int32_t>(int32_t toPrint);
+
+template void _Serial::print<long>(long toPrint);
+template void _Serial::println<long>(long toPrint);
+
+template void _Serial::print<unsigned long>(unsigned long toPrint);
+template void _Serial::println<unsigned long>(unsigned long toPrint);
 
 template void _Serial::print<float>(float toPrint);
 template void _Serial::println<float>(float toPrint);

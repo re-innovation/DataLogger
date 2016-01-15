@@ -22,7 +22,7 @@
  * Standard Library Includes
  */
 
-#include <arduino.h>
+#include <Arduino.h>
 
 /*
  * Local Includes
@@ -69,6 +69,7 @@ static bool addIntSettingFromString(INTSETTING i, char const * const pValue)
 SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInterface, char const * const filename)
 {
 	char lineBuffer[256];
+	int lineCount = 1;
 
 	if (!pInterface)
 	{
@@ -85,7 +86,7 @@ SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInte
     {
         // Read from file into lineBuffer and strip CRLF endings
         pInterface->readLine(hndl, lineBuffer, 256, true);
-        SETTINGS_READER_RESULT res = Settings_readFromString(lineBuffer);
+        SETTINGS_READER_RESULT res = Settings_readFromString(lineBuffer, lineCount++);
         if (res != ERR_READER_NONE) { return res; }
     }
 
@@ -93,7 +94,7 @@ SETTINGS_READER_RESULT Settings_readGlobalFromFile(LocalStorageInterface * pInte
     return noError();
 }
 
-SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
+SETTINGS_READER_RESULT Settings_readFromString(char const * const string, int lineNo)
 {
 	char settingNameCopy[64];
 	char settingValueCopy[64];
@@ -112,7 +113,7 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 
 	if (!splitAndStripWhiteSpace((char*)string, '=', NULL, &pEndOfName, &pStartOfSetting, NULL))
 	{
-		return noEqualsError();
+		return noEqualsError(lineNo);
 	}
 
 	// The length of the setting name is the difference between the two pointers
@@ -132,7 +133,7 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 			bool result = addIntSettingFromString((INTSETTING)i, settingValueCopy);
 			if (!result)
 			{
-				return invalidIntError(settingNameCopy, settingValueCopy);
+				return invalidIntError(settingNameCopy, settingValueCopy, lineNo);
 			}
 			return noError();
 		}
@@ -151,7 +152,7 @@ SETTINGS_READER_RESULT Settings_readFromString(char const * const string)
 	}
 
 	// If execution got this far, the setting name wasn't found.
-	return noNameError(settingNameCopy);
+	return noNameError(settingNameCopy, lineNo);
 }
 
 

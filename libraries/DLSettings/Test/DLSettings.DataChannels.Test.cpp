@@ -20,6 +20,7 @@
  */
 
 #include "DLDataField.Types.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 #include "DLSettings.DataChannels.Helper.h"
 
@@ -96,79 +97,113 @@ void test_CorrectFloatIsParsedFromSetting(void)
 
 void test_NoChannelInSettingReturnsNoChannelError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NO_CHANNEL, Settings_parseDataChannelSetting("Channel.Type = Voltage"));
+    TEST_ASSERT_EQUAL(ERR_READER_NO_CHANNEL, Settings_parseDataChannelSetting("Channel.Type = Voltage", 1));
+    
+    char expected[100];
+    sprintf(expected, ERROR_STR_NO_CHANNEL, 1);
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_InvalidChannelInSettingReturnsNoChannelError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NO_CHANNEL, Settings_parseDataChannelSetting("Channel-1.Type = Voltage"));
+    TEST_ASSERT_EQUAL(ERR_READER_NO_CHANNEL, Settings_parseDataChannelSetting("Channel-1.Type = Voltage", 2));
+        
+    char expected[100];
+    sprintf(expected, ERROR_STR_NO_CHANNEL, 2);
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_NoSettingInSettingReturnsNoSettingError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NO_SETTING, Settings_parseDataChannelSetting("Channel1 = Voltage"));   
+    TEST_ASSERT_EQUAL(ERR_READER_NO_SETTING, Settings_parseDataChannelSetting("Channel1 = Voltage", 3));
+    
+    char expected[100];
+    sprintf(expected, ERROR_STR_NO_SETTING, 3);
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_NoEqualsInSettingReturnsNoEqualsError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NO_EQUALS, Settings_parseDataChannelSetting("Channel1.Type - Voltage"));
+    TEST_ASSERT_EQUAL(ERR_READER_NO_EQUALS, Settings_parseDataChannelSetting("Channel1.Type - Voltage", 4));
+    char expected[100];
+    sprintf(expected, ERROR_STR_NO_EQUALS, 4);
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_UnknownSettingInSettingReturnsUnknownSettingError(void)
 {
     // Channel must have type set in order to try parsing other settings
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("Channel1.Type = Voltage"));
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_UNKNOWN_SETTING, Settings_parseDataChannelSetting("Channel1.BadSetting = Voltage"));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("Channel1.Type = Voltage", 5));
+
+    TEST_ASSERT_EQUAL(ERR_READER_UNKNOWN_SETTING, Settings_parseDataChannelSetting("Channel1.BadSetting = Voltage", 6));
+
+    char expected[100];
+    sprintf(expected, ERROR_STR_UNKNOWN_SETTING, 6, "badsetting = voltage");
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_UnknownTypeForTypeReturnsUnknownTypeError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_UNKNOWN_TYPE, Settings_parseDataChannelSetting("Channel1.Type = Woltage"));
+    TEST_ASSERT_EQUAL(ERR_READER_UNKNOWN_TYPE, Settings_parseDataChannelSetting("Channel1.Type = Woltage", 7));
+
+    char expected[100];
+    sprintf(expected, ERROR_STR_UNKNOWN_TYPE, 7, "woltage");
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
 }
 
 void test_ValidSettingWithoutChannelTypeReturnChannelTypeNotSetError(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_CHANNEL_TYPE_NOT_SET, Settings_parseDataChannelSetting("Channel1.mvPerA = 234"));
+    TEST_ASSERT_EQUAL(ERR_READER_CHANNEL_TYPE_NOT_SET, Settings_parseDataChannelSetting("Channel1.mvPerA = 234", 8));
+
+    char expected[100];
+    sprintf(expected, ERROR_STR_CHANNEL_TYPE_NOT_SET, 8, 1);
+    TEST_ASSERT_EQUAL_STRING(expected, Settings_getLastReaderResultText());
+}
+
+void test_WhitespaceLinesAndCommentsAreIgnored(void)
+{
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("#CH1.type =Voltage", 1));   
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("   \t", 2));
 }
 
 void test_ValidVoltageSettingsAreParsedCorrectly(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("CH1.Type =Voltage"));
-    TEST_ASSERT_EQUAL(VOLTAGE, Settings_GetChannelType(0));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("CH1.type =Voltage", 9));
+    TEST_ASSERT_EQUAL(VOLTAGE, Settings_GetChannelType(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("cH1.r1= 18300.0"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("cH1.r1= 18300.0", 10));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.R2 = 10000.0"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("ch1.R2 = 10000.0", 11));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.mvperbit = 0.125"));
-    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("ch1.mvperbit = 0.125", 12));
+    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL_FLOAT(18300.0, Settings_GetDataAsVoltage(0)->R1);
-    TEST_ASSERT_EQUAL_FLOAT(10000.0, Settings_GetDataAsVoltage(0)->R2);
-    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsVoltage(0)->mvPerBit);
+    TEST_ASSERT_EQUAL_FLOAT(18300.0, Settings_GetDataAsVoltage(1)->R1);
+    TEST_ASSERT_EQUAL_FLOAT(10000.0, Settings_GetDataAsVoltage(1)->R2);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsVoltage(1)->mvPerBit);
 }
 
 void test_ValidCurrentSettingsAreParsedCorrectly(void)
 {
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("ch1.Type =Current"));
-    TEST_ASSERT_EQUAL(CURRENT, Settings_GetChannelType(0));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("ch1.Type =Current", 13));
+    TEST_ASSERT_EQUAL(CURRENT, Settings_GetChannelType(1));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.mvperAmp= 400"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("channel1.mvperAmp= 400", 14));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.offset = 12"));
-    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("channel1.offset = 12", 15));
+    TEST_ASSERT_FALSE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL(ERR_DATA_CH_NONE, Settings_parseDataChannelSetting("channel1.mvperbit = 0.125"));
-    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(0));
+    TEST_ASSERT_EQUAL(ERR_READER_NONE, Settings_parseDataChannelSetting("channel1.mvperbit = 0.125", 16));
+    TEST_ASSERT_TRUE(Settings_ChannelSettingIsValid(1));
 
-    TEST_ASSERT_EQUAL_FLOAT(400.0, Settings_GetDataAsCurrent(0)->mvPerAmp);
-    TEST_ASSERT_EQUAL_FLOAT(12.0, Settings_GetDataAsCurrent(0)->offset);
-    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsCurrent(0)->mvPerBit);
+    TEST_ASSERT_EQUAL_FLOAT(400.0, Settings_GetDataAsCurrent(1)->mvPerAmp);
+    TEST_ASSERT_EQUAL_FLOAT(12.0, Settings_GetDataAsCurrent(1)->offset);
+    TEST_ASSERT_EQUAL_FLOAT(0.125, Settings_GetDataAsCurrent(1)->mvPerBit);
 }
 
 int main(void)
@@ -189,6 +224,8 @@ int main(void)
     RUN_TEST(test_UnknownSettingInSettingReturnsUnknownSettingError);
     RUN_TEST(test_UnknownTypeForTypeReturnsUnknownTypeError);
     RUN_TEST(test_ValidSettingWithoutChannelTypeReturnChannelTypeNotSetError);
+
+    RUN_TEST(test_WhitespaceLinesAndCommentsAreIgnored);
 
     RUN_TEST(test_ValidVoltageSettingsAreParsedCorrectly);
     RUN_TEST(test_ValidCurrentSettingsAreParsedCorrectly);

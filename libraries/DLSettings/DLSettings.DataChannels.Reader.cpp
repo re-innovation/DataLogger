@@ -23,8 +23,8 @@
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
-#include "DLSettings.DataChannels.h"
 #include "DLSettings.Reader.Errors.h"
+#include "DLSettings.DataChannels.h"
 
 /*
  * Public Functions
@@ -44,6 +44,8 @@ SETTINGS_READER_RESULT Settings_readChannelsFromFile(
     DataFieldManager * pManager, LocalStorageInterface * pInterface, char const * const filename)
 {
     char lineBuffer[256];
+    int lineCount = 1;
+    SETTINGS_READER_RESULT err = ERR_READER_NONE;
 
     if (!pManager)
     {
@@ -65,12 +67,16 @@ SETTINGS_READER_RESULT Settings_readChannelsFromFile(
     {
         // Read from file into lineBuffer and strip CRLF endings
         pInterface->readLine(hndl, lineBuffer, 256, true);
-        (void)Settings_parseDataChannelSetting(lineBuffer);
+        err = Settings_parseDataChannelSetting(lineBuffer, lineCount++);
+        if (err != ERR_READER_NONE) { break; } // Stop on any error encountered
     }
 
     pInterface->closeFile(hndl);
 
-    pManager->setupAllValidChannels();
-    
-    return noError();
+    if (err == ERR_READER_NONE)
+    {
+        pManager->setupAllValidChannels();
+    }
+
+    return err;
 }

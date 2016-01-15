@@ -31,6 +31,8 @@ typedef enum field_type FIELD_TYPE;
 struct voltagechannel
 {
     float mvPerBit;
+    float offset;
+    float multiplier;
     float R1;
     float R2;
 };

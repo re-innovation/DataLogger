@@ -27,6 +27,7 @@
 #include "DLSettings.h"
 #include "DLSettings.Global.h"
 #include "DLSettings.Reader.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 
 void Settings_Init(void)

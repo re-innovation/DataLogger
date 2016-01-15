@@ -28,9 +28,11 @@ private:
     unsigned long m_interval;
     unsigned long m_LastTime;
     void (*m_function)();
+    char const * m_name;
+    bool m_debug;
 
 public:
-    TaskAction(void (*function)(), unsigned long interval, unsigned int ticks);
+    TaskAction(void (*function)(), unsigned long interval, unsigned int ticks, char const * n_name = NULL);
 
     bool tick(unsigned long millisec = 0);
     void SetInterval(unsigned long interval) { m_interval = interval; }
@@ -41,6 +43,7 @@ public:
     unsigned long GetCurrentInterval() { return m_interval; }
     void ResetTicks() { m_CurrentTick = 0; }
     void ResetTime();
+    void SetDebug(bool on);
 };
 
 #endif // _TASKACTION_h

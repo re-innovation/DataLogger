@@ -9,6 +9,7 @@ class LinkItOneSD : public LocalStorageInterface
 {
     public:
         LinkItOneSD();
+        bool inError();
         bool fileExists(char const * const filePath);
         bool directoryExists(char const * const dirPath);
         bool mkDir(char const * const dirPath);
@@ -23,6 +24,7 @@ class LinkItOneSD : public LocalStorageInterface
 
     private:
         bool m_echo;
+        bool m_successfulInit;
 };
 
 #endif

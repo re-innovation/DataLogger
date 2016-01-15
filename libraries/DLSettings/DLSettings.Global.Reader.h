@@ -16,7 +16,7 @@ bool Settings_allRequiredSettingsRead(void);
 void Settings_getMissingNames(char * buffer, uint32_t size);
 
 SETTINGS_READER_RESULT Settings_getLastReaderResult(void);
-SETTINGS_READER_RESULT Settings_readFromString(char const * const string);
+SETTINGS_READER_RESULT Settings_readFromString(char const * const string, int lineNo);
 char const * Settings_getLastReaderResultText(void);
 
 #endif

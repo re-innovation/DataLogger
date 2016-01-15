@@ -21,4 +21,7 @@ bool Time_GetTime(TM *, TIME_TYPE type);
 
 void Time_SetPlatformTime(TM *);
 
+void Time_PrintTime(TM * pTime, bool endwithCRLF = false);
+void Time_PrintDate(TM * pTime, bool endwithCRLF = false);
+
 #endif

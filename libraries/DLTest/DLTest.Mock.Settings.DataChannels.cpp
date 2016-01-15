@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include "DLDataField.Types.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 
 static VOLTAGECHANNEL s_voltageChannelSettings = {
@@ -28,9 +29,9 @@ void Settings_InitDataChannels(void)
     
 }
 
-DATACHANNELERROR Settings_parseDataChannelSetting(char const * const setting)
+SETTINGS_READER_RESULT Settings_parseDataChannelSetting(char const * const setting)
 {
-    (void)setting; return ERR_DATA_CH_NONE;
+    (void)setting; return ERR_READER_NONE;
 }
 
 FIELD_TYPE Settings_GetChannelType(uint8_t channel)

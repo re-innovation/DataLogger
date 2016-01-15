@@ -4,6 +4,8 @@
 // A datafield should return this value if data is requested when none exists
 #define DATAFIELD_NO_DATA_VALUE (float)(0xFFFFFFFF)
 
+typedef float (APP_CONVERSION_FN)(float, void *);
+
 class DataField
 {
     public:
@@ -11,7 +13,7 @@ class DataField
         ~DataField();
 
         void setSize(uint32_t length);
-        FIELD_TYPE getType(void);    
+        FIELD_TYPE getType(void);
         char const * getTypeString(void);
         virtual void getConfigString(char * buffer);
 
@@ -34,7 +36,7 @@ class DataField
         //uint32_t getRealReadIndex(uint32_t requestedIndex);
 
         uint32_t getWriteIndex(void);
-        
+
         FIELD_TYPE m_fieldType;
         uint32_t m_index[2];
         uint32_t m_maxIndex;
@@ -53,7 +55,9 @@ class NumericDataField : public DataField
 
         void setDataSizes(uint32_t N, uint32_t averagerN);
 
-        void storeData(int32_t data);
+        bool storeData(int32_t data);
+
+        void setAltConversion(APP_CONVERSION_FN * altConversionFn);
 
         float getRawData(bool alsoRemove);
         float getConvData(bool alsoRemove);
@@ -63,10 +67,12 @@ class NumericDataField : public DataField
 
         bool isString(void) { return false; }
         bool isNumeric(void) { return true; }
-        
+
+        void * getConversionParams(void) { return m_conversionData; }
     private:
         float * m_data;
         void * m_conversionData;
+        APP_CONVERSION_FN * m_altConversionFn;
         #ifdef TEST
         void printContents(void);
         #endif
@@ -86,7 +92,7 @@ class StringDataField : public DataField
 
         bool isString(void) { return true; }
         bool isNumeric(void) { return false; }
-        
+
     private:
         char ** m_data;
         uint8_t m_maxLength;

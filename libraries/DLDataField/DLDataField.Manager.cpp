@@ -1,6 +1,6 @@
 /*
  * DLDataField.Manager.cpp
- * 
+ *
  * Provides management of datafields for applications
  *
  * Author: James Fowkes
@@ -14,7 +14,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
-#else 
+#else
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,22 +25,25 @@
 #endif
 
 /*
- * Local Application Includes
+ * Datalogger Library Includes
  */
 
 #include "DLUtility.Averager.h"
 #include "DLDataField.Types.h"
 #include "DLDataField.h"
 #include "DLDataField.Manager.h"
+#include "DLSettings.Reader.Errors.h"
 #include "DLSettings.DataChannels.h"
 #include "DLUtility.h"
 #include "DLUtility.ArrayFunctions.h"
+#include "DLPlatform.h"
 
 DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
 {
     m_dataSize = dataSize;
     m_averagerSize = averagerSize;
-    m_count = 0;
+    m_fieldCount = 0;
+    m_dataCount = 0;
 
     uint8_t i = 0;
     for (i = 0; i < MAX_FIELDS; i++)
@@ -49,22 +52,33 @@ DataFieldManager::DataFieldManager(uint32_t dataSize, uint32_t averagerSize)
     }
 }
 
-uint8_t DataFieldManager::count()
+uint8_t DataFieldManager::fieldCount()
 {
-    return m_count;
+    return m_fieldCount;
 }
 
+/*
+ * addField
+ *
+ * Add a field to the manager.
+ * Stores field pointer in next free location in m_fields.
+ * Channel number is stored in m_channelNumbers.
+ */
 bool DataFieldManager::addField(NumericDataField * field)
 {
     if (!field) { return false; }
 
-    if (m_count == MAX_FIELDS) { return false; }
+    if (m_fieldCount == MAX_FIELDS) { return false; }
+
+    // The field might need extra setup based on the datatype/sensor and platform.
+    // The platform interface takes care of that.
+    PLATFORM_specialFieldSetup(field);
 
     field->setDataSizes(m_dataSize, m_averagerSize);
 
-    m_fields[m_count] = field;
-    m_channelNumbers[m_count] = field->getChannelNumber();
-    m_count++;
+    m_fields[m_fieldCount] = field;
+    m_channelNumbers[m_fieldCount] = field->getChannelNumber();
+    m_fieldCount++;
 
     return true;
 }
@@ -73,21 +87,60 @@ bool DataFieldManager::addField(StringDataField * field)
 {
     if (!field) { return false; }
 
-    if (m_count == MAX_FIELDS) { return false; }
+    if (m_fieldCount == MAX_FIELDS) { return false; }
 
-    m_fields[m_count] = field;
-    m_channelNumbers[m_count] = field->getChannelNumber();
+    m_fields[m_fieldCount] = field;
+    m_channelNumbers[m_fieldCount] = field->getChannelNumber();
 
-    m_count++;
+    m_fieldCount++;
     return true;
+}
+
+void DataFieldManager::storeDataArray(int32_t * data)
+{
+    uint16_t field = 0;
+
+    // The data manager stores only the fields of interest, but 
+    // the incoming data array is for ALL channels for the platform
+    // dataIndex is the correct index for the raw data array
+    uint16_t dataIndex;
+
+    bool newAverageStored = false;
+    for (field = 0; field < m_fieldCount; field++)
+    {
+        NumericDataField* pField = (NumericDataField*)m_fields[field];
+        if (pField)
+        {
+            dataIndex = m_channelNumbers[field] - 1;
+            newAverageStored |= pField->storeData( data[dataIndex] );
+        }
+    }
+
+    if (newAverageStored) { m_dataCount++; }
+}
+
+void DataFieldManager::getDataArray(float * buffer, bool converted, bool alsoRemove)
+{
+    uint16_t field;
+    for(field = 0; field < m_fieldCount; ++field)
+    {
+        if (converted)
+        {
+            buffer[field] = ((NumericDataField*)m_fields[field])->getConvData(alsoRemove);
+        }
+        else
+        {
+            buffer[field] = ((NumericDataField*)m_fields[field])->getRawData(alsoRemove);
+        }
+    }
+    if (alsoRemove) { m_dataCount--; }
 }
 
 DataField * DataFieldManager::getChannel(uint8_t channel)
 {
-    int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_count);
+    int32_t actualIndex = indexOf(m_channelNumbers, (uint32_t)channel, m_fieldCount);
     return actualIndex >= 0 ? m_fields[actualIndex] : NULL;
 }
-
 
 DataField * DataFieldManager::getField(uint8_t index)
 {
@@ -104,13 +157,13 @@ uint32_t DataFieldManager::writeHeadersToBuffer(char * buffer, uint8_t bufferLen
     if (!buffer) { return 0; }
 
     uint8_t i;
-    
+
     FixedLengthAccumulator headerAccumulator(buffer, bufferLength);
 
-    for (i = 0; i < m_count; ++i)
+    for (i = 0; i < m_fieldCount; ++i)
     {
         headerAccumulator.writeString(m_fields[i]->getTypeString());
-        if (!lastinloop(i, m_count))
+        if (!lastinloop(i, m_fieldCount))
         {
             headerAccumulator.writeString(", ");
         }
@@ -160,11 +213,16 @@ bool DataFieldManager::hasData(void)
 {
     uint8_t i = 0;
     bool atLeastOneFieldHasData = false;
-    for (i = 0; i < m_count; i++)
+    for (i = 0; i < m_fieldCount; i++)
     {
         atLeastOneFieldHasData |= m_fields[i]->hasData();
     }
     return atLeastOneFieldHasData;
+}
+
+uint32_t DataFieldManager::count(void)
+{
+    return m_dataCount;
 }
 
 uint32_t * DataFieldManager::getChannelNumbers(void)

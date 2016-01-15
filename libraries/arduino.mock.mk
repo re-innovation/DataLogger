@@ -2,18 +2,20 @@ CC = g++
 
 CFLAGS=-Wall -Wextra -Werror
 
-INC_DIRS = -IDLCSV -IDLDataField -IDLFilename -IDLGPS -IDLHTTP -IDLLocalStorage -IDLLocation
-INC_DIRS += -IDLNetwork -IDLSecurity -IDLSensor -IDLService -IDLSettings -IDLSMS 
-INC_DIRS += -IDLTest  -IDLTime -IDLUtility -ITaskAction
-
 DIR = $(dir $(INO_FILE))
 MODIFIED_INO = $(INO_FILE).modified
 TARGET = $(INO_FILE).mocked
+
+INC_DIRS = -I$(DIR) -IDLCSV -IDLDataField -IDLFilename -IDLGPS -IDLHTTP -IDLLocalStorage -IDLLocation
+INC_DIRS += -IDLNetwork -IDLSecurity -IDLSensor -IDLService -IDLSettings -IDLSMS -IDLPlatform
+INC_DIRS += -IDLError -IDLBattery -IDLTest  -IDLTime -IDLUtility -ITaskAction
+
 
 SRC_FILES = DLTest/DLTest.Mock.LocalStorage.cpp DLTest/DLTest.Mock.Serial.cpp DLTest/DLTest.Mock.delay.cpp
 SRC_FILES += DLTest/DLTest.Mock.random.cpp DLTest/DLTest.Mock.arduino.cpp DLTest/DLTest.Mock.Sensor.ADS1x1x.cpp
 SRC_FILES += DLTest/DLTest.Mock.Location.cpp DLTest/DLTest.Mock.Time.cpp DLTest/DLTest.Mock.GPS.cpp
 SRC_FILES += DLTest/DLTest.Mock.Network.cpp DLTest/DLTest.Mock.Sensor.LinkItONE.cpp TaskAction/TaskAction.cpp
+SRC_FILES += DLTest/DLTest.Mock.Battery.cpp DLTest/DLTest.Mock.SMS.LinkItONE.cpp
 
 SYMBOLS = -g -DMOCK -DTEST
 
