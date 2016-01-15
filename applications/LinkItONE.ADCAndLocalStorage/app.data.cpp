@@ -78,7 +78,7 @@ static uint16_t calculateNumberOfAveragesToStore(uint16_t storageInterval, uint1
 static void debugTaskFn(void)
 {
     uint8_t i;
-    uint8_t fieldCount = s_dataDebugManager->count();
+    uint8_t fieldCount = s_dataDebugManager->fieldCount();
 
     for (i = 0; i < fieldCount; i++)
     {
@@ -104,7 +104,7 @@ static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
  * Public Functions
  */
 
-void APP_DATA_Setup(
+void APP_Data_Setup(
     unsigned long averagingInterval, uint16_t valuesPerSecond,
     uint16_t storageInterval, char const * const filename)
 {    
@@ -129,7 +129,7 @@ void APP_DATA_Setup(
     APP_SD_ReadDataChannelSettings(s_dataManager, filename);
     APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
 
-    uint32_t count = s_dataManager->count();
+    uint32_t count = s_dataManager->fieldCount();
     Serial.print("Datamanager created with ");
     Serial.print(count);
     Serial.println(" fields.");
@@ -153,7 +153,7 @@ void APP_DATA_Setup(
     s_setupValid = true;
 }
 
-void APP_DATA_NewData(int32_t data, uint16_t field)
+void APP_Data_NewData(int32_t data, uint16_t field)
 {
     char errBuffer[64];
     NumericDataField* pField;
@@ -175,12 +175,12 @@ void APP_DATA_NewData(int32_t data, uint16_t field)
     pField->storeData( data );
 }
 
-uint16_t APP_DATA_GetNumberOfFields(void)
+uint16_t APP_Data_GetNumberOfFields(void)
 {
-    return s_dataManager->count();
+    return s_dataManager->fieldCount();
 }
 
-void APP_DATA_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
+void APP_Data_WriteHeadersToBuffer(char * buffer, uint8_t bufferLength)
 {
     (void)s_dataManager->writeHeadersToBuffer(buffer, bufferLength);
 }
@@ -190,7 +190,7 @@ NumericDataField * APP_Data_GetField(uint8_t i)
     return (NumericDataField *)s_dataManager->getField(i);
 }
 
-void APP_DATA_Tick(void)
+void APP_Data_Tick(void)
 {
     if (s_setupValid)
     {

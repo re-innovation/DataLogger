@@ -5,7 +5,7 @@ void APP_SD_Init(void);
 void APP_SD_EnableDebugging(void);
 
 void APP_SD_ReadGlobalSettings(char const * const filename);
-void APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename);
+uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename);
 
 void APP_SD_Setup(unsigned long msInterval);
 
