@@ -74,7 +74,7 @@ static void writeToSDCardTaskFn(void)
     char buffer[10];
 
     NumericDataField * pField;
-    uint16_t nFields = APP_DATA_GetNumberOfFields();
+    uint16_t nFields = APP_Data_GetNumberOfFields();
     
     if (s_debugThisModule)
     {       
@@ -94,7 +94,7 @@ static void writeToSDCardTaskFn(void)
         {
             pField = APP_Data_GetField(i);
             // Write from datafield to buffer then from buffer to SD file
-            pField->getDataAsString(buffer, "%.4f", i);
+            pField->getRawDataAsString(buffer, "%.4f", i);
 
             s_sdCard->write(s_fileHandle, buffer);
 
@@ -155,7 +155,7 @@ void createAndOpenNewFileForToday(void)
     s_sdCard->write(s_fileHandle, "Timestamp, Entry ID, ");
 
     char csvHeaders[200];
-    APP_DATA_WriteHeadersToBuffer(csvHeaders, 200);
+    APP_Data_WriteHeadersToBuffer(csvHeaders, 200);
 
     s_sdCard->write(s_fileHandle, csvHeaders);
     s_entryID = 0;
@@ -262,12 +262,14 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
     }
 }
 
-void APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
+uint8_t APP_SD_ReadDataChannelSettings(DataFieldManager * pManager, char const * const filename)
 {
     if (ERR_READER_NONE != Settings_readChannelsFromFile(pManager, s_sdCard, filename))
     {
         APP_FatalError(Settings_getLastReaderResultText());
+        return 0;
     }
+    return pManager->fieldCount();
 }
 
 void APP_SD_EnableDebugging(void)

@@ -57,6 +57,7 @@
 #include "DLSensor.ADS1x1x.h"
 #include "DLSensor.LinkItONE.h"
 #include "DLSensor.Thermistor.h"
+#include "DLPlatform.h"
 
 #include "TaskAction.h"
 
@@ -145,7 +146,7 @@ void readFromADCsTaskFn(void)
             if (Settings_ChannelSettingIsValid(field))
             {
                 uint16_t data = s_ADCs[adc].readADC_SingleEnded(ch);
-                APP_DATA_NewData(data, field);
+                APP_Data_NewData(data, field);
             }
         }
     }
@@ -164,15 +165,15 @@ void setup()
     APP_SD_Init();
     APP_SD_Setup(30 * 1000);
     
-    Settings_requireInt(DATA_AVERAGING_INTERVAL_SECS);
+    Settings_requireInt(STORAGE_AVERAGING_INTERVAL_SECS);
     Settings_requireInt(DATA_STORAGE_INTERVAL_SECS);
 
     APP_SD_ReadGlobalSettings("Datalogger.settings.conf");
     
-    int averaging_interval = Settings_getInt(DATA_AVERAGING_INTERVAL_SECS);
+    int averaging_interval = Settings_getInt(STORAGE_AVERAGING_INTERVAL_SECS);
     int storage_interval = Settings_getInt(DATA_STORAGE_INTERVAL_SECS);
 
-    APP_DATA_Setup(
+    APP_Data_Setup(
         averaging_interval, // Seconds to average readings over
         ADC_READS_PER_SECOND, // Number of reads per second per field
         storage_interval, // Number of seconds between SD card writes
@@ -203,7 +204,7 @@ void setup()
 void loop()
 {
     readFromADCsTask.tick();
-    APP_DATA_Tick();
+    APP_Data_Tick();
     APP_SD_Tick();
     heartbeatTask.tick();
 }
