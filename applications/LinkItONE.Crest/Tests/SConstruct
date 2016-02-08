@@ -1,0 +1,18 @@
+import os
+
+env = Environment(ENV=os.environ)
+
+target = 'app.serial-interface' 
+cpppath = ["#../"]
+cppflags = ['-Wall', '-Wextra', '-g']
+
+objects = [
+	Object(target+".test.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath),
+	Object("../" + target + ".cpp", CPPFLAGS=cppflags, CPPPATH=cpppath)
+]
+
+program = env.Program(target=target+".test", source=objects, LIBS=['cppunit'], CC='g++')
+
+test_alias = env.Alias(target+".test", [program], program[0].path)
+
+env.AlwaysBuild(test_alias)
