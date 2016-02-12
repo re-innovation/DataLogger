@@ -86,6 +86,7 @@
  */
 
 #include "app.h"
+#include "app.serial-interface.h"
 #include "app.upload_manager.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
@@ -120,6 +121,8 @@ static uint32_t s_uploadInterval = 0;
 static TM s_gpsTime;
 static TM s_rtcTime;
 
+static String serial_in;
+
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
 
@@ -150,7 +153,14 @@ void APP_SetDebugModules(char const * const modules)
 
     if (strstr(modules, "Batt"))
     {
+        Serial.println("Turning debugging on for battery functionality.");
         Battery_Set_Debug(true);
+    }
+
+    if (strstr(modules, "SerialRequest"))
+    {
+        Serial.println("Turning debugging on for serial request functionality.");
+        APP_SerialInterface_SetDebug(true);
     }
 }
 
@@ -185,8 +195,9 @@ static void delayStart(uint8_t seconds)
 /*
  * Tasks
  */
+
 static void heartbeatTaskFn(void);
-TaskAction heartbeatTask(heartbeatTaskFn, 1000, INFINITE_TICKS);
+static TaskAction heartbeatTask(heartbeatTaskFn, 1000, INFINITE_TICKS);
 static void heartbeatTaskFn(void)
 {
     static bool ledState = false;
@@ -236,10 +247,10 @@ static void readFromADCsTaskFn(void)
     
     APP_Data_NewDataArray(allData);
 }
-TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
+static TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
 
 static void remoteUploadTaskFn(void);
-TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
+static TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
 static void remoteUploadTaskFn(void)
 {
 
@@ -318,7 +329,7 @@ static void remoteUploadTaskFn(void)
     }
 }
 
-void gpsTaskFn(void)
+static void gpsTaskFn(void)
 {
     Location_UpdateNow();
     bool success = GPS_InfoIsValid();
@@ -343,9 +354,22 @@ void gpsTaskFn(void)
         if (s_debugGPS) { Serial.println("No valid GPS info."); }
     }
 }
-TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
+static TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
 
-void setupUploadVars(void)
+static void on_serial_request_received(int request_number)
+{
+    (void)request_number;
+}
+
+static void handle_incoming_serial()
+{
+    while (Serial1.available())
+    {
+        APP_SerialInterface_HandleChar(Serial1.read());
+    }
+}
+
+static void setupUploadVars(void)
 {
     uint16_t nFields = APP_Data_GetNumberOfFields();
 
@@ -367,7 +391,7 @@ void setupUploadVars(void)
     s_uploadData = new float[nFields];
 }
 
-void setupADCs(void)
+static void setupADCs(void)
 {
     uint8_t i = 0;
     for (i = 0; i < 3; i++)
@@ -385,7 +409,7 @@ void setupADCs(void)
     }
 }
 
-void setupTime(void)
+static void setupTime(void)
 {
     Time_GetTime(&s_rtcTime, TIME_PLATFORM);
     Serial.print("RTC datetime: ");
@@ -397,7 +421,8 @@ void setupTime(void)
 void setup()
 {   
     Serial.begin(115200);
-
+    Serial1.begin(115200);
+    
     delayStart(10);
 
     pinMode(HEARTBEAT_LED_PIN, OUTPUT);
@@ -452,6 +477,8 @@ void setup()
     
     SMS_Setup(SMS_INTERFACE_LINKITONE);
 
+    APP_SerialInterface_Setup(on_serial_request_received);
+
     Battery_Setup();
 
     setupTime();
@@ -478,5 +505,6 @@ void loop()
     gpsTask.tick();
     Battery_Tick();
     APP_Error_Tick();
+    handle_incoming_serial();
 }
 

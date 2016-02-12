@@ -3,6 +3,10 @@
 
 #define INVALID_REQUEST (-1)
 
-int APP_SerialInterface_HandleRequest(const char * req);
+typedef void (*ON_SERIAL_REQUEST_CB)(int);
+
+void APP_SerialInterface_Setup(ON_SERIAL_REQUEST_CB handler);
+void APP_SerialInterface_HandleChar(char c);
+void APP_SerialInterface_SetDebug(bool on);
 
 #endif
