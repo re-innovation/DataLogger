@@ -73,6 +73,7 @@
 #include "DLService.thingspeak.h"
 
 #include "DLSMS.h"
+#include "DLSMS.messaging.h"
 
 #include "DLPlatform.h"
 
@@ -88,7 +89,6 @@
 #include "app.upload_manager.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
-#include "app.sms.h"
 #include "app.error.h"
 
 // Pointers to fuctionality objects
@@ -396,13 +396,14 @@ void setupTime(void)
 
 void setup()
 {   
-    // setup Serial port
     Serial.begin(115200);
 
     delayStart(10);
 
     pinMode(HEARTBEAT_LED_PIN, OUTPUT);
     pinMode(ERROR_LED_PIN, OUTPUT);
+
+    APP_Error_Setup();
 
     Location_Setup(0);
  
@@ -448,8 +449,8 @@ void setup()
     /* If execution got this far, the application data storage functionality
     was set up successfully and there are valid fields.
     Configure the remaining application functionality. */
-
-    APP_SMS_Setup();
+    
+    SMS_Setup(SMS_INTERFACE_LINKITONE);
 
     Battery_Setup();
 

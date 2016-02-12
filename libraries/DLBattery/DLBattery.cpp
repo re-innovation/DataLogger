@@ -34,12 +34,8 @@
 #include "DLSettings.h"
 #include "DLSettings.Global.h"
 #include "TaskAction.h"
-
-/*
- * Application Includes
- */
-
-#include "app.sms.h"
+#include "DLSMS.h"
+#include "DLSMS.messaging.h"
 
 /*
  * Private Module Variables
@@ -55,7 +51,7 @@ static int s_batteryWarnLevel = -1;
 static int get_level()
 {
 	#ifdef __LINKIT_ONE__
-	return LBattery.level()
+	return LBattery.level();
 	#else
 	return 0;
 	#endif
@@ -64,7 +60,7 @@ static int get_level()
 static bool is_charging()
 {
 	#ifdef __LINKIT_ONE__
-	return LBattery.isCharging()
+	return LBattery.isCharging();
 	#else
 	return false;
 	#endif
@@ -100,7 +96,7 @@ static void batteryCheckTaskFn(void)
         {
             sprintf(sms, "Low Battery Warning: %d%% (not charging)", batteryLevel);
         }
-        APP_SMS_SendMaintenanceMessage(sms);
+        SMS_SendMaintenanceMessage(sms);
     }
 }
 TaskAction batteryCheckTask(batteryCheckTaskFn, 60*60*1000, INFINITE_TICKS);

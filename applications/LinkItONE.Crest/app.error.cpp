@@ -35,6 +35,7 @@
 
 // LED delay for each application error (defines 1/2 of flash period)
 static uint16_t s_error_flash_timing[ERR_RUNNING_MAX] = {
+	500,	// No error, just keep task ticking over
 	500,	// 1 flash per second
 	250,	// 2 flashes per second
 	100		// 5 flashes per second
@@ -84,13 +85,10 @@ static void fatal_error_handler(char const * const err, FATAL_ERROR_ENUM errorTy
 static void running_error_handler(RUNNING_ERROR_ENUM errorType)
 {
 	bool is_error = errorType != ERR_RUNNING_NONE;
-	errorTask.Enable(is_error);
-
 	if (is_error)
 	{
 		errorTask.SetInterval(s_error_flash_timing[errorType]);
 	}
-	
 }
 
 void APP_Error_Setup(void)

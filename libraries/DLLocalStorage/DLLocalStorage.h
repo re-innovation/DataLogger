@@ -18,6 +18,7 @@ typedef int8_t FILE_HANDLE;
 class LocalStorageInterface
 {
     public:
+        virtual bool inError();
         virtual bool fileExists(char const * const filePath) = 0;
         virtual bool directoryExists(char const * const dirPath) = 0;
         virtual bool mkDir(char const * const dirPath) = 0;

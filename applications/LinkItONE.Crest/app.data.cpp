@@ -48,7 +48,6 @@
 #include "app.h"
 #include "app.data.h"
 #include "app.sd_storage.h"
-#include "app.sms.h"
 
 /*
  * Applications Data
@@ -93,6 +92,7 @@ static void debugTaskFn(void)
 {
     uint8_t i;
     uint8_t fieldCount = s_dataDebugManager->fieldCount();
+    uint32_t * channelNumbers = s_dataDebugManager->getChannelNumbers();
 
     while(s_dataDebugManager->hasData())
     {
@@ -103,10 +103,13 @@ static void debugTaskFn(void)
             float toShow = ((NumericDataField *)s_dataDebugManager->getField(i))->getConvData(true);
              
             if (s_debugFieldFlags[i])
-            {   Serial.print(toShow);
+            {
+                Serial.print(toShow);
                 Serial.print("(");
                 Serial.print(average);
-                Serial.print(")");
+                Serial.print(")[");
+                Serial.print(channelNumbers[i]);
+                Serial.print("]");
                 Serial.print(", ");
             }
         }

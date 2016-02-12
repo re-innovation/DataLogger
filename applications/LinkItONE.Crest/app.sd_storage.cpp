@@ -128,6 +128,9 @@ static void writeToSDCardTaskFn(void)
             Serial.println("' when trying to write data.");
         }
     }
+
+    Time_GetTime(&s_lastSDTimestamp, TIME_PLATFORM);
+
 }
 
 static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
@@ -135,6 +138,11 @@ static TaskAction writeToSDCardTask(writeToSDCardTaskFn, 0, INFINITE_TICKS);
 void APP_SD_Init(void)
 {
     s_sdCard = LocalStorage_GetLocalStorageInterface(LINKITONE_SD_CARD);
+
+    if (s_sdCard->inError())
+    {
+        Error_Fatal("SD card not present or corrupted!", ERR_FATAL_CONFIG);
+    }
 }
 
 void APP_SD_Setup(unsigned long msInterval)

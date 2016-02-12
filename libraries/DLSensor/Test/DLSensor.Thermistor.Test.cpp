@@ -158,7 +158,7 @@ void test_lowsideEmpiricallyDeterminedValuesFromADC(void)
 
 	Thermistor oneHundredK(4400U, 100000, false);
 	temp = oneHundredK.TemperatureFromADCReading(10000.0, adc = 596, 675);
-	expected = -14.97;
+	expected = 30.8;
 	sprintf(messageBuffer, "adc = %u, lowsideT=%f", adc, temp);
 	TEST_ASSERT_FLOAT_WITHIN_MESSAGE(expected, temp, expected/100, messageBuffer);
 }

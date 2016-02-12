@@ -99,14 +99,20 @@ bool DataFieldManager::addField(StringDataField * field)
 void DataFieldManager::storeDataArray(int32_t * data)
 {
     uint16_t field = 0;
+
+    // The data manager stores only the fields of interest, but 
+    // the incoming data array is for ALL channels for the platform
+    // dataIndex is the correct index for the raw data array
+    uint16_t dataIndex;
+
     bool newAverageStored = false;
     for (field = 0; field < m_fieldCount; field++)
     {
         NumericDataField* pField = (NumericDataField*)m_fields[field];
-
         if (pField)
         {
-            newAverageStored |= pField->storeData( data[field] );
+            dataIndex = m_channelNumbers[field] - 1;
+            newAverageStored |= pField->storeData( data[dataIndex] );
         }
     }
 

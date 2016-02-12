@@ -34,7 +34,7 @@
 #include "DLPlatform.h"
 
 /*
- * Compenstates thermsitor readings for 33K+33K divider on
+ * Compenstates thermistor readings for 33K+33K divider on
  * ADC inputs
  */
 

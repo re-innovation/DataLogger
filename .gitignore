@@ -9,3 +9,5 @@
 *.debug
 
 libraries/Datalogger
+applications/LinkItONE.Crest/Logs/
+applications/LinkItONE.SimpleADC/Logs/

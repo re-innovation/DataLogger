@@ -11,6 +11,7 @@
 /* Define each string setting for the application */
 
 #define FOREACH_STRINGSET(STRING) \
+    STRING(UNIT_IDENTIFIER) \
     STRING(FAKE_ADC_READS) \
     STRING(DEBUG_MODULES) \
     STRING(DEBUG_FIELDS) \
