@@ -132,24 +132,25 @@ void APP_SetDebugModules(char const * const modules)
 {
     if (strstr(modules, "LocalStorage"))
     {
-        Serial.println("Turning debugging on for local storage functionality.");
+        Serial.println("APP: Turning debugging on for local storage functionality.");
         APP_SD_EnableDebugging();
     }
 
     if (strstr(modules, "Upload"))
     {
-        Serial.println("Turning debugging on for remote upload functionality.");
+        Serial.println("APP: Turning debugging on for remote upload functionality.");
         s_debugUpload = true;
     }
     
     if (strstr(modules, "GPS"))
     {
-        Serial.println("Turning debugging on for GPS functionality.");
+        Serial.println("APP: Turning debugging on for GPS functionality.");
         s_debugGPS = true;
     }
 
     if (strstr(modules, "Batt"))
     {
+        Serial.println("APP: Turning debugging on for battery functionality.");
         Battery_Set_Debug(true);
     }
 }
@@ -159,7 +160,7 @@ static void tryConnection(void)
     // Try to connect to GPRS network
     if (s_debugUpload)
     {
-        Serial.print("Attempting to attach to ");
+        Serial.print("APP: Attempting to attach to ");
         Serial.print(Settings_getString(GPRS_APN));
         Serial.print(" with username/pwd ");
         Serial.print(Settings_getString(GPRS_USERNAME));
@@ -171,7 +172,7 @@ static void tryConnection(void)
 
 static void delayStart(uint8_t seconds)
 {
-    Serial.println("Starting application in... ");
+    Serial.println("APP: Starting application in... ");
 
     while (seconds--)
     {
@@ -194,6 +195,7 @@ static void heartbeatTaskFn(void)
     // 1s on, 4s off by setting task interval
     heartbeatTask.SetInterval(ledState ? 1000 : 4000);
     ledState = !ledState;
+    Serial.print(".");
 }
 
 static void readFromADCsTaskFn(void)
@@ -247,6 +249,7 @@ static void remoteUploadTaskFn(void)
 
     if (APP_Data_UploadIsPending() && APP_Data_UploadDataRemaining())
     {
+        Serial.println("APP: Upload pending...");
         /* The data upload flag is set and there is data to upload.
         Reset the flag and task interval and perform the upload */
         APP_Data_SetUploadPending(false);
@@ -256,7 +259,7 @@ static void remoteUploadTaskFn(void)
         
         if (!s_gprsConnection->isConnected())
         {
-            if (s_debugUpload) { Serial.println("GPRS not connected. Attempting new connection."); }
+            if (s_debugUpload) { Serial.println("APP: GPRS not connected. Attempting new connection."); }
             tryConnection();
         }
 
@@ -267,10 +270,10 @@ static void remoteUploadTaskFn(void)
 
             if (s_debugUpload)
             {
-                Serial.print("Remaining records to upload: ");
+                Serial.print("APP: Remaining records to upload: ");
                 Serial.println(APP_Data_UploadDataRemaining());
 
-                Serial.print("Attempting upload to ");
+                Serial.print("APP: Attempting upload to ");
                 Serial.println(s_thingSpeakService->getURL());
             }
             
@@ -285,7 +288,7 @@ static void remoteUploadTaskFn(void)
 
             if (s_debugUpload)
             {
-                Serial.print("Request: '");
+                Serial.print("APP: Request: '");
                 Serial.print(s_requestBuffer);
                 Serial.println("'");
             }
@@ -296,13 +299,13 @@ static void remoteUploadTaskFn(void)
 
             if (success)
             {
-                if (s_debugUpload) { Serial.println("Upload complete!"); }
+                if (s_debugUpload) { Serial.println("APP: Upload complete!"); }
             }
             else
             {
                 if (s_debugUpload)
                 {
-                    Serial.print("Could not connect to ");
+                    Serial.print("APP: Could not connect to ");
                     Serial.print(s_thingSpeakService->getURL());
                     Serial.println("!");
                 }
@@ -313,6 +316,7 @@ static void remoteUploadTaskFn(void)
     {
         /* Set the upload pending flag and start calling this task every second to
         check for data */
+        Serial.println("APP: Setting pending flag");
         APP_Data_SetUploadPending(true);
         remoteUploadTask.SetInterval(1000);
     }
@@ -330,7 +334,7 @@ void gpsTaskFn(void)
         Time_GetTime(&s_gpsTime, TIME_GPS);
         if (s_debugGPS)
         {
-            Serial.print("Updating RTC time from GPS (");
+            Serial.print("APP: Updating RTC time from GPS (");
             Time_PrintTime(&s_gpsTime);
             Serial.print(" ");
             Time_PrintDate(&s_gpsTime);
@@ -340,7 +344,7 @@ void gpsTaskFn(void)
     }
     else
     {
-        if (s_debugGPS) { Serial.println("No valid GPS info."); }
+        if (s_debugGPS) { Serial.println("APP: No valid GPS info."); }
     }
 }
 TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
@@ -358,7 +362,7 @@ void setupUploadVars(void)
     // Then allocate twice as much as that estimate (minimum 512)
 
     s_uploadBufferSize = APP_Data_GetUploadBufferSize();
-    Serial.print("Upload buffer size: ");
+    Serial.print("APP: Upload buffer size: ");
     Serial.println(s_uploadBufferSize);
     
     s_requestBuffer = new char [s_uploadBufferSize];
@@ -388,7 +392,7 @@ void setupADCs(void)
 void setupTime(void)
 {
     Time_GetTime(&s_rtcTime, TIME_PLATFORM);
-    Serial.print("RTC datetime: ");
+    Serial.print("APP: RTC datetime: ");
     Time_PrintTime(&s_rtcTime);
     Serial.print(" ");
     Time_PrintDate(&s_rtcTime, true);
@@ -473,7 +477,7 @@ void loop()
     readFromADCsTask.tick();
     APP_Data_Tick();
     APP_SD_Tick();
-    remoteUploadTask.tick();
+    //remoteUploadTask.tick();
     heartbeatTask.tick();
     gpsTask.tick();
     Battery_Tick();
