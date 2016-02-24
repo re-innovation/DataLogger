@@ -13,8 +13,10 @@
 
 static VOLTAGECHANNEL s_voltageChannelSettings = {
 	.mvPerBit = 0.125f,
-	.R1 = 200000.0f,
-	.R2= 10000.0f,
+	.offset = 0.0f,
+    .multiplier = 0.0f,
+    .R1 = 200000.0f,
+	.R2= 10000.0f
 };
 
 static CURRENTCHANNEL s_currentChannelSettings = {

@@ -86,6 +86,8 @@
  */
 
 #include "app.h"
+#include "app.serial-interface.h"
+#include "app.serial-request-data.h"
 #include "app.upload_manager.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
@@ -102,6 +104,9 @@ static float * s_uploadData;
 
 static bool s_debugUpload = false;
 static bool s_debugGPS = false;
+
+static bool s_disable_upload = false;
+static bool s_disable_adc_reads = false;
 
 static ADS1115 s_ADCs[] = {
     ADS1115(0x48),
@@ -120,8 +125,37 @@ static uint32_t s_uploadInterval = 0;
 static TM s_gpsTime;
 static TM s_rtcTime;
 
+static String serial_in;
+
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
+
+/*
+ * APP_DisableModules
+ *
+ * For each module in the comma separated list of modules, disable it
+ */
+void APP_DisableModules(char const * const modules)
+{
+    if (strstr(modules, "Upload"))
+    {
+        Serial.println("APP: Disabling remote upload functionality.");
+        s_disable_upload = true;
+    }
+
+    if (strstr(modules, "ADC"))
+    {
+        Serial.println("APP: Disabling ADC reads (conversion module also disabled).");
+        s_disable_adc_reads = true;
+        APP_Data_EnableConversion(false);
+    }
+
+    if (strstr(modules, "Conversion"))
+    {
+        Serial.println("APP: Disabling data conversion.");
+        APP_Data_EnableConversion(false);
+    }
+}
 
 /*
  * APP_SetDebugModules
@@ -132,25 +166,32 @@ void APP_SetDebugModules(char const * const modules)
 {
     if (strstr(modules, "LocalStorage"))
     {
-        Serial.println("Turning debugging on for local storage functionality.");
+        Serial.println("APP: Turning debugging on for local storage functionality.");
         APP_SD_EnableDebugging();
     }
 
     if (strstr(modules, "Upload"))
     {
-        Serial.println("Turning debugging on for remote upload functionality.");
+        Serial.println("APP: Turning debugging on for remote upload functionality.");
         s_debugUpload = true;
     }
     
     if (strstr(modules, "GPS"))
     {
-        Serial.println("Turning debugging on for GPS functionality.");
+        Serial.println("APP: Turning debugging on for GPS functionality.");
         s_debugGPS = true;
     }
 
     if (strstr(modules, "Batt"))
     {
+        Serial.println("APP: Turning debugging on for battery functionality.");
         Battery_Set_Debug(true);
+    }
+
+    if (strstr(modules, "SerialRequest"))
+    {
+        Serial.println("APP: Turning debugging on for serial request functionality.");
+        APP_SerialInterface_SetDebug(true);
     }
 }
 
@@ -159,7 +200,7 @@ static void tryConnection(void)
     // Try to connect to GPRS network
     if (s_debugUpload)
     {
-        Serial.print("Attempting to attach to ");
+        Serial.print("APP: Attempting to attach to ");
         Serial.print(Settings_getString(GPRS_APN));
         Serial.print(" with username/pwd ");
         Serial.print(Settings_getString(GPRS_USERNAME));
@@ -171,7 +212,7 @@ static void tryConnection(void)
 
 static void delayStart(uint8_t seconds)
 {
-    Serial.println("Starting application in... ");
+    Serial.println("APP: Starting application in... ");
 
     while (seconds--)
     {
@@ -185,8 +226,9 @@ static void delayStart(uint8_t seconds)
 /*
  * Tasks
  */
+
 static void heartbeatTaskFn(void);
-TaskAction heartbeatTask(heartbeatTaskFn, 1000, INFINITE_TICKS);
+static TaskAction heartbeatTask(heartbeatTaskFn, 1000, INFINITE_TICKS);
 static void heartbeatTaskFn(void)
 {
     static bool ledState = false;
@@ -201,17 +243,34 @@ static void readFromADCsTaskFn(void)
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
-    int32_t allData[15];
+    int32_t allData[15] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
-    // Read the ADC1x1x ICs for fields 1 - 12
-    for (adc = 0; adc < 3; adc++)
+    if (!s_disable_adc_reads)
     {
-        for (ch = 0; ch < 4; ch++)
+        // Read the ADC1x1x ICs for fields 1 - 12
+        for (adc = 0; adc < 3; adc++)
         {
-            field = (adc*4)+ch;
+            for (ch = 0; ch < 4; ch++)
+            {
+                field = (adc*4)+ch;
+                if (Settings_ChannelSettingIsValid(field+1))
+                {
+                    allData[field] = s_ADCs[adc].readADC_SingleEnded(ch);
+                }
+                else
+                {
+                    allData[field] = 0;
+                }
+            }
+        }
+
+        // Read the internal ADCs for fields 13-15
+        for (adc = 0; adc < 3; adc++)
+        {
+            field = adc + 12;
             if (Settings_ChannelSettingIsValid(field+1))
             {
-                allData[field] = s_ADCs[adc].readADC_SingleEnded(ch);
+                allData[field] = s_internalADCs[adc].read();
             }
             else
             {
@@ -220,33 +279,22 @@ static void readFromADCsTaskFn(void)
         }
     }
 
-    // Read the internal ADCs for fields 13-15
-    for (adc = 0; adc < 3; adc++)
-    {
-        field = adc + 12;
-        if (Settings_ChannelSettingIsValid(field+1))
-        {
-            allData[field] = s_internalADCs[adc].read();
-        }
-        else
-        {
-            allData[field] = 0;
-        }
-    }
-    
     APP_Data_NewDataArray(allData);
 }
-TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
+
+static TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
 
 static void remoteUploadTaskFn(void);
-TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
+static TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
 static void remoteUploadTaskFn(void)
 {
-
+    if (s_disable_upload) { return; }
+    
     bool success = false;
 
     if (APP_Data_UploadIsPending() && APP_Data_UploadDataRemaining())
     {
+        Serial.println("APP: Upload pending...");
         /* The data upload flag is set and there is data to upload.
         Reset the flag and task interval and perform the upload */
         APP_Data_SetUploadPending(false);
@@ -256,7 +304,7 @@ static void remoteUploadTaskFn(void)
         
         if (!s_gprsConnection->isConnected())
         {
-            if (s_debugUpload) { Serial.println("GPRS not connected. Attempting new connection."); }
+            if (s_debugUpload) { Serial.println("APP: GPRS not connected. Attempting new connection."); }
             tryConnection();
         }
 
@@ -267,10 +315,10 @@ static void remoteUploadTaskFn(void)
 
             if (s_debugUpload)
             {
-                Serial.print("Remaining records to upload: ");
+                Serial.print("APP: Remaining records to upload: ");
                 Serial.println(APP_Data_UploadDataRemaining());
 
-                Serial.print("Attempting upload to ");
+                Serial.print("APP: Attempting upload to ");
                 Serial.println(s_thingSpeakService->getURL());
             }
             
@@ -285,7 +333,7 @@ static void remoteUploadTaskFn(void)
 
             if (s_debugUpload)
             {
-                Serial.print("Request: '");
+                Serial.print("APP: Request: '");
                 Serial.print(s_requestBuffer);
                 Serial.println("'");
             }
@@ -296,13 +344,13 @@ static void remoteUploadTaskFn(void)
 
             if (success)
             {
-                if (s_debugUpload) { Serial.println("Upload complete!"); }
+                if (s_debugUpload) { Serial.println("APP: Upload complete!"); }
             }
             else
             {
                 if (s_debugUpload)
                 {
-                    Serial.print("Could not connect to ");
+                    Serial.print("APP: Could not connect to ");
                     Serial.print(s_thingSpeakService->getURL());
                     Serial.println("!");
                 }
@@ -313,12 +361,13 @@ static void remoteUploadTaskFn(void)
     {
         /* Set the upload pending flag and start calling this task every second to
         check for data */
+        Serial.println("APP: Setting pending flag");
         APP_Data_SetUploadPending(true);
         remoteUploadTask.SetInterval(1000);
     }
 }
 
-void gpsTaskFn(void)
+static void gpsTaskFn(void)
 {
     Location_UpdateNow();
     bool success = GPS_InfoIsValid();
@@ -330,7 +379,7 @@ void gpsTaskFn(void)
         Time_GetTime(&s_gpsTime, TIME_GPS);
         if (s_debugGPS)
         {
-            Serial.print("Updating RTC time from GPS (");
+            Serial.print("APP: Updating RTC time from GPS (");
             Time_PrintTime(&s_gpsTime);
             Serial.print(" ");
             Time_PrintDate(&s_gpsTime);
@@ -340,12 +389,69 @@ void gpsTaskFn(void)
     }
     else
     {
-        if (s_debugGPS) { Serial.println("No valid GPS info."); }
+        if (s_debugGPS) { Serial.println("APP: No valid GPS info."); }
     }
 }
-TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
+static TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
 
-void setupUploadVars(void)
+static char s_request_data_buffer[128];
+static void on_serial_request_received(int request_number)
+{
+    float all_data[15];
+    
+    float * request_data = all_data;
+    
+    uint32_t * channel_numbers;
+
+    int n_fields = APP_Data_GetNumberOfFields();
+    int n_temperature_fields = 0;
+    channel_numbers = APP_Data_GetChannelNumbers();
+
+    APP_Data_GetRequestData(all_data);
+
+    switch(request_number)
+    {
+    case 0:
+        if (Settings_ChannelSettingIsValid(13)) { n_fields--; }
+        if (Settings_ChannelSettingIsValid(14)) { n_fields--; }
+        if (Settings_ChannelSettingIsValid(15)) { n_fields--; }
+        request_data = all_data;
+        break;
+    case 1:
+        request_data = &all_data[n_fields];
+        if (Settings_ChannelSettingIsValid(15))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+        if (Settings_ChannelSettingIsValid(14))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+        if (Settings_ChannelSettingIsValid(13))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+
+        n_fields = n_temperature_fields;
+        break;
+    }
+
+    APP_SerialRequestData_FormatArray(request_data, n_fields, s_request_data_buffer, 128);
+    Serial1.print(s_request_data_buffer);
+}
+
+static void handle_incoming_serial()
+{
+    while (Serial1.available())
+    {
+        APP_SerialInterface_HandleChar(Serial1.read());
+    } 
+}
+
+static void setupUploadVars(void)
 {
     uint16_t nFields = APP_Data_GetNumberOfFields();
 
@@ -358,7 +464,7 @@ void setupUploadVars(void)
     // Then allocate twice as much as that estimate (minimum 512)
 
     s_uploadBufferSize = APP_Data_GetUploadBufferSize();
-    Serial.print("Upload buffer size: ");
+    Serial.print("APP: Upload buffer size: ");
     Serial.println(s_uploadBufferSize);
     
     s_requestBuffer = new char [s_uploadBufferSize];
@@ -367,28 +473,20 @@ void setupUploadVars(void)
     s_uploadData = new float[nFields];
 }
 
-void setupADCs(void)
+static void setupADCs(void)
 {
     uint8_t i = 0;
     for (i = 0; i < 3; i++)
     {
         s_ADCs[i].begin();
         s_ADCs[i].setGain(GAIN_ONE);
-
-        if (Settings_stringIsSet(FAKE_ADC_READS))
-        {
-            s_ADCs[i].fake(0, 0, 1023);
-            s_ADCs[i].fake(1, 0, 1023);
-            s_ADCs[i].fake(2, 0, 1023);
-            s_ADCs[i].fake(3, 0, 1023);
-        }
     }
 }
 
-void setupTime(void)
+static void setupTime(void)
 {
     Time_GetTime(&s_rtcTime, TIME_PLATFORM);
-    Serial.print("RTC datetime: ");
+    Serial.print("APP: RTC datetime: ");
     Time_PrintTime(&s_rtcTime);
     Serial.print(" ");
     Time_PrintDate(&s_rtcTime, true);
@@ -397,7 +495,8 @@ void setupTime(void)
 void setup()
 {   
     Serial.begin(115200);
-
+    Serial1.begin(115200);
+    
     delayStart(10);
 
     pinMode(HEARTBEAT_LED_PIN, OUTPUT);
@@ -452,6 +551,8 @@ void setup()
     
     SMS_Setup(SMS_INTERFACE_LINKITONE);
 
+    APP_SerialInterface_Setup(on_serial_request_received);
+
     Battery_Setup();
 
     setupTime();
@@ -478,5 +579,6 @@ void loop()
     gpsTask.tick();
     Battery_Tick();
     APP_Error_Tick();
+    handle_incoming_serial();
 }
 

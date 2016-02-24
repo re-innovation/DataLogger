@@ -55,6 +55,7 @@
 
 static DataFieldManager * s_storageManager = NULL;
 static DataFieldManager * s_uploadManager = NULL;
+static DataFieldManager * s_requestManager = NULL;
 static DataFieldManager * s_dataDebugManager = NULL;
 
 static bool s_uploadPending = false;
@@ -65,6 +66,9 @@ static uint8_t s_fieldCount;
 
 static bool s_debugEnabled = true;
 static bool * s_debugFieldFlags;
+
+static bool s_conversion_enabled = true;
+static bool s_adc_reads_enabled = true;
 
 static bool s_setupValid = false;
 
@@ -118,6 +122,17 @@ static void debugTaskFn(void)
 }
 static TaskAction debugTask(debugTaskFn, 1000, INFINITE_TICKS);
 
+static bool counts_match(uint8_t storageFieldCount, uint8_t uploadFieldCount, uint8_t requestFieldCount, uint8_t debugFieldCount)
+{
+    bool match = true;
+    match &= storageFieldCount == uploadFieldCount;
+    match &= uploadFieldCount == debugFieldCount;
+    match &= debugFieldCount == storageFieldCount;
+    match &= debugFieldCount == requestFieldCount;
+
+    return match;
+}
+
 /*
  * Public Functions
  */
@@ -165,31 +180,34 @@ void APP_Data_Setup(
     Serial.print(uploadAveragingInterval);
     Serial.println(" seconds).");
 
-    // Create three data managers, one for storing data, one for uploading data and one for debugging
+    // Create four data managers, one for storing data, one for uploading data, one for request data and one for debugging
     
     s_storageManager = new DataFieldManager(s_numberOfAveragesToStore, storageAveragerSize);
     s_uploadManager = new DataFieldManager(s_numberOfAveragesToUpload, uploadAveragerSize);
+    s_requestManager = new DataFieldManager(1, 1);
     s_dataDebugManager = new DataFieldManager(1, valuesPerSecond);
 
     if (!s_storageManager) { Error_Fatal("Failed to create storage manager", ERR_FATAL_RUNTIME); }
     if (!s_uploadManager) { Error_Fatal("Failed to create upload manager", ERR_FATAL_RUNTIME); }
+    if (!s_requestManager) { Error_Fatal("Failed to create request manager", ERR_FATAL_RUNTIME); }
     if (!s_dataDebugManager) { Error_Fatal("Failed to create debug manager", ERR_FATAL_RUNTIME); }
-
+    
     Serial.print("Attempting to read channel settings from ");
     Serial.print("filename");
     Serial.println("...");
     
     uint8_t storageFieldCount = APP_SD_ReadDataChannelSettings(s_storageManager, filename);    
     uint8_t uploadFieldCount = APP_SD_ReadDataChannelSettings(s_uploadManager, filename);
+    uint8_t requestFieldCount = APP_SD_ReadDataChannelSettings(s_requestManager, filename);
     uint8_t debugFieldCount = APP_SD_ReadDataChannelSettings(s_dataDebugManager, filename);
 
-    if ((storageFieldCount != uploadFieldCount) || (uploadFieldCount != debugFieldCount) || (debugFieldCount != storageFieldCount))
+    if (counts_match(storageFieldCount, uploadFieldCount, requestFieldCount, debugFieldCount))
     {
-        Error_Fatal("Field counts for data managers do not match!", ERR_FATAL_CONFIG);
+        s_fieldCount = storageFieldCount;
     }
     else
     {
-        s_fieldCount = storageFieldCount;
+        Error_Fatal("Field counts for data managers do not match!", ERR_FATAL_CONFIG);
     }
 
     if (s_fieldCount == 0)
@@ -269,11 +287,17 @@ void APP_Data_NewDataArray(int32_t * data)
     s_storageManager->storeDataArray(data);
     s_uploadManager->storeDataArray(data);
     s_dataDebugManager->storeDataArray(data);
+    s_requestManager->storeDataArray(data);
 }
 
 void APP_Data_GetUploadData(float * buffer)
 {
-    s_uploadManager->getDataArray(buffer, true, true);
+    s_uploadManager->getDataArray(buffer, s_conversion_enabled, true);
+}
+
+void APP_Data_GetRequestData(float * buffer)
+{
+    s_requestManager->getDataArray(buffer, s_conversion_enabled, false);
 }
 
 uint16_t APP_Data_GetNumberOfFields(void)
@@ -344,4 +368,14 @@ void APP_Data_Tick(void)
             debugTask.tick();
         }
     }
+}
+
+void APP_Data_EnableConversion(bool enable)
+{
+    s_conversion_enabled = enable;
+}
+
+bool APP_Data_ConversionEnabled(void)
+{
+    return s_conversion_enabled;
 }

@@ -12,6 +12,7 @@ NumericDataField * APP_Data_GetUploadField(uint8_t i);
 NumericDataField * APP_Data_GetStorageField(uint8_t i);
 
 void APP_Data_GetUploadData(float * buffer);
+void APP_Data_GetRequestData(float * buffer);
 
 uint32_t APP_Data_GetNumberOfAveragesForStorage(void);
 uint32_t APP_Data_GetNumberOfAveragesForUpload(void);
@@ -28,5 +29,8 @@ bool APP_Data_UploadDataRemaining(void);
 
 void APP_Data_SetUploadPending(bool pending);
 bool APP_Data_UploadIsPending(void);
+
+void APP_Data_EnableConversion(bool enable);
+bool APP_Data_ConversionEnabled(void);
 
 #endif
