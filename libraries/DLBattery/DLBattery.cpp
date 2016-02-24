@@ -107,7 +107,6 @@ TaskAction batteryCheckTask(batteryCheckTaskFn, 60*60*1000, INFINITE_TICKS);
 
 void Battery_Set_Debug(bool set)
 {
-	Serial.println("Turning debugging on for battery functionality.");
 	s_debugBattery = set;
 }
 
