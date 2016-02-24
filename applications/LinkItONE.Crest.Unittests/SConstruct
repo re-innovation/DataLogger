@@ -2,17 +2,29 @@ import os
 
 env = Environment(ENV=os.environ)
 
-target = 'app.serial-interface' 
 cpppath = ["#../LinkItONE.Crest"]
 cppflags = ['-Wall', '-Wextra', '-g']
 
-objects = [
-	Object(target+".test.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath),
-	Object("../LinkItONE.Crest/" + target + ".cpp", CPPFLAGS=cppflags, CPPPATH=cpppath)
-]
 
-program = env.Program(target=target+".test", source=objects, LIBS=['cppunit'], CC='g++')
+for target in COMMAND_LINE_TARGETS:
+    conscript = target+"/SConscript"
+    test_objects = SConscript(conscript, exports='cpppath cppflags')
 
-test_alias = env.Alias(target+".test", [program], program[0].path)
+    program = env.Program(test_objects, LIBS=['cppunit'], CC='g++')
+    target_cmd = "./{0}/{0}.test".format(target)
+    test_alias = env.Alias(target, [program], program[0].path)
+    env.AlwaysBuild(test_alias)
 
-env.AlwaysBuild(test_alias)
+    #cpppath = ["#../LinkItONE.Crest"]
+    #cppflags = ['-Wall', '-Wextra', '-g']
+
+    #objects = [
+    #    Object(target+"/"+target+".test.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath),
+    #    Object("../LinkItONE.Crest/" + target + ".cpp", CPPFLAGS=cppflags, CPPPATH=cpppath)
+    #]
+
+    #program = env.Program(target=target+".test", source=objects, LIBS=['cppunit'], CC='g++')
+
+    #test_alias = env.Alias(target+".test", [program], program[0].path)
+
+    #env.AlwaysBuild(test_alias)

@@ -55,25 +55,25 @@ static void handle_complete_request(String& req)
 
 	if (valid_request)
 	{
+		request_number = ((req[1] - '0') * 10) + (req[2] - '0');
 		#ifdef ARDUINO
 		if (s_debug_serial_requests)
 		{
-			Serial.print("Handling request ");
+			Serial.print("APP: Handling request ");
 			Serial.print(req);
 			Serial.print(" (");
 			Serial.print(request_number);
-			Serial.print(")");
+			Serial.println(")");
 		}
 		#endif
-		request_number = ((req[1] - '0') * 10) + (req[2] - '0');
 		s_handler(request_number);
 	}
 	else
 	{
 		#ifdef ARDUINO
-		Serial.print("Request ");
+		Serial.print("APP: Request ");
 		Serial.print(req);
-		Serial.print(" invalid.");
+		Serial.println(" invalid.");
 		#endif
 		s_handler(INVALID_REQUEST);
 	}

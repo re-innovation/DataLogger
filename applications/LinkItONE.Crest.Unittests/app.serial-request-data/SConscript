@@ -1,0 +1,11 @@
+Import('cpppath', 'cppflags')
+
+cpppath += ["../../../Libraries/DLUtility"]
+
+objects = [
+    Object("app.serial-request-data.test.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath),
+    Object("../../LinkItONE.Crest/app.serial-request-data.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath),
+    Object("../../../Libraries/DLUtility/DLUtility.Strings.cpp", CPPFLAGS=cppflags, CPPPATH=cpppath)
+]
+
+Return('objects')

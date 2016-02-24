@@ -87,6 +87,7 @@
 
 #include "app.h"
 #include "app.serial-interface.h"
+#include "app.serial-request-data.h"
 #include "app.upload_manager.h"
 #include "app.sd_storage.h"
 #include "app.data.h"
@@ -103,6 +104,9 @@ static float * s_uploadData;
 
 static bool s_debugUpload = false;
 static bool s_debugGPS = false;
+
+static bool s_disable_upload = false;
+static bool s_disable_adc_reads = false;
 
 static ADS1115 s_ADCs[] = {
     ADS1115(0x48),
@@ -125,6 +129,33 @@ static String serial_in;
 
 #define ADC_READS_PER_SECOND (5)
 #define MS_PER_ADC_READ (1000 / ADC_READS_PER_SECOND)
+
+/*
+ * APP_DisableModules
+ *
+ * For each module in the comma separated list of modules, disable it
+ */
+void APP_DisableModules(char const * const modules)
+{
+    if (strstr(modules, "Upload"))
+    {
+        Serial.println("APP: Disabling remote upload functionality.");
+        s_disable_upload = true;
+    }
+
+    if (strstr(modules, "ADC"))
+    {
+        Serial.println("APP: Disabling ADC reads (conversion module also disabled).");
+        s_disable_adc_reads = true;
+        APP_Data_EnableConversion(false);
+    }
+
+    if (strstr(modules, "Conversion"))
+    {
+        Serial.println("APP: Disabling data conversion.");
+        APP_Data_EnableConversion(false);
+    }
+}
 
 /*
  * APP_SetDebugModules
@@ -159,7 +190,7 @@ void APP_SetDebugModules(char const * const modules)
 
     if (strstr(modules, "SerialRequest"))
     {
-        Serial.println("Turning debugging on for serial request functionality.");
+        Serial.println("APP: Turning debugging on for serial request functionality.");
         APP_SerialInterface_SetDebug(true);
     }
 }
@@ -205,7 +236,6 @@ static void heartbeatTaskFn(void)
     // 1s on, 4s off by setting task interval
     heartbeatTask.SetInterval(ledState ? 1000 : 4000);
     ledState = !ledState;
-    Serial.print(".");
 }
 
 static void readFromADCsTaskFn(void)
@@ -213,17 +243,34 @@ static void readFromADCsTaskFn(void)
     uint8_t adc = 0;
     uint8_t ch = 0;
     uint8_t field = 0;
-    int32_t allData[15];
+    int32_t allData[15] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
-    // Read the ADC1x1x ICs for fields 1 - 12
-    for (adc = 0; adc < 3; adc++)
+    if (!s_disable_adc_reads)
     {
-        for (ch = 0; ch < 4; ch++)
+        // Read the ADC1x1x ICs for fields 1 - 12
+        for (adc = 0; adc < 3; adc++)
         {
-            field = (adc*4)+ch;
+            for (ch = 0; ch < 4; ch++)
+            {
+                field = (adc*4)+ch;
+                if (Settings_ChannelSettingIsValid(field+1))
+                {
+                    allData[field] = s_ADCs[adc].readADC_SingleEnded(ch);
+                }
+                else
+                {
+                    allData[field] = 0;
+                }
+            }
+        }
+
+        // Read the internal ADCs for fields 13-15
+        for (adc = 0; adc < 3; adc++)
+        {
+            field = adc + 12;
             if (Settings_ChannelSettingIsValid(field+1))
             {
-                allData[field] = s_ADCs[adc].readADC_SingleEnded(ch);
+                allData[field] = s_internalADCs[adc].read();
             }
             else
             {
@@ -232,29 +279,17 @@ static void readFromADCsTaskFn(void)
         }
     }
 
-    // Read the internal ADCs for fields 13-15
-    for (adc = 0; adc < 3; adc++)
-    {
-        field = adc + 12;
-        if (Settings_ChannelSettingIsValid(field+1))
-        {
-            allData[field] = s_internalADCs[adc].read();
-        }
-        else
-        {
-            allData[field] = 0;
-        }
-    }
-    
     APP_Data_NewDataArray(allData);
 }
+
 static TaskAction readFromADCsTask(readFromADCsTaskFn, MS_PER_ADC_READ, INFINITE_TICKS, "ADC Read Task");
 
 static void remoteUploadTaskFn(void);
 static TaskAction remoteUploadTask(remoteUploadTaskFn, 1000, INFINITE_TICKS, "Upload Task");
 static void remoteUploadTaskFn(void)
 {
-
+    if (s_disable_upload) { return; }
+    
     bool success = false;
 
     if (APP_Data_UploadIsPending() && APP_Data_UploadDataRemaining())
@@ -359,9 +394,53 @@ static void gpsTaskFn(void)
 }
 static TaskAction gpsTask(gpsTaskFn, 30 * 1000, INFINITE_TICKS, "GPS Task");
 
+static char s_request_data_buffer[128];
 static void on_serial_request_received(int request_number)
 {
-    (void)request_number;
+    float all_data[15];
+    
+    float * request_data = all_data;
+    
+    uint32_t * channel_numbers;
+
+    int n_fields = APP_Data_GetNumberOfFields();
+    int n_temperature_fields = 0;
+    channel_numbers = APP_Data_GetChannelNumbers();
+
+    APP_Data_GetRequestData(all_data);
+
+    switch(request_number)
+    {
+    case 0:
+        if (Settings_ChannelSettingIsValid(13)) { n_fields--; }
+        if (Settings_ChannelSettingIsValid(14)) { n_fields--; }
+        if (Settings_ChannelSettingIsValid(15)) { n_fields--; }
+        request_data = all_data;
+        break;
+    case 1:
+        request_data = &all_data[n_fields];
+        if (Settings_ChannelSettingIsValid(15))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+        if (Settings_ChannelSettingIsValid(14))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+        if (Settings_ChannelSettingIsValid(13))
+        {
+            request_data--;
+            n_temperature_fields++;
+        }
+
+        n_fields = n_temperature_fields;
+        break;
+    }
+
+    APP_SerialRequestData_FormatArray(request_data, n_fields, s_request_data_buffer, 128);
+    Serial1.print(s_request_data_buffer);
 }
 
 static void handle_incoming_serial()
@@ -369,7 +448,7 @@ static void handle_incoming_serial()
     while (Serial1.available())
     {
         APP_SerialInterface_HandleChar(Serial1.read());
-    }
+    } 
 }
 
 static void setupUploadVars(void)
@@ -401,14 +480,6 @@ static void setupADCs(void)
     {
         s_ADCs[i].begin();
         s_ADCs[i].setGain(GAIN_ONE);
-
-        if (Settings_stringIsSet(FAKE_ADC_READS))
-        {
-            s_ADCs[i].fake(0, 0, 1023);
-            s_ADCs[i].fake(1, 0, 1023);
-            s_ADCs[i].fake(2, 0, 1023);
-            s_ADCs[i].fake(3, 0, 1023);
-        }
     }
 }
 
@@ -503,7 +574,7 @@ void loop()
     readFromADCsTask.tick();
     APP_Data_Tick();
     APP_SD_Tick();
-    //remoteUploadTask.tick();
+    remoteUploadTask.tick();
     heartbeatTask.tick();
     gpsTask.tick();
     Battery_Tick();

@@ -66,12 +66,12 @@ bool LinkItOneGPRS::connect(char const * const url)
         Serial.print(url);
         Serial.print("...");
         success &= m_client->connect(url, HTTP_PORT);
-        Serial.print(success ? " connected." : " failed.");
+        Serial.println(success ? " connected." : " failed.");
     }
     else
     {
-        if (!m_connected) { Serial.print("LinkItOneGPRS::connect: No GRPS connection!"); }
-        if (!m_client)  { Serial.print("LinkItOneGPRS::connect: No LGPRSClient!"); }
+        if (!m_connected) { Serial.println("LinkItOneGPRS::connect: No GRPS connection!"); }
+        if (!m_client)  { Serial.println("LinkItOneGPRS::connect: No LGPRSClient!"); }
     }
     
     return success;

@@ -98,7 +98,14 @@ static void writeToSDCardTaskFn(void)
                 pField = APP_Data_GetStorageField(i);
 
                 // Write from datafield to buffer then from buffer to SD file
-                pField->getConvDataAsString(buffer, "%.4f", true);
+                if (APP_Data_ConversionEnabled())
+                {
+                    pField->getConvDataAsString(buffer, "%.4f", true);
+                }
+                else
+                {
+                    pField->getRawDataAsString(buffer, "%.4f", true);
+                }
 
                 s_sdCard->write(s_fileHandle, buffer);
 
@@ -283,6 +290,11 @@ void APP_SD_ReadGlobalSettings(char const * const filename)
     if (Settings_stringIsSet(DEBUG_MODULES))
     {
         APP_SetDebugModules(Settings_getString(DEBUG_MODULES));
+    }
+
+    if (Settings_stringIsSet(DISABLE_MODULES))
+    {
+        APP_DisableModules(Settings_getString(DISABLE_MODULES));
     }
 }
 
