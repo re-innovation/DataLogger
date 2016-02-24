@@ -38,7 +38,7 @@ LinkItOneGPRS::LinkItOneGPRS(char * apn, char * username, char * password)
     m_pUser = username;
     m_pPwd = password;
     m_connected = false;
-    m_client = new LGPRSClient(); 
+    m_client = NULL;
 }
 
 LinkItOneGPRS::~LinkItOneGPRS() {}
@@ -51,17 +51,27 @@ bool LinkItOneGPRS::tryConnection(uint8_t timeoutSeconds)
     while (!m_connected && (millis() < timeout))
     {
         m_connected = LGPRS.attachGPRS(m_pAPN, m_pUser, m_pPwd);
+        if(!m_client) { m_client = new LGPRSClient(); }
     }
     return m_connected;
 }
 
 bool LinkItOneGPRS::connect(char const * const url)
 {
-    bool success = m_connected;
+    bool success = m_connected && (m_client != NULL);
 
     if (success)
     {
+        Serial.print("LinkItOneGPRS::connect: Have GPRS. Trying to connect to ");
+        Serial.print(url);
+        Serial.print("...");
         success &= m_client->connect(url, HTTP_PORT);
+        Serial.println(success ? " connected." : " failed.");
+    }
+    else
+    {
+        if (!m_connected) { Serial.println("LinkItOneGPRS::connect: No GRPS connection!"); }
+        if (!m_client)  { Serial.println("LinkItOneGPRS::connect: No LGPRSClient!"); }
     }
     
     return success;
@@ -75,12 +85,14 @@ bool LinkItOneGPRS::sendHTTPRequest(const char * const url, const char * request
 
     if (success)
     {
+        Serial.println("LinkItOneGPRS::sendHTTPRequest: sending");
         m_client->print(request);
+        Serial.println("LinkItOneGPRS::sendHTTPRequest: reading response");
         readResponse(response);
     }
     else
     {
-        Serial.print("sendHTTPRequest: Failed to connect to ");
+        Serial.print("LinkItOneGPRS::sendHTTPRequest: Failed to connect to ");
         Serial.println(url);
     }
     return success;
@@ -116,7 +128,7 @@ void LinkItOneGPRS::readResponse(char * response)
         else
         {
 
-            Serial.println("Disconnecting from client");
+            Serial.println("LinkItOneGPRS::readResponse: Disconnecting from client");
             m_client->stop();
         }
         

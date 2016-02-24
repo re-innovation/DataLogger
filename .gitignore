@@ -1,5 +1,8 @@
+# IDE files
 *.sublime-project
 *.sublime-workspace
+
+# Build Artifacts
 *.Test
 *.o
 *.exe
@@ -8,4 +11,10 @@
 *.stackdump
 *.debug
 
+# Logging directories
 libraries/Datalogger
+applications/LinkItONE.Crest/Logs/
+applications/LinkItONE.SimpleADC/Logs/
+
+# Scons files
+*.dblite
