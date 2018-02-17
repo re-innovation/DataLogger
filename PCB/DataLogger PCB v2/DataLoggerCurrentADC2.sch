@@ -1,0 +1,381 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:special
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:matts_components
+LIBS:smd-special
+LIBS:dips082
+LIBS:CNT-RJ45
+LIBS:arduino_shieldsNCL
+LIBS:DataLogger_LinkItOne_PCB_v2-cache
+EELAYER 27 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 6 6
+Title "VIt Monitoring Slave Unit"
+Date "7 may 2015"
+Rev "1"
+Comp "Product Health"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L AGND #PWR037
+U 1 1 54D924ED
+P 8200 2050
+F 0 "#PWR037" H 8200 2050 40  0001 C CNN
+F 1 "AGND" H 8200 1980 50  0000 C CNN
+F 2 "" H 8200 2050 60  0000 C CNN
+F 3 "" H 8200 2050 60  0000 C CNN
+	1    8200 2050
+	1    0    0    -1  
+$EndComp
+Text Notes 7450 1000 0    60   ~ 0
+ADDR is connected to:\nGND -> 0x48\nVcc -> 0x49\nSDA -> 0x4A\nSCL -> 0x4B
+$Comp
+L C C12
+U 1 1 54D924E8
+P 9150 2750
+F 0 "C12" V 9250 2900 50  0000 L CNN
+F 1 "100nf" V 9250 2450 50  0000 L CNN
+F 2 "" H 9150 2750 60  0000 C CNN
+F 3 "" H 9150 2750 60  0000 C CNN
+	1    9150 2750
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9550 1700 10250 1700
+Wire Wire Line
+	9550 1850 10250 1850
+Wire Wire Line
+	8200 2000 8750 2000
+Wire Wire Line
+	8200 2000 8200 2050
+Wire Wire Line
+	9550 2000 9900 2000
+Wire Wire Line
+	9900 3250 9900 3650
+Connection ~ 8600 2000
+Wire Wire Line
+	8950 2750 8600 2750
+Wire Wire Line
+	9900 2750 9350 2750
+Wire Wire Line
+	8600 2750 8600 2000
+Wire Wire Line
+	9900 2000 9900 2850
+$Comp
+L R R23
+U 1 1 54D924EF
+P 8650 1350
+F 0 "R23" V 8730 1350 50  0000 C CNN
+F 1 "10k" V 8650 1350 50  0000 C CNN
+F 2 "" H 8650 1350 60  0000 C CNN
+F 3 "" H 8650 1350 60  0000 C CNN
+	1    8650 1350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8750 1850 8650 1850
+Wire Wire Line
+	8650 1850 8650 1600
+Wire Wire Line
+	9650 4000 9650 2300
+Wire Wire Line
+	9650 2300 9550 2300
+Wire Wire Line
+	9550 2150 9750 2150
+Wire Wire Line
+	9750 2150 9750 3400
+Wire Wire Line
+	7850 4200 7850 4000
+Connection ~ 7850 4000
+Wire Wire Line
+	8150 4200 8150 3400
+Wire Wire Line
+	7850 2450 7850 2200
+Connection ~ 7850 2200
+Wire Wire Line
+	7850 2850 7850 3050
+Wire Wire Line
+	7850 3050 8150 3050
+Wire Wire Line
+	8150 3050 8150 2850
+Wire Wire Line
+	7850 4600 7850 4800
+Wire Wire Line
+	7850 4800 8150 4800
+Wire Wire Line
+	8150 4800 8150 4600
+$Comp
+L AGND #PWR038
+U 1 1 52C8C2DE
+P 8000 3200
+F 0 "#PWR038" H 8000 3200 40  0001 C CNN
+F 1 "AGND" H 8000 3130 50  0000 C CNN
+F 2 "" H 8000 3200 60  0000 C CNN
+F 3 "" H 8000 3200 60  0000 C CNN
+	1    8000 3200
+	1    0    0    -1  
+$EndComp
+$Comp
+L AGND #PWR039
+U 1 1 54D924EB
+P 8000 4950
+F 0 "#PWR039" H 8000 4950 40  0001 C CNN
+F 1 "AGND" H 8000 4880 50  0000 C CNN
+F 2 "" H 8000 4950 60  0000 C CNN
+F 3 "" H 8000 4950 60  0000 C CNN
+	1    8000 4950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8000 4950 8000 4800
+Connection ~ 8000 4800
+Wire Wire Line
+	8000 3200 8000 3050
+Connection ~ 8000 3050
+Text Notes 7550 1950 0    60   ~ 0
+This is ID: 0x4A
+$Comp
+L ZENER_SOT23 D12
+U 1 1 52C99A4B
+P 7850 2650
+F 0 "D12" H 7850 2750 50  0000 C CNN
+F 1 "ZENER_SOT23" H 7850 2550 40  0000 C CNN
+F 2 "" H 7850 2650 60  0000 C CNN
+F 3 "" H 7850 2650 60  0000 C CNN
+	1    7850 2650
+	0    -1   -1   0   
+$EndComp
+$Comp
+L ZENER_SOT23 D14
+U 1 1 52C99A5A
+P 8150 2650
+F 0 "D14" H 8150 2750 50  0000 C CNN
+F 1 "ZENER_SOT23" H 8150 2550 40  0000 C CNN
+F 2 "" H 8150 2650 60  0000 C CNN
+F 3 "" H 8150 2650 60  0000 C CNN
+	1    8150 2650
+	0    -1   -1   0   
+$EndComp
+$Comp
+L ZENER_SOT23 D13
+U 1 1 52C99A69
+P 7850 4400
+F 0 "D13" H 7850 4500 50  0000 C CNN
+F 1 "ZENER_SOT23" H 7850 4300 40  0000 C CNN
+F 2 "" H 7850 4400 60  0000 C CNN
+F 3 "" H 7850 4400 60  0000 C CNN
+	1    7850 4400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L ZENER_SOT23 D15
+U 1 1 54D924F7
+P 8150 4400
+F 0 "D15" H 8150 4500 50  0000 C CNN
+F 1 "ZENER_SOT23" H 8150 4300 40  0000 C CNN
+F 2 "" H 8150 4400 60  0000 C CNN
+F 3 "" H 8150 4400 60  0000 C CNN
+	1    8150 4400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	8150 2450 8150 2300
+Connection ~ 8150 2300
+Wire Wire Line
+	10100 950  10100 2150
+Wire Wire Line
+	10100 2150 9900 2150
+Connection ~ 9900 2150
+Text HLabel 10250 1700 2    60   Output ~ 0
+SCLK
+Text HLabel 10250 1850 2    60   Output ~ 0
+SDA
+Wire Wire Line
+	8150 3400 9750 3400
+Wire Wire Line
+	6750 4000 9650 4000
+Text HLabel 2500 1350 0    60   Input ~ 0
+I5
+Text HLabel 2500 2000 0    60   Input ~ 0
+I6
+Text HLabel 2450 2650 0    60   Input ~ 0
+I7
+Text HLabel 2450 3300 0    60   Input ~ 0
+I8
+Wire Wire Line
+	2500 1350 4850 1350
+Wire Wire Line
+	2500 2000 5400 2000
+Wire Wire Line
+	2450 2650 5950 2650
+Wire Wire Line
+	2450 3300 6500 3300
+Wire Wire Line
+	8750 2150 8350 2150
+Wire Wire Line
+	8350 2150 8350 2200
+Wire Wire Line
+	8350 2200 5800 2200
+Wire Wire Line
+	5800 2200 5800 1900
+Wire Wire Line
+	5800 1900 4850 1900
+Wire Wire Line
+	5400 2300 8750 2300
+Wire Wire Line
+	6750 4000 6750 3200
+Wire Wire Line
+	6750 3200 5950 3200
+Wire Wire Line
+	6500 3900 8150 3900
+Connection ~ 8150 3900
+$Comp
+L CP1 C13
+U 1 1 52AF6A63
+P 9900 3050
+F 0 "C13" H 9950 3150 50  0000 L CNN
+F 1 "10uf" H 9950 2950 50  0000 L CNN
+F 2 "" H 9900 3050 60  0000 C CNN
+F 3 "" H 9900 3050 60  0000 C CNN
+	1    9900 3050
+	1    0    0    -1  
+$EndComp
+Connection ~ 9900 2750
+Wire Wire Line
+	9900 2550 10650 2550
+Connection ~ 9900 2550
+Text HLabel 10650 2550 2    60   Input ~ 0
++Vcc
+$Comp
+L AGND #PWR040
+U 1 1 54D95757
+P 9900 3650
+F 0 "#PWR040" H 9900 3650 40  0001 C CNN
+F 1 "AGND" H 9900 3580 50  0000 C CNN
+F 2 "" H 9900 3650 60  0000 C CNN
+F 3 "" H 9900 3650 60  0000 C CNN
+	1    9900 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8750 1700 8450 1700
+Wire Wire Line
+	6500 3300 6500 3900
+Wire Wire Line
+	5950 3200 5950 2650
+Wire Wire Line
+	4850 1900 4850 1350
+Wire Wire Line
+	5400 2000 5400 2300
+$Comp
+L ADS1115 U5
+U 1 1 54D924F9
+P 9100 1850
+F 0 "U5" H 9150 2200 60  0000 C CNN
+F 1 "ADS1115" H 9150 1200 60  0000 C CNN
+F 2 "~" H 9300 1750 60  0000 C CNN
+F 3 "~" H 9300 1750 60  0000 C CNN
+	1    9100 1850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8650 1100 8650 950 
+Wire Wire Line
+	8650 950  10100 950 
+Wire Wire Line
+	8450 1700 8450 1000
+Wire Wire Line
+	8450 1000 9750 1000
+Wire Wire Line
+	9750 1000 9750 1850
+Connection ~ 9750 1850
+$Comp
+L CONN_1 P49
+U 1 1 554B34F0
+P 2900 1100
+F 0 "P49" H 2980 1100 40  0000 L CNN
+F 1 "TPI5" H 2900 1155 30  0001 C CNN
+F 2 "" H 2900 1100 60  0000 C CNN
+F 3 "" H 2900 1100 60  0000 C CNN
+	1    2900 1100
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CONN_1 P50
+U 1 1 554B34FF
+P 2900 1800
+F 0 "P50" H 2980 1800 40  0000 L CNN
+F 1 "TPI6" H 2900 1855 30  0001 C CNN
+F 2 "" H 2900 1800 60  0000 C CNN
+F 3 "" H 2900 1800 60  0000 C CNN
+	1    2900 1800
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CONN_1 P51
+U 1 1 554B3518
+P 2900 2450
+F 0 "P51" H 2980 2450 40  0000 L CNN
+F 1 "TPI7" H 2900 2505 30  0001 C CNN
+F 2 "" H 2900 2450 60  0000 C CNN
+F 3 "" H 2900 2450 60  0000 C CNN
+	1    2900 2450
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CONN_1 P52
+U 1 1 554B3527
+P 2900 3050
+F 0 "P52" H 2980 3050 40  0000 L CNN
+F 1 "TPI8" H 2900 3105 30  0001 C CNN
+F 2 "" H 2900 3050 60  0000 C CNN
+F 3 "" H 2900 3050 60  0000 C CNN
+	1    2900 3050
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2900 1250 2900 1350
+Connection ~ 2900 1350
+Wire Wire Line
+	2900 1950 2900 2000
+Connection ~ 2900 2000
+Wire Wire Line
+	2900 2600 2900 2650
+Connection ~ 2900 2650
+Wire Wire Line
+	2900 3200 2900 3300
+Connection ~ 2900 3300
+$EndSCHEMATC
