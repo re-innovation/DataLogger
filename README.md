@@ -5,6 +5,8 @@ Based upon the LinkIt One system on a chip board:
 
 https://www.seeedstudio.com/LinkIt-ONE-p-2017.html
 
+https://docs.labs.mediatek.com/resource/linkit-one/en/documentation
+
 ## Hardware
 
 PCB has been designed in KiCAD and the files are available in this repository.
